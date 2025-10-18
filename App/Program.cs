@@ -10,18 +10,10 @@ var app = builder.Build();
 
 app.MapOpenApiAndScalar();
 
+app.MapHealthChecks("health");
+
 app.MapControllers();
 
 app.LogStartup();
-
-await using (var scope = app.Services.CreateAsyncScope())
-{
-    var activity = new Activity("Program");
-    Activity.Current = activity;
-    activity.Start();
-    var logger = scope.ServiceProvider.GetRequiredService<ILogger<Program>>();
-    
-    logger.LogInformation("Hello, World!");
-}
 
 app.Run();
