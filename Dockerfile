@@ -1,26 +1,29 @@
-﻿FROM mcr.microsoft.com/dotnet/aspnet:10.0 AS base
+﻿ARG PROJECT=App
+
+FROM mcr.microsoft.com/dotnet/aspnet:10.0 AS base
 USER $APP_UID
 WORKDIR /app
 EXPOSE 8080
 
 FROM mcr.microsoft.com/dotnet/sdk:10.0 AS build
+ARG PROJECT
 ARG BUILD_CONFIGURATION=Release
 WORKDIR /src
-COPY ["App/App.csproj", "App/"]
-COPY ["Application/Application.csproj", "Application/"]
-COPY ["Presentation/Presentation.csproj", "Presentation/"]
-COPY ["Domain/Domain.csproj", "Domain/"]
-COPY ["Database/Database.csproj", "Database/"]
-RUN dotnet restore "App/App.csproj"
+
 COPY . .
-WORKDIR "/src/App"
-RUN dotnet build "./App.csproj" -c $BUILD_CONFIGURATION -o /app/build
+RUN dotnet restore "${PROJECT}/${PROJECT}.csproj"
+
+WORKDIR "/src/${PROJECT}"
+RUN dotnet build "./${PROJECT}.csproj" -c $BUILD_CONFIGURATION -o /app/build
 
 FROM build AS publish
+ARG PROJECT
 ARG BUILD_CONFIGURATION=Release
-RUN dotnet publish "./App.csproj" -c $BUILD_CONFIGURATION -o /app/publish /p:UseAppHost=false
+RUN dotnet publish "./${PROJECT}.csproj" -c $BUILD_CONFIGURATION -o /app/publish /p:UseAppHost=false
 
 FROM base AS final
+ARG PROJECT
+ENV PROJECT_DLL="${PROJECT}.dll"
 WORKDIR /app
 COPY --from=publish /app/publish .
 
@@ -31,4 +34,4 @@ ENV ASPNETCORE_URLS=http://+:8080 \
     DOTNET_RUNNING_IN_CONTAINER=true \
     DOTNET_SYSTEM_GLOBALIZATION_INVARIANT=false
 
-ENTRYPOINT ["dotnet", "App.dll"]
+ENTRYPOINT sh -c "dotnet ${PROJECT_DLL}"
