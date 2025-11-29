@@ -58,6 +58,8 @@ public static class Dependencies
             // Configure JWT settings
             options.TokenValidationParameters = TokenValidationParametersFactory
                 .AccessValidationParameters(jwtOptions, timeProvider);
+            
+            options.MapInboundClaims = false;
 
             // Get token from cookie
             options.Events = new JwtBearerEvents

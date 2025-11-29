@@ -73,6 +73,8 @@ public static class JwtTokenKeys
     private static List<string> GetClaimValue(this ClaimsPrincipal claimsPrincipal, string claimType)
     {
         return claimsPrincipal
+            .Identities
+            .First()
             .Claims
             .Where(c => c.Type == claimType)
             .Select(c => c.Value)
