@@ -16,6 +16,10 @@ if (app.Environment.IsDevelopment())
 
 app.UseGlobalExceptionHandler(app.Logger);
 
+app.UseStaticFiles(StaticFileOptionsFactory.Create());
+
+app.MapFallbackToFile("index.html");
+
 app.UseAuthentication();
 
 app.UseAuthorization();
@@ -35,7 +39,9 @@ app.Use(async (context, next) =>
     }
     catch (Exception e)
     {
-        logger.LogError(e, "Unable to authenticate user");
+        logger.LogInformation(
+            e,
+            "Unable to authenticate user");
     }
     
     await next(context);
