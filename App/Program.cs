@@ -16,6 +16,8 @@ if (app.Environment.IsDevelopment())
 
 app.UseGlobalExceptionHandler(app.Logger);
 
+app.UseCors();
+
 app.UseStaticFiles(StaticFileOptionsFactory.Create());
 
 app.MapFallbackToFile("index.html");

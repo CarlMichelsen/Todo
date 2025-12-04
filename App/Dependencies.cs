@@ -35,7 +35,29 @@ public static class Dependencies
         
         // Options
         builder.Services
-            .AddConfigurationOptions<JwtOptions>(builder.Configuration);
+            .AddConfigurationOptions<JwtOptions>(builder.Configuration)
+            .AddConfigurationOptions<CorsOptions>(builder.Configuration);
+        
+        // CORS
+        var corsConfig = builder
+            .Configuration
+            .GetSection(CorsOptions.SectionName)
+            .Get<CorsOptions>() ?? throw new NullReferenceException("Cors options not found");
+        builder.Services.AddCors(options =>
+        {
+            options.AddDefaultPolicy(policy =>
+            {
+                var origins = corsConfig
+                    .AllowedDomains
+                    .Select(uri => uri.GetLeftPart(UriPartial.Authority).TrimEnd('/'))
+                    .ToArray();
+                policy
+                    .WithOrigins(origins)
+                    .AllowAnyHeader()
+                    .AllowAnyMethod()
+                    .AllowCredentials();
+            });
+        });
         
         // Add services to the container.
         // Learn more about configuring OpenAPI at https://aka.ms/aspnet/openapi
@@ -59,7 +81,7 @@ public static class Dependencies
             options.TokenValidationParameters = TokenValidationParametersFactory
                 .AccessValidationParameters(jwtOptions, timeProvider);
             
-            options.MapInboundClaims = false;
+            options.MapInboundClaims = false; // Important!
 
             // Get token from cookie
             options.Events = new JwtBearerEvents
