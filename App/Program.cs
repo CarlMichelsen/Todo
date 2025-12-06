@@ -17,6 +17,8 @@ if (app.Environment.IsDevelopment())
 
 app.UseGlobalExceptionHandler(app.Logger);
 
+app.MapHealthChecks("health");
+
 app.UseCors();
 
 app.UseStaticFiles(StaticFileOptionsFactory.Create());

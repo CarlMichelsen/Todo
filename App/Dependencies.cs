@@ -2,6 +2,7 @@
 using App.Extensions;
 using Application.Configuration;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
+using Microsoft.Extensions.Diagnostics.HealthChecks;
 using Presentation;
 
 namespace App;
@@ -30,6 +31,11 @@ public static class Dependencies
             .Services
             .AddSingleton(TimeProvider.System)
             .AddHttpContextAccessor();
+        
+        // Healthcheck
+        builder.Services
+            .AddHealthChecks()
+            .AddCheck("self", () => HealthCheckResult.Healthy());
         
         // Auth
         builder.RegisterAuthDependencies();
