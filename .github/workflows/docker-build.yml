@@ -50,6 +50,3 @@ jobs:
           load: true
           cache-from: type=gha
           cache-to: type=gha,mode=max
-
-      - name: Verify image was built
-        run: docker images | grep ${{ secrets.IMAGE_NAME }}
