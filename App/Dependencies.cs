@@ -1,13 +1,8 @@
+﻿using System.Text.Json.Serialization;
 using App.Extensions;
-using App.HostedServices;
-using App.JsonConverters;
-using Application.Client.Discord;
-using Application.Configuration.Options;
-using Application.Service;
-using Database;
-using Microsoft.Extensions.Diagnostics.HealthChecks;
-using Presentation.Client.Discord;
-using Presentation.Service;
+using Application.Configuration;
+using Microsoft.AspNetCore.Authentication.JwtBearer;
+using Presentation;
 
 namespace App;
 
@@ -25,45 +20,82 @@ public static class Dependencies
             .AddEnvironmentVariables();
         builder.Services
             .AddControllers()
-            .AddJsonOptions(options =>
-        {
-            options.JsonSerializerOptions.Converters.Add(new UtcDateTimeConverter());
-        });
-        builder.Services
+            .AddApplicationPart(typeof(Program).Assembly)
+            .AddJsonOptions(o => o.JsonSerializerOptions.Converters.Add(new JsonStringEnumConverter()));
+        builder.Environment.ApplicationName = ApplicationConstants.Name;
+
+        // Utility 
+        builder
+            .ApplicationUseSerilog()
+            .Services
             .AddSingleton(TimeProvider.System)
-            .AddConfigurationOptions<DiscordWebhookOptions>(builder.Configuration);
-
-        // OpenApi
-        builder.Services
-            .AddOpenApi();
-
-        // Logging
-        builder.ApplicationUseSerilog();
-
-        // HealthChecks
-        builder.Services
-            .AddHealthChecks()
-            .AddCheck("self", () => HealthCheckResult.Healthy());
-
-        // Queue
-        builder.Services
-            .AddSingleReaderChannel<WebhookMessage>();
-
-        // HostedServices
-        builder.Services
-            .AddSingleton<DiscordWebhookQueueProcessor>()
-            .AddHostedService<DiscordWebhookQueueProcessor>();
+            .AddHttpContextAccessor();
         
-        // Database
-        builder.AddDatabase<DatabaseContext>();
+        // Auth
+        builder.RegisterAuthDependencies();
         
-        // Client
+        // Options
         builder.Services
-            .AddHttpClient<IDiscordWebhookMessageClient, DiscordWebhookMessageClient>()
-            .AddStandardResilienceHandler();
+            .AddConfigurationOptions<JwtOptions>(builder.Configuration)
+            .AddConfigurationOptions<CorsOptions>(builder.Configuration);
         
-        // Services
+        // CORS
+        var corsConfig = builder
+            .Configuration
+            .GetSection(CorsOptions.SectionName)
+            .Get<CorsOptions>() ?? throw new NullReferenceException("Cors options not found");
+        builder.Services.AddCors(options =>
+        {
+            options.AddDefaultPolicy(policy =>
+            {
+                var origins = corsConfig
+                    .AllowedDomains
+                    .Select(uri => uri.GetLeftPart(UriPartial.Authority).TrimEnd('/'))
+                    .ToArray();
+                policy
+                    .WithOrigins(origins)
+                    .AllowAnyHeader()
+                    .AllowAnyMethod()
+                    .AllowCredentials();
+            });
+        });
+        
+        // Add services to the container.
+        // Learn more about configuring OpenAPI at https://aka.ms/aspnet/openapi
+        builder.Services.AddOpenApi();
+    }
+    
+    private static void RegisterAuthDependencies(this WebApplicationBuilder builder)
+    {
+        var jwtOptions = builder.Configuration
+            .GetSection(JwtOptions.SectionName)
+            .Get<JwtOptions>() ?? throw new NullReferenceException($"Failed to get {nameof(JwtOptions)} during startup");
+        
         builder.Services
-            .AddScoped<ITodoService, TodoService>();
+            .AddAuthentication()
+            .AddJwtBearer("CookieScheme", options =>
+            {
+                var timeProvider = builder.Services.BuildServiceProvider()
+                    .GetService<TimeProvider>();
+            
+            // Configure JWT settings
+            options.TokenValidationParameters = TokenValidationParametersFactory
+                .AccessValidationParameters(jwtOptions, timeProvider);
+            
+            options.MapInboundClaims = false; // Important!
+
+            // Get token from cookie
+            options.Events = new JwtBearerEvents
+            {
+                OnMessageReceived = context =>
+                {
+                    context.Token = context.Request.Cookies[ApplicationConstants.AccessCookieName];
+                    return Task.CompletedTask;
+                },
+            };
+        });
+        
+        builder.Services
+            .AddAuthorization();
     }
 }

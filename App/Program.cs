@@ -1,6 +1,6 @@
-using System.Diagnostics;
 using App;
 using App.Extensions;
+using Scalar.AspNetCore;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -8,12 +8,25 @@ builder.RegisterTodoDependencies();
 
 var app = builder.Build();
 
-app.MapOpenApiAndScalar();
+// Configure the HTTP request pipeline.
+if (app.Environment.IsDevelopment())
+{
+    app.MapOpenApi();
+    app.MapScalarApiReference();
+}
 
-app.MapHealthChecks("health");
+app.UseGlobalExceptionHandler(app.Logger);
+
+app.UseCors();
+
+app.UseStaticFiles(StaticFileOptionsFactory.Create());
+
+app.MapFallbackToFile("index.html");
+
+app.UseAuthentication();
+
+app.UseAuthorization();
 
 app.MapControllers();
-
-app.LogStartup();
 
 app.Run();

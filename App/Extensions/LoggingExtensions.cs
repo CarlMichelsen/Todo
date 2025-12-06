@@ -1,4 +1,4 @@
-using Application.Configuration;
+﻿using Presentation;
 using Serilog;
 using Serilog.Enrichers.OpenTelemetry;
 
@@ -21,24 +21,6 @@ public static class LoggingExtensions
         });
 
         return builder;
-    }
-    
-    public static WebApplication LogStartup(this WebApplication app)
-    {
-        app.Lifetime.ApplicationStarted.Register(() =>
-        {
-            var logger = app.Services.GetRequiredService<ILogger<Program>>();
-            foreach (var address in app.Urls)
-            {
-                logger.LogInformation(
-                    "{ApplicationName} has started in {Mode} mode at {Address}",
-                    ApplicationConstants.Name,
-                    GetEnvironmentName(app.Environment),
-                    address);
-            }
-        });
-        
-        return app;
     }
     
     private static string GetEnvironmentName(IHostEnvironment environment) =>

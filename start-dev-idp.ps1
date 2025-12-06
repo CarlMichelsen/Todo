@@ -1,0 +1,1 @@
+dotnet run --project ../Identity/App/App.csproj

@@ -16,6 +16,11 @@ Database container start command:
 docker run -d --name postgres-db -e POSTGRES_USER=admin -e POSTGRES_PASSWORD=admin123 -e POSTGRES_DB=mydatabase -v C:/DockerVolumes/Database/postgres-data:/var/lib/postgresql/data -p 5432:5432 postgres:17
 ````
 
+Login Test uri
+```bash
+http://localhost:5220/api/v1/Auth/Login/Test?SuccessRedirectUrl=http%3A%2F%2Flocalhost%3A5035%2Fapi%2Fv1%2Ftest&ErrorRedirectUrl=http%3A%2F%2Flocalhost%3A5035%2Ferror
+```
+
 ## Entity framework commands
 
 ### install entity framework cli tool
