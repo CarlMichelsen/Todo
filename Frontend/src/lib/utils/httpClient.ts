@@ -17,10 +17,21 @@ export interface RequestOptions {
 }
 
 /**
+ * HTTP methods enum
+ */
+export enum HttpMethod {
+    GET = 'GET',
+    POST = 'POST',
+    PUT = 'PUT',
+    PATCH = 'PATCH',
+    DELETE = 'DELETE'
+}
+
+/**
  * Base HTTP client class for making REST API calls
  * Provides a centralized place for request handling, error management, and configuration
  */
-export class HttpClient {
+export abstract class HttpClient {
     private baseUrl: string;
     private defaultHeaders: Record<string, string>;
     private timeout: number;
@@ -33,6 +44,32 @@ export class HttpClient {
             'Content-Type': 'application/json',
             ...config?.headers
         };
+    }
+
+    /**
+     * Make HTTP request
+     */
+    protected async request<T, D = unknown>(
+        method: HttpMethod,
+        endpoint: string,
+        data?: D,
+        options?: RequestOptions
+    ): Promise<T | void> {
+        const url = this.buildUrl(endpoint);
+        const headers = this.mergeHeaders(options);
+
+        const response = await this.fetchWithTimeout(
+            url,
+            {
+                method,
+                headers,
+                body: data ? JSON.stringify(data) : undefined,
+                credentials: options?.credentials || 'include'
+            },
+            options?.timeout || this.timeout
+        );
+
+        return this.handleResponse<T>(response);
     }
 
     /**
@@ -104,7 +141,7 @@ export class HttpClient {
     /**
      * Handle response and parse JSON
      */
-    private async handleResponse<T>(response: Response): Promise<T> {
+    private async handleResponse<T>(response: Response): Promise<T | void> {
         if (!response.ok) {
             const errorText = await response.text();
             throw new Error(`HTTP ${response.status}: ${errorText || response.statusText}`);
@@ -112,7 +149,7 @@ export class HttpClient {
 
         // Handle empty responses (204 No Content)
         if (response.status === 204) {
-            return undefined as T;
+            return;
         }
 
         const contentType = response.headers.get('content-type');
@@ -121,135 +158,6 @@ export class HttpClient {
         }
 
         return response.text() as T;
-    }
-
-    /**
-     * GET request
-     */
-    async get<T>(endpoint: string, options?: RequestOptions): Promise<T> {
-        const url = this.buildUrl(endpoint);
-        const headers = this.mergeHeaders(options);
-
-        const response = await this.fetchWithTimeout(
-            url,
-            {
-                method: 'GET',
-                headers,
-                credentials: options?.credentials || 'include'
-            },
-            options?.timeout || this.timeout
-        );
-
-        return this.handleResponse<T>(response);
-    }
-
-    /**
-     * POST request
-     */
-    async post<T, D = unknown>(
-        endpoint: string,
-        data?: D,
-        options?: RequestOptions
-    ): Promise<T> {
-        const url = this.buildUrl(endpoint);
-        const headers = this.mergeHeaders(options);
-
-        const response = await this.fetchWithTimeout(
-            url,
-            {
-                method: 'POST',
-                headers,
-                body: data ? JSON.stringify(data) : undefined,
-                credentials: options?.credentials || 'include'
-            },
-            options?.timeout || this.timeout
-        );
-
-        return this.handleResponse<T>(response);
-    }
-
-    /**
-     * PUT request
-     */
-    async put<T, D = unknown>(
-        endpoint: string,
-        data?: D,
-        options?: RequestOptions
-    ): Promise<T> {
-        const url = this.buildUrl(endpoint);
-        const headers = this.mergeHeaders(options);
-
-        const response = await this.fetchWithTimeout(
-            url,
-            {
-                method: 'PUT',
-                headers,
-                body: data ? JSON.stringify(data) : undefined,
-                credentials: options?.credentials || 'include'
-            },
-            options?.timeout || this.timeout
-        );
-
-        return this.handleResponse<T>(response);
-    }
-
-    /**
-     * PATCH request
-     */
-    async patch<T, D = unknown>(
-        endpoint: string,
-        data?: D,
-        options?: RequestOptions
-    ): Promise<T> {
-        const url = this.buildUrl(endpoint);
-        const headers = this.mergeHeaders(options);
-
-        const response = await this.fetchWithTimeout(
-            url,
-            {
-                method: 'PATCH',
-                headers,
-                body: data ? JSON.stringify(data) : undefined,
-                credentials: options?.credentials || 'include'
-            },
-            options?.timeout || this.timeout
-        );
-
-        return this.handleResponse<T>(response);
-    }
-
-    /**
-     * DELETE request
-     */
-    async delete<T>(endpoint: string, options?: RequestOptions): Promise<T> {
-        const url = this.buildUrl(endpoint);
-        const headers = this.mergeHeaders(options);
-
-        const response = await this.fetchWithTimeout(
-            url,
-            {
-                method: 'DELETE',
-                headers,
-                credentials: options?.credentials || 'include'
-            },
-            options?.timeout || this.timeout
-        );
-
-        return this.handleResponse<T>(response);
-    }
-
-    /**
-     * Update default headers (useful for adding auth tokens)
-     */
-    setHeader(key: string, value: string): void {
-        this.defaultHeaders[key] = value;
-    }
-
-    /**
-     * Remove a default header
-     */
-    removeHeader(key: string): void {
-        delete this.defaultHeaders[key];
     }
 
     /**
