@@ -2,3 +2,9 @@
 
 /* Force enable dark mode variants for all utilities */
 @variant dark (&:where(.dark, .dark *));
+
+@layer base {
+	button {
+		cursor: pointer;
+	}
+}

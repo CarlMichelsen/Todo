@@ -2,11 +2,13 @@
 	import Router from 'svelte-spa-router';
 	import Header from '$lib/components/Header.svelte';
 	import Home from './routes/Home.svelte';
+	import Error from './routes/Error.svelte';
 	import NotFound from './routes/NotFound.svelte';
 
 	// Define routes using svelte-spa-router
 	const routes = {
 		'/': Home,
+		'/error': Error,
 		'*': NotFound
 	};
 </script>

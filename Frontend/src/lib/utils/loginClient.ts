@@ -16,8 +16,6 @@ export type AuthProvider = typeof AUTH_PROVIDERS[number];
  */
 export interface LoginOptions {
     provider: AuthProvider;
-    successRedirectUrl?: string;
-    errorRedirectUrl?: string;
 }
 
 /**
@@ -28,19 +26,19 @@ export class LoginClient extends AuthorizedHttpClient {
     /**
      * Redirect the user to the login page for the specified provider
      * This will navigate the browser to the OAuth login flow
+     * Success redirects to current URL, errors redirect to /#/error
      */
     login(options: LoginOptions): void {
         const baseUrl = this.getBaseUrlValue();
         const url = new URL(`${baseUrl}/api/v1/Auth/Login/${options.provider}`);
 
-        // Add optional query parameters
-        if (options.successRedirectUrl) {
-            url.searchParams.append('SuccessRedirectUrl', options.successRedirectUrl);
-        }
+        // Add redirect URLs based on current location
+        url.searchParams.append('SuccessRedirectUrl', window.location.href);
 
-        if (options.errorRedirectUrl) {
-            url.searchParams.append('ErrorRedirectUrl', options.errorRedirectUrl);
-        }
+        // Create error URL with hash-based routing
+        const errorUrl = new URL(window.location.href);
+        errorUrl.hash = '#/error';
+        url.searchParams.append('ErrorRedirectUrl', errorUrl.toString());
 
         // Redirect the browser
         window.location.href = url.toString();
