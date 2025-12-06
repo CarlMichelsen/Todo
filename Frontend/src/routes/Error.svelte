@@ -1,9 +1,9 @@
 <script lang="ts">
-	import { link, querystring } from 'svelte-spa-router';
+	import { Link } from 'svelte-routing';
 
-	// Parse the error query parameter
+	// Parse the error query parameter from URL
 	let errorMessage = $derived(() => {
-		const params = new URLSearchParams($querystring);
+		const params = new URLSearchParams(window.location.search);
 		return params.get('error') || 'An unexpected error occurred. Please try again.';
 	});
 </script>
@@ -16,11 +16,10 @@
 	<p class="text-xl mb-8 text-gray-600 dark:text-gray-400">
 		{errorMessage()}
 	</p>
-	<a
-		href="/"
-		use:link
+	<Link
+		to="/"
 		class="inline-block px-6 py-3 bg-orange-600 hover:bg-orange-700 dark:bg-orange-500 dark:hover:bg-orange-600 text-white rounded-lg font-medium transition-colors shadow-sm hover:shadow-md"
 	>
 		Go back home
-	</a>
+	</Link>
 </div>

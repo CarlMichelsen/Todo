@@ -1,21 +1,25 @@
 <script lang="ts">
-	import Router from 'svelte-spa-router';
+	import { onMount } from 'svelte';
+	import { Router, Route } from 'svelte-routing';
 	import Header from '$lib/components/Header.svelte';
 	import Home from './routes/Home.svelte';
 	import Error from './routes/Error.svelte';
 	import NotFound from './routes/NotFound.svelte';
+	import { userStore } from '$lib/stores/user';
 
-	// Define routes using svelte-spa-router
-	const routes = {
-		'/': Home,
-		'/error': Error,
-		'*': NotFound
-	};
+	// Initialize user authentication on app startup
+	onMount(async () => {
+		await userStore.initialize();
+	});
 </script>
 
 <div class="min-h-screen flex flex-col bg-white dark:bg-gray-900 text-gray-900 dark:text-gray-100 transition-colors">
 	<Header />
 	<main class="flex-1">
-		<Router {routes} />
+		<Router>
+			<Route path="/"><Home /></Route>
+			<Route path="/error"><Error /></Route>
+			<Route><NotFound /></Route>
+		</Router>
 	</main>
 </div>

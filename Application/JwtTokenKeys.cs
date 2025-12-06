@@ -35,12 +35,11 @@ public static class JwtTokenKeys
     
     public const string Audience = "aud";
 
-    public static JwtUser GetJwtUser(this HttpContext context)
+    public static JwtUser? GetJwtUser(this HttpContext context)
     {
         if (context.User.Identity?.IsAuthenticated != true)
         {
-            throw new UnauthorizedAccessException(
-                "No authenticated user found. JWT token must be validated before accessing claims.");
+            return null;
         }
 
         var user = context.User;

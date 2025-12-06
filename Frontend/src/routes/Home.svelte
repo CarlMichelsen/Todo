@@ -1,5 +1,5 @@
 <script lang="ts">
-	import { link } from 'svelte-spa-router';
+	import { Link } from 'svelte-routing';
 
 	// Example of Svelte 5 runes usage
 	let count = $state(0);
@@ -39,11 +39,10 @@
 			This is the home page. Client-side routing is working!
 		</p>
 		<p class="text-yellow-900 dark:text-purple-100">
-			Try navigating to <a
-				href="/some-route"
-				use:link
+			Try navigating to <Link
+				to="/some-route"
 				class="text-orange-600 dark:text-orange-300 underline hover:text-orange-700 dark:hover:text-orange-200 font-bold"
-			>/some-route</a> to see the 404 page.
+			>/some-route</Link> to see the 404 page.
 		</p>
 	</nav>
 </div>

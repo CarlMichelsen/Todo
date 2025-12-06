@@ -85,7 +85,7 @@ export abstract class HttpClient {
 
         if (isDev) {
             // Use environment variable or default dev URL
-            return import.meta.env.VITE_API_URL || 'http://localhost:5220';
+            return import.meta.env.VITE_API_URL || 'http://localhost:5035';
         }
 
         // In production, use the same host as the frontend

@@ -28,7 +28,8 @@ public static class Dependencies
         builder
             .ApplicationUseSerilog()
             .Services
-            .AddSingleton(TimeProvider.System);
+            .AddSingleton(TimeProvider.System)
+            .AddHttpContextAccessor();
         
         // Auth
         builder.RegisterAuthDependencies();

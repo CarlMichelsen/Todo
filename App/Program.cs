@@ -1,6 +1,6 @@
 using App;
 using App.Extensions;
-using Application;
+using Scalar.AspNetCore;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -12,6 +12,7 @@ var app = builder.Build();
 if (app.Environment.IsDevelopment())
 {
     app.MapOpenApi();
+    app.MapScalarApiReference();
 }
 
 app.UseGlobalExceptionHandler(app.Logger);
@@ -26,27 +27,6 @@ app.UseAuthentication();
 
 app.UseAuthorization();
 
-app.Use(async (context, next) =>
-{
-    var logger = context
-        .RequestServices
-        .GetRequiredService<ILogger<Program>>();
-    try
-    {
-        var jwtUser = context.GetJwtUser();
-        logger.LogInformation(
-            "'{Username}' - {UserId}",
-            jwtUser.Username,
-            jwtUser.UserId);
-    }
-    catch (Exception e)
-    {
-        logger.LogInformation(
-            e,
-            "Unable to authenticate user");
-    }
-    
-    await next(context);
-});
+app.MapControllers();
 
 app.Run();

@@ -26,18 +26,19 @@ export class LoginClient extends AuthorizedHttpClient {
     /**
      * Redirect the user to the login page for the specified provider
      * This will navigate the browser to the OAuth login flow
-     * Success redirects to current URL, errors redirect to /#/error
+     * Success redirects to current URL, errors redirect to /error
      */
     login(options: LoginOptions): void {
-        const baseUrl = this.getBaseUrlValue();
+        const baseUrl = this.getAuthBaseUrl();
         const url = new URL(`${baseUrl}/api/v1/Auth/Login/${options.provider}`);
 
         // Add redirect URLs based on current location
         url.searchParams.append('SuccessRedirectUrl', window.location.href);
 
-        // Create error URL with hash-based routing
+        // Create error URL with pathname-based routing (HTML5 history mode)
         const errorUrl = new URL(window.location.href);
-        errorUrl.hash = '#/error';
+        errorUrl.pathname = '/error';
+        errorUrl.hash = '';
         url.searchParams.append('ErrorRedirectUrl', errorUrl.toString());
 
         // Redirect the browser
@@ -58,18 +59,5 @@ export class LoginClient extends AuthorizedHttpClient {
 
         // Exclude 'Test' provider in production
         return AUTH_PROVIDERS.filter(provider => provider !== 'Test');
-    }
-
-    /**
-     * Logout the current user
-     * Calls the logout endpoint and optionally redirects
-     */
-    async logout(redirectUrl?: string): Promise<void> {
-        await this.request<void>(HttpMethod.DELETE, '/api/v1/Auth/Logout');
-
-        // Redirect after successful logout
-        if (redirectUrl) {
-            window.location.href = redirectUrl;
-        }
     }
 }

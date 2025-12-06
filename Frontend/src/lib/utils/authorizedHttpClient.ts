@@ -5,27 +5,27 @@ import { ApiConfig, HttpClient, HttpMethod, type RequestOptions } from './httpCl
  * Extends HttpClient to handle authentication token refresh automatically
  */
 export abstract class AuthorizedHttpClient extends HttpClient {
-    private refreshUrl: string;
+    private authBaseUrl: string;
 
     constructor(config?: Partial<ApiConfig>) {
         super(config);
-        this.refreshUrl = this.getRefreshUrl();
+        this.authBaseUrl = this.getAuthBaseUrl();
     }
 
     /**
      * Determine the refresh endpoint URL based on environment
      */
-    private getRefreshUrl(): string {
+    protected getAuthBaseUrl(): string {
         // Check if we're in development mode
         const isDev = import.meta.env.DEV;
 
         if (isDev) {
             // Use development URL
-            return 'http://localhost:5220/api/v1/Auth/Refresh';
+            return 'http://localhost:5220';
         }
 
         // In production
-        return 'https://identity.survivethething.com/api/v1/Auth/Refresh';
+        return 'https://identity.survivethething.com';
     }
 
     /**
@@ -68,8 +68,23 @@ export abstract class AuthorizedHttpClient extends HttpClient {
      * Refresh the authentication token by calling the refresh endpoint
      */
     private async refreshToken(): Promise<void> {
-        const response = await fetch(this.refreshUrl, {
+        const response = await fetch(this.authBaseUrl + "/api/v1/Auth/Refresh", {
             method: 'GET',
+            credentials: 'include', // Include httponly cookies
+        });
+
+        if (!response.ok) {
+            throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+        }
+    }
+
+    /**
+     * Logout the current user
+     * Calls the logout endpoint to invalidate the session
+     */
+    async logout(): Promise<void> {
+        const response = await fetch(this.authBaseUrl + "/api/v1/Auth/Logout", {
+            method: 'DELETE',
             credentials: 'include', // Include httponly cookies
         });
 
