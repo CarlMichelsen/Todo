@@ -47,7 +47,6 @@ jobs:
         with:
           context: .
           push: false
-          tags: ${{ secrets.DOCKER_REGISTRY }}/${{ secrets.IMAGE_NAME }}:latest
           load: true
           cache-from: type=gha
           cache-to: type=gha,mode=max
