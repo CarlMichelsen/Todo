@@ -1,5 +1,4 @@
 import { AuthorizedHttpClient } from './authorizedHttpClient';
-import { HttpMethod } from './httpClient';
 
 /**
  * All supported authentication providers

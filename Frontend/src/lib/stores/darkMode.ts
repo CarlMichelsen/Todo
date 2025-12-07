@@ -40,10 +40,8 @@ darkMode.subscribe((isDark) => {
     if (isDark) {
         document.documentElement.classList.add('dark');
         localStorage.setItem('darkMode', 'true');
-        console.log('dark');
     } else {
         document.documentElement.classList.remove('dark');
         localStorage.setItem('darkMode', 'false');
-        console.log('light');
     }
 });
