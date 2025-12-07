@@ -59,6 +59,7 @@ To create a new modal type, create a new component that wraps the base Modal:
 ### Examples
 
 #### ConfirmModal
+
 Confirmation dialogs with confirm/cancel actions.
 
 ```svelte
@@ -73,6 +74,7 @@ Confirmation dialogs with confirm/cancel actions.
 ```
 
 #### AlertModal
+
 Simple alert messages with a single OK button.
 
 ```svelte
@@ -86,6 +88,7 @@ Simple alert messages with a single OK button.
 ```
 
 #### FormModal
+
 Forms with submit/cancel actions and custom form content.
 
 ```svelte
@@ -118,16 +121,16 @@ Forms with submit/cancel actions and custom form content.
 
 ## Base Modal Props
 
-| Prop | Type | Default | Description |
-|------|------|---------|-------------|
-| `isOpen` | `boolean` | `false` | Controls modal visibility (bindable) |
-| `size` | `'sm' \| 'md' \| 'lg' \| 'full'` | `'md'` | Modal size |
-| `showClose` | `boolean` | `true` | Show/hide the X close button |
-| `closeOnBackdrop` | `boolean` | `true` | Allow closing by clicking backdrop |
-| `onClose` | `() => void` | `undefined` | Callback when modal closes |
-| `header` | `Snippet` | `undefined` | Header content snippet |
-| `content` | `Snippet` | required | Main content snippet |
-| `footer` | `Snippet` | `undefined` | Footer content snippet |
+| Prop              | Type                             | Default     | Description                          |
+| ----------------- | -------------------------------- | ----------- | ------------------------------------ |
+| `isOpen`          | `boolean`                        | `false`     | Controls modal visibility (bindable) |
+| `size`            | `'sm' \| 'md' \| 'lg' \| 'full'` | `'md'`      | Modal size                           |
+| `showClose`       | `boolean`                        | `true`      | Show/hide the X close button         |
+| `closeOnBackdrop` | `boolean`                        | `true`      | Allow closing by clicking backdrop   |
+| `onClose`         | `() => void`                     | `undefined` | Callback when modal closes           |
+| `header`          | `Snippet`                        | `undefined` | Header content snippet               |
+| `content`         | `Snippet`                        | required    | Main content snippet                 |
+| `footer`          | `Snippet`                        | `undefined` | Footer content snippet               |
 
 ## Modal Sizes
 
@@ -156,6 +159,7 @@ Forms with submit/cancel actions and custom form content.
 ## Styling
 
 All styling is done with Tailwind CSS utility classes. No custom CSS is used. This makes it easy to:
+
 - Customize colors and spacing
 - Maintain consistent design system
 - Support dark mode seamlessly

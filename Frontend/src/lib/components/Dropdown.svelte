@@ -30,6 +30,14 @@
 		}
 	}
 
+	function handleContentClick(event: MouseEvent) {
+		// Close dropdown when clicking on buttons or interactive elements inside
+		const target = event.target as HTMLElement;
+		if (target.tagName === 'BUTTON' || target.closest('button')) {
+			isOpen = false;
+		}
+	}
+
 	$effect(() => {
 		if (isOpen) {
 			// Use requestAnimationFrame for better timing control than setTimeout
@@ -54,6 +62,7 @@
 	<!-- Dropdown Content -->
 	{#if isOpen}
 		<div
+			onclick={handleContentClick}
 			class="absolute top-full mt-2 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg shadow-lg overflow-hidden min-w-[160px] z-50"
 			class:right-0={align === 'right'}
 			class:left-0={align === 'left'}
