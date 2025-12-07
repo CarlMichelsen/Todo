@@ -1,6 +1,7 @@
 <script lang="ts">
 	import { userStore } from '$lib/stores/user';
 	import { navigate } from 'svelte-routing';
+	import Card from '$lib/components/Card.svelte';
 
 	// Redirect to home if not authenticated
 	// Effect runs on mount and whenever userStore changes
@@ -24,7 +25,7 @@
 		</h1>
 
 		<!-- Profile Image Section -->
-		<div class="bg-white dark:bg-gray-800 rounded-lg shadow-lg p-6 mb-6 border border-gray-200 dark:border-gray-700">
+		<Card class="mb-6">
 			<div class="flex items-center gap-6">
 				<img
 					src={$userStore.user.profileLarge || $userStore.user.profileMedium || $userStore.user.profile}
@@ -40,10 +41,10 @@
 					</p>
 				</div>
 			</div>
-		</div>
+		</Card>
 
 		<!-- Personal Information -->
-		<div class="bg-white dark:bg-gray-800 rounded-lg shadow-lg p-6 mb-6 border border-gray-200 dark:border-gray-700">
+		<Card class="mb-6">
 			<h3 class="text-2xl font-semibold text-gray-900 dark:text-gray-100 mb-4 border-b border-gray-200 dark:border-gray-700 pb-2">
 				Personal Information
 			</h3>
@@ -67,10 +68,10 @@
 					</p>
 				</div>
 			</div>
-		</div>
+		</Card>
 
 		<!-- Authentication Information -->
-		<div class="bg-white dark:bg-gray-800 rounded-lg shadow-lg p-6 mb-6 border border-gray-200 dark:border-gray-700">
+		<Card class="mb-6">
 			<h3 class="text-2xl font-semibold text-gray-900 dark:text-gray-100 mb-4 border-b border-gray-200 dark:border-gray-700 pb-2">
 				Authentication Information
 			</h3>
@@ -84,10 +85,10 @@
 					<p class="text-base text-gray-900 dark:text-gray-100 font-mono break-all">{$userStore.user.authenticationProviderId}</p>
 				</div>
 			</div>
-		</div>
+		</Card>
 
 		<!-- Token Information -->
-		<div class="bg-white dark:bg-gray-800 rounded-lg shadow-lg p-6 mb-6 border border-gray-200 dark:border-gray-700">
+		<Card class="mb-6">
 			<h3 class="text-2xl font-semibold text-gray-900 dark:text-gray-100 mb-4 border-b border-gray-200 dark:border-gray-700 pb-2">
 				Token Information
 			</h3>
@@ -113,7 +114,7 @@
 					<p class="text-base text-gray-900 dark:text-gray-100 break-all">{$userStore.user.audience}</p>
 				</div>
 			</div>
-		</div>
+		</Card>
 	</div>
 {:else}
 	<div class="max-w-4xl mx-auto px-4 py-8">

@@ -36,7 +36,7 @@
 
 <div class="max-w-4xl mx-auto px-4 py-8">
 	<h1 class="text-5xl font-bold text-orange-600 dark:text-orange-400 mb-8">
-		Welcome to Todo App
+		Welcome to Todo
 	</h1>
 	
 	<!-- Make this card VERY different in light vs dark -->

@@ -18,7 +18,7 @@
 			<!-- Logo/Title -->
 			<button onclick={goToHome} class="flex items-center hover:opacity-80 transition-opacity">
 				<h1 class="text-xl font-bold text-orange-600 dark:text-orange-400">
-					Todo App
+					Todo
 				</h1>
 			</button>
 
