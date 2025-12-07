@@ -1,0 +1,12 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(tree:*)",
+      "Bash(bun run check:*)",
+      "Bash(bun run lint:*)",
+      "Bash(prettier --check:*)"
+    ],
+    "deny": [],
+    "ask": []
+  }
+}

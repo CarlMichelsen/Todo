@@ -1,9 +1,14 @@
 <script lang="ts">
 	import { darkMode } from '$lib/stores/darkMode';
-	import LoginButton from './LoginButton.svelte';
+	import { navigate } from 'svelte-routing';
+	import Profile from './Profile.svelte';
 
 	function toggleDarkMode() {
 		darkMode.update((value: boolean) => !value);
+	}
+
+	function goToHome() {
+		navigate('/');
 	}
 </script>
 
@@ -11,13 +16,13 @@
 	<div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
 		<div class="flex justify-between items-center h-14">
 			<!-- Logo/Title -->
-			<div class="flex items-center">
+			<button onclick={goToHome} class="flex items-center hover:opacity-80 transition-opacity">
 				<h1 class="text-xl font-bold text-orange-600 dark:text-orange-400">
 					Todo App
 				</h1>
-			</div>
+			</button>
 
-			<!-- Right side: Dark mode toggle + Login button -->
+			<!-- Right side: Dark mode toggle + Profile -->
 			<div class="flex items-center gap-3">
 				<!-- Dark Mode Toggle -->
 				<button
@@ -29,8 +34,8 @@
 					{$darkMode ? '☀️' : '🌙'}
 				</button>
 
-				<!-- Login Button -->
-				<LoginButton />
+				<!-- Profile -->
+				<Profile />
 			</div>
 		</div>
 	</div>

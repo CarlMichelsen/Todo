@@ -2,10 +2,10 @@
 	import { Link } from 'svelte-routing';
 
 	// Parse the error query parameter from URL
-	let errorMessage = $derived(() => {
-		const params = new URLSearchParams(window.location.search);
-		return params.get('error') || 'An unexpected error occurred. Please try again.';
-	});
+	let errorMessage = $derived(
+		new URLSearchParams(window.location.search).get('error') ||
+		'An unexpected error occurred. Please try again.'
+	);
 </script>
 
 <div class="max-w-2xl mx-auto px-4 py-16 text-center">
@@ -14,7 +14,7 @@
 	</h1>
 	<h2 class="text-3xl font-semibold mb-4">Something went wrong</h2>
 	<p class="text-xl mb-8 text-gray-600 dark:text-gray-400">
-		{errorMessage()}
+		{errorMessage}
 	</p>
 	<Link
 		to="/"

@@ -3,6 +3,7 @@
 	import { Router, Route } from 'svelte-routing';
 	import Header from '$lib/components/Header.svelte';
 	import Home from './routes/Home.svelte';
+	import ProfilePage from './routes/ProfilePage.svelte';
 	import Error from './routes/Error.svelte';
 	import NotFound from './routes/NotFound.svelte';
 	import { userStore } from '$lib/stores/user';
@@ -18,6 +19,7 @@
 	<main class="flex-1">
 		<Router>
 			<Route path="/"><Home /></Route>
+			<Route path="/profile"><ProfilePage /></Route>
 			<Route path="/error"><Error /></Route>
 			<Route><NotFound /></Route>
 		</Router>
