@@ -51,3 +51,13 @@ export interface CalendarState {
 	/** The currently selected date, or null if none selected */
 	selectedDate: Date | null;
 }
+
+/**
+ * Layout information for rendering an event with overlap handling
+ */
+export interface EventLayout {
+	/** Which column this event occupies (0-indexed) */
+	columnIndex: number;
+	/** Total number of columns in this overlap group */
+	totalColumns: number;
+}

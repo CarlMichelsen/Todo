@@ -1,5 +1,5 @@
 <script lang="ts">
-	import type { CalendarEvent } from '$lib/types/calendar';
+	import type { CalendarEvent, EventLayout } from '$lib/types/calendar';
 
 	interface Props {
 		event: CalendarEvent;
@@ -8,12 +8,16 @@
 		 */
 		currentDate: string;
 		/**
+		 * Layout information for handling overlaps (optional for backwards compatibility)
+		 */
+		layout?: EventLayout;
+		/**
 		 * Callback when event is clicked
 		 */
 		onclick?: (event: CalendarEvent) => void;
 	}
 
-	let { event, currentDate, onclick }: Props = $props();
+	let { event, currentDate, layout, onclick }: Props = $props();
 
 	// Convert HH:MM time string to pixels from top
 	function timeToPixels(time: string): number {
@@ -38,14 +42,31 @@
 
 	// Default color if none provided
 	const backgroundColor = $derived(event.color || '#ea580c');
+
+	// Calculate horizontal positioning based on layout
+	const leftOffset = $derived.by(() => {
+		if (!layout || layout.totalColumns === 1) {
+			return '0.25rem'; // Same as left-1 (4px)
+		}
+		const percentage = (layout.columnIndex / layout.totalColumns) * 100;
+		return `calc(${percentage}% + 0.25rem)`;
+	});
+
+	const width = $derived.by(() => {
+		if (!layout || layout.totalColumns === 1) {
+			return 'calc(100% - 0.5rem)'; // Same as left-1 right-1 (minus 8px total)
+		}
+		const percentage = (100 / layout.totalColumns) - 1; // Subtract 1% for gap
+		return `${percentage}%`;
+	});
 </script>
 
 <div
-	class="absolute left-1 right-1 px-2 py-1 overflow-hidden transition-transform hover:scale-x-[1.02] hover:z-10 cursor-pointer shadow-sm"
+	class="absolute px-2 py-1 overflow-hidden transition-transform hover:scale-x-[1.02] hover:z-10 cursor-pointer shadow-sm"
 	class:rounded={!isMultiDay}
 	class:rounded-t={isMultiDay && !startsBeforeToday}
 	class:rounded-b={isMultiDay && !endsAfterToday}
-	style="top: {topPosition}px; height: {height}px; background-color: {backgroundColor};"
+	style="top: {topPosition}px; height: {height}px; left: {leftOffset}; width: {width}; background-color: {backgroundColor};"
 	onclick={() => onclick?.(event)}
 	role="button"
 	tabindex="0"

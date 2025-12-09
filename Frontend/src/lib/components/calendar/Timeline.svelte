@@ -1,6 +1,7 @@
 <script lang="ts">
 	import type { CalendarEvent } from '$lib/types/calendar';
 	import TimeSpanEvent from './TimeSpanEvent.svelte';
+	import { calculateEventLayout } from '$lib/utils/calendarUtils';
 
 	interface Props {
 		date: Date;
@@ -23,6 +24,9 @@
 
 	// Current date as YYYY-MM-DD string for TimeSpanEvent
 	const currentDateStr = $derived(date.toISOString().split('T')[0]);
+
+	// Calculate layout for overlapping events
+	const eventLayout = $derived(calculateEventLayout(events));
 </script>
 
 <div class="relative h-full flex text-xs">
@@ -58,7 +62,7 @@
 		<!-- Events layer -->
 		<div class="absolute inset-0">
 			{#each events as event (event.id)}
-				<TimeSpanEvent {event} currentDate={currentDateStr} onclick={onEventClick} />
+				<TimeSpanEvent {event} currentDate={currentDateStr} layout={eventLayout.get(event.id)} onclick={onEventClick} />
 			{/each}
 		</div>
 	</div>
