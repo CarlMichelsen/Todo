@@ -1,10 +1,39 @@
 <!doctype html>
-<html lang="en">
+<html lang="en" class="dark">
 	<head>
 		<meta charset="UTF-8" />
 		<link rel="icon" type="image/svg+xml" href="/favicon.svg" />
 		<meta name="viewport" content="width=device-width, initial-scale=1.0" />
 		<title>Todo</title>
+		<style>
+			/* Default light mode */
+			html,
+			body {
+				background-color: #ffffff;
+				margin: 0;
+				padding: 0;
+			}
+
+			/* Dark mode using system preference */
+			@media (prefers-color-scheme: dark) {
+				html,
+				body {
+					background-color: #111827;
+				}
+			}
+
+			/* Dark mode using class (overrides media query) */
+			html.dark,
+			html.dark body {
+				background-color: #111827;
+			}
+
+			/* Light mode using class (overrides media query) */
+			html:not(.dark),
+			html:not(.dark) body {
+				background-color: #ffffff;
+			}
+		</style>
 	</head>
 	<body>
 		<div id="app"></div>

@@ -1,50 +1,43 @@
 <script lang="ts">
 	import Card from '$lib/components/Card.svelte';
-	import type { CalendarDay } from '$lib/types/calendar';
+	import Timeline from './Timeline.svelte';
+	import type { CalendarDay, CalendarEvent } from '$lib/types/calendar';
 
 	interface Props {
 		day: CalendarDay;
-		onclick?: (date: Date) => void;
+		/**
+		 * Callback when an event is clicked
+		 */
+		onEventClick?: (event: CalendarEvent) => void;
 	}
 
-	let { day, onclick }: Props = $props();
-
-	function handleClick() {
-		if (onclick) {
-			onclick(day.date);
-		}
-	}
+	let { day, onEventClick }: Props = $props();
 
 	// Build custom classes for today indicator
 	let customClasses = $derived(
 		day.isToday
-			? 'border-l-4 border-l-orange-600 dark:border-l-orange-400 min-h-[240px] h-full'
-			: 'min-h-[240px] h-full'
+			? 'border-l-4 border-l-orange-600 dark:border-l-orange-400 h-[960px]'
+			: 'h-[960px]'
 	);
 </script>
 
-<button
-	onclick={handleClick}
-	class="w-full h-full hover:brightness-95 dark:hover:brightness-110 transition-all cursor-pointer"
->
-	<Card variant={day.isWeekend ? 'blue' : 'default'} class={customClasses}>
-		<div class="flex flex-col h-full">
-			<!-- Day header -->
-			<div class="flex items-center justify-between mb-3">
-				<div class="text-sm font-semibold uppercase text-gray-600 dark:text-gray-400">
-					{day.dayOfWeek}
-				</div>
-				<div class="text-2xl font-bold">
-					<span class={day.isToday ? 'text-orange-600 dark:text-orange-400' : ''}>
-						{day.dayOfMonth}
-					</span>
-				</div>
+<Card variant={day.isWeekend ? 'blue' : 'default'} class={customClasses} padding={false}>
+	<div class="flex flex-col h-full px-2">
+		<!-- Day header -->
+		<div class="flex items-center justify-between mb-2">
+			<div class="text-sm font-semibold uppercase text-gray-600 dark:text-gray-400">
+				{day.dayOfWeek}
 			</div>
-
-			<!-- Events container -->
-			<div class="flex-1 space-y-1 overflow-y-auto">
-				<!-- Future: Events will be rendered here -->
+			<div class="text-2xl font-bold">
+				<span class={day.isToday ? 'text-orange-600 dark:text-orange-400' : ''}>
+					{day.dayOfMonth}
+				</span>
 			</div>
 		</div>
-	</Card>
-</button>
+
+		<!-- Timeline with events -->
+		<div class="flex-1 overflow-hidden">
+			<Timeline date={day.date} events={day.events} onEventClick={onEventClick} />
+		</div>
+	</div>
+</Card>

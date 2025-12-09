@@ -4,12 +4,14 @@
 	interface Props {
 		variant?: 'default' | 'blue' | 'yellow' | 'purple';
 		class?: string;
+		padding?: boolean;
 		children: Snippet;
 	}
 
 	let {
 		variant = 'default',
 		class: className = '',
+		padding = true,
 		children
 	}: Props = $props();
 
@@ -20,7 +22,7 @@
 		purple: 'bg-purple-100 dark:bg-purple-900 border border-purple-300 dark:border-purple-600 shadow-lg'
 	};
 
-	const baseClasses = 'rounded-lg p-6';
+	const baseClasses = padding ? 'rounded-lg p-6' : 'rounded-lg';
 	const fullClasses = `${baseClasses} ${variantClasses[variant]} ${className}`;
 </script>
 

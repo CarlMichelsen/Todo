@@ -3,6 +3,28 @@
  */
 
 /**
+ * Represents a calendar event that can span one or more days
+ */
+export interface CalendarEvent {
+	/** Unique identifier for the event */
+	id: string;
+	/** Event title */
+	title: string;
+	/** Optional event description */
+	description?: string;
+	/** Start date in ISO format (YYYY-MM-DD) */
+	startDate: string;
+	/** End date in ISO format (YYYY-MM-DD) */
+	endDate: string;
+	/** Start time in HH:MM format (e.g., "09:30") */
+	startTime: string;
+	/** End time in HH:MM format (e.g., "10:30") */
+	endTime: string;
+	/** Optional hex color for event bar (default: orange #ea580c) */
+	color?: string;
+}
+
+/**
  * Represents a calendar day with metadata
  */
 export interface CalendarDay {
@@ -16,6 +38,8 @@ export interface CalendarDay {
 	dayOfMonth: number;
 	/** Short day name ("Sun", "Mon", etc.) */
 	dayOfWeek: string;
+	/** Events scheduled for this day */
+	events: CalendarEvent[];
 }
 
 /**
@@ -26,4 +50,14 @@ export interface CalendarState {
 	currentWeekStart: Date;
 	/** The currently selected date, or null if none selected */
 	selectedDate: Date | null;
+}
+
+/**
+ * Layout information for rendering an event with overlap handling
+ */
+export interface EventLayout {
+	/** Which column this event occupies (0-indexed) */
+	columnIndex: number;
+	/** Total number of columns in this overlap group */
+	totalColumns: number;
 }

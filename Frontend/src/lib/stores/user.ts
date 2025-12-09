@@ -5,12 +5,11 @@ import { UserClient } from '$lib/utils/userClient';
 /**
  * User store state type
  * - 'pending': Initial state, auth check not yet started or completed
- * - 'loading': Actively loading user data
  * - 'authenticated': User is logged in
  * - 'unauthenticated': User is not logged in (normal state)
  * - 'error': Failed to check authentication (network error, etc.)
  */
-type UserStoreState = 'pending' | 'loading' | 'authenticated' | 'unauthenticated' | 'error';
+type UserStoreState = 'pending' | 'authenticated' | 'unauthenticated' | 'error';
 
 /**
  * User store state
@@ -41,7 +40,7 @@ function createUserStore() {
          * This should be called when the application starts
          */
         async initialize(): Promise<void> {
-            update(state => ({ ...state, state: 'loading', error: null }));
+            update(state => ({ ...state, state: 'pending', error: null }));
 
             try {
                 const user = await userClient.getCurrentUser();
@@ -53,10 +52,7 @@ function createUserStore() {
                     set({ user: null, state: 'unauthenticated', error: null });
                 }
             } catch (error) {
-                // Only actual errors (network issues, 500s, etc.) reach here
-                const errorMessage = error instanceof Error ? error.message : 'Failed to fetch user';
-                console.error('User authentication check failed:', errorMessage);
-                set({ user: null, state: 'error', error: errorMessage });
+                set({ user: null, state: 'unauthenticated', error: null });
             }
         },
 
@@ -70,16 +66,22 @@ function createUserStore() {
         /**
          * Clear the user data (logout)
          */
-        clearUser(): void {
-            set({ user: null, state: 'unauthenticated', error: null });
+        async logoutUser(): Promise<void> {
+            try {
+                await userClient.logout();
+                set({ user: null, state: 'unauthenticated', error: null });
+            }
+            catch(error) {
+                const errorMessage = error instanceof Error ? error.message : 'Failed to fetch user';
+                console.error('User authentication check failed:', errorMessage);
+                set({ user: null, state: 'error', error: errorMessage });
+            }
         },
 
         /**
          * Refresh user data from the API
          */
         async refresh(): Promise<void> {
-            update(state => ({ ...state, state: 'loading' }));
-
             try {
                 const user = await userClient.getCurrentUser();
 
@@ -89,10 +91,7 @@ function createUserStore() {
                     update(state => ({ ...state, user: null, state: 'unauthenticated', error: null }));
                 }
             } catch (error) {
-                // Only actual errors (network issues, 500s, etc.) reach here
-                const errorMessage = error instanceof Error ? error.message : 'Failed to refresh user';
-                console.error('User refresh failed:', errorMessage);
-                update(state => ({ ...state, user: null, state: 'error', error: errorMessage }));
+                set({ user: null, state: 'unauthenticated', error: null });
             }
         }
     };
