@@ -43,6 +43,30 @@
 	// Default color if none provided
 	const backgroundColor = $derived(event.color || '#ea580c');
 
+	// Format dates for display (e.g., "Jan 14-16" or "Jan 30 - Feb 2")
+	const displayDateRange = $derived.by(() => {
+		if (!isMultiDay) return null;
+
+		const startDateObj = new Date(event.startDate);
+		const endDateObj = new Date(event.endDate);
+
+		const monthNames = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun',
+		                    'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+
+		const startMonth = monthNames[startDateObj.getMonth()];
+		const startDay = startDateObj.getDate();
+		const endMonth = monthNames[endDateObj.getMonth()];
+		const endDay = endDateObj.getDate();
+
+		if (startMonth === endMonth) {
+			// Same month: "Jan 14-16"
+			return `${startMonth} ${startDay}-${endDay}`;
+		} else {
+			// Different months: "Jan 30 - Feb 2"
+			return `${startMonth} ${startDay} - ${endMonth} ${endDay}`;
+		}
+	});
+
 	// Calculate horizontal positioning based on layout
 	const leftOffset = $derived.by(() => {
 		if (!layout || layout.totalColumns === 1) {
@@ -89,7 +113,11 @@
 	</div>
 	{#if height > 30}
 		<div class="text-xs text-white/90">
-			{displayStartTime} - {displayEndTime}
+			{#if isMultiDay}
+				{displayDateRange}
+			{:else}
+				{displayStartTime} - {displayEndTime}
+			{/if}
 		</div>
 	{/if}
 
