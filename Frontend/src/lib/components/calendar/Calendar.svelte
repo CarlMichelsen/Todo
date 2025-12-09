@@ -1,8 +1,10 @@
 <script lang="ts">
 	import CalendarHeader from './CalendarHeader.svelte';
 	import CalendarGrid from './CalendarGrid.svelte';
+	import EventModal from './EventModal.svelte';
 	import { getWeekStart, getWeekDates, addWeeks } from '$lib/utils/calendarUtils';
 	import { eventsStore } from '$lib/stores/events';
+	import type { CalendarEvent } from '$lib/types/calendar';
 
 	// State management
 	let currentWeekStart = $state(getWeekStart(new Date()));
@@ -12,6 +14,10 @@
 
 	// Mobile: track which day of the week to display (0=Monday, 6=Sunday)
 	let currentDayIndex = $state(0);
+
+	// Modal state
+	let isEventModalOpen = $state(false);
+	let editingEvent = $state<CalendarEvent | undefined>(undefined);
 
 	// Derived state
 	let weekDates = $derived(getWeekDates(currentWeekStart));
@@ -133,6 +139,24 @@
 		const dayOfWeek = today.getDay();
 		currentDayIndex = dayOfWeek === 0 ? 6 : dayOfWeek - 1;
 	}
+
+	function handleEventClick(event: CalendarEvent) {
+		editingEvent = event;
+		isEventModalOpen = true;
+	}
+
+	function handleAddEvent() {
+		editingEvent = undefined; // Clear editing event for create mode
+		isEventModalOpen = true;
+	}
+
+	// Get initial date for the modal based on current view
+	let initialDate = $derived(() => {
+		if (isMobile) {
+			return weekDates[currentDayIndex].toISOString().split('T')[0];
+		}
+		return new Date().toISOString().split('T')[0];
+	});
 </script>
 
 <div class="w-full h-full flex flex-col">
@@ -149,11 +173,16 @@
 		onPreviousDay={handlePreviousDay}
 		onNextDay={handleNextDay}
 		onToday={handleToday}
+		onAddEvent={handleAddEvent}
 	/>
 
 	<CalendarGrid
 		weekDates={weekDates}
 		isMobile={isMobile}
 		currentDayIndex={currentDayIndex}
+		onEventClick={handleEventClick}
 	/>
+
+	<!-- Event Modal -->
+	<EventModal bind:isOpen={isEventModalOpen} event={editingEvent} initialDate={initialDate()} />
 </div>

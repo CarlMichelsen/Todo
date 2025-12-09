@@ -3,9 +3,13 @@
 
 	interface Props {
 		event: CalendarEvent;
+		/**
+		 * Callback when event is clicked
+		 */
+		onclick?: (event: CalendarEvent) => void;
 	}
 
-	let { event }: Props = $props();
+	let { event, onclick }: Props = $props();
 
 	// Convert HH:MM time string to pixels from top
 	function timeToPixels(time: string): number {
@@ -24,8 +28,17 @@
 </script>
 
 <div
-	class="absolute left-1 right-1 rounded px-2 py-1 overflow-hidden transition-transform hover:scale-[1.02] hover:z-10 cursor-pointer shadow-sm"
+	class="absolute left-1 right-1 rounded px-2 py-1 overflow-hidden transition-transform hover:scale-x-[1.02] hover:z-10 cursor-pointer shadow-sm"
 	style="top: {topPosition}px; height: {height}px; background-color: {backgroundColor};"
+	onclick={() => onclick?.(event)}
+	role="button"
+	tabindex="0"
+	onkeydown={(e) => {
+		if (e.key === 'Enter' || e.key === ' ') {
+			e.preventDefault();
+			onclick?.(event);
+		}
+	}}
 >
 	<div class="text-xs font-semibold text-white truncate">
 		{event.title}

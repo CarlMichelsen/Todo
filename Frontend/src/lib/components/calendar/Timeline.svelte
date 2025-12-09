@@ -5,9 +5,13 @@
 	interface Props {
 		date: Date;
 		events: CalendarEvent[];
+		/**
+		 * Callback when an event is clicked
+		 */
+		onEventClick?: (event: CalendarEvent) => void;
 	}
 
-	let { date, events }: Props = $props();
+	let { date, events, onEventClick }: Props = $props();
 
 	// Generate 24 hours (0-23)
 	const hours = Array.from({ length: 24 }, (_, i) => i);
@@ -51,7 +55,7 @@
 		<!-- Events layer -->
 		<div class="absolute inset-0">
 			{#each events as event (event.id)}
-				<TimeSpanEvent {event} />
+				<TimeSpanEvent {event} onclick={onEventClick} />
 			{/each}
 		</div>
 	</div>

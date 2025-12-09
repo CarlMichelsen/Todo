@@ -1,13 +1,17 @@
 <script lang="ts">
 	import Card from '$lib/components/Card.svelte';
 	import Timeline from './Timeline.svelte';
-	import type { CalendarDay } from '$lib/types/calendar';
+	import type { CalendarDay, CalendarEvent } from '$lib/types/calendar';
 
 	interface Props {
 		day: CalendarDay;
+		/**
+		 * Callback when an event is clicked
+		 */
+		onEventClick?: (event: CalendarEvent) => void;
 	}
 
-	let { day }: Props = $props();
+	let { day, onEventClick }: Props = $props();
 
 	// Build custom classes for today indicator
 	let customClasses = $derived(
@@ -33,7 +37,7 @@
 
 		<!-- Timeline with events -->
 		<div class="flex-1 overflow-hidden">
-			<Timeline date={day.date} events={day.events} />
+			<Timeline date={day.date} events={day.events} onEventClick={onEventClick} />
 		</div>
 	</div>
 </Card>

@@ -3,7 +3,7 @@
  */
 
 /**
- * Represents a calendar event within a day
+ * Represents a calendar event that can span one or more days
  */
 export interface CalendarEvent {
 	/** Unique identifier for the event */
@@ -12,8 +12,10 @@ export interface CalendarEvent {
 	title: string;
 	/** Optional event description */
 	description?: string;
-	/** ISO date string (YYYY-MM-DD) */
-	date: string;
+	/** Start date in ISO format (YYYY-MM-DD) */
+	startDate: string;
+	/** End date in ISO format (YYYY-MM-DD) */
+	endDate: string;
 	/** Start time in HH:MM format (e.g., "09:30") */
 	startTime: string;
 	/** End time in HH:MM format (e.g., "10:30") */

@@ -14,6 +14,7 @@
 		onPreviousDay: () => void;
 		onNextDay: () => void;
 		onToday: () => void;
+		onAddEvent: () => void;
 	}
 
 	let {
@@ -28,7 +29,8 @@
 		onNextWeek,
 		onPreviousDay,
 		onNextDay,
-		onToday
+		onToday,
+		onAddEvent
 	}: Props = $props();
 </script>
 
@@ -44,6 +46,17 @@
 
 	<!-- Navigation Buttons - conditional based on viewport -->
 	<div class="flex gap-2">
+		<!-- Add Event Button -->
+		<button
+			onclick={onAddEvent}
+			class="px-4 py-2 bg-orange-600 hover:bg-orange-700 dark:bg-orange-500 dark:hover:bg-orange-600 text-white rounded-lg font-medium transition-colors flex items-center gap-2"
+			aria-label="Add new event"
+		>
+			<svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+				<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4" />
+			</svg>
+			<span class="hidden sm:inline">Add Event</span>
+		</button>
 		{#if isMobile}
 			<!-- Mobile: Day navigation -->
 			<button

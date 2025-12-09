@@ -67,7 +67,6 @@
 	onclick={handleBackdropClick}
 	onclose={handleDialogClose}
 	class="m-auto p-0 border-0 bg-transparent max-w-none max-h-none backdrop:bg-black/50 backdrop:dark:bg-black/70 backdrop:animate-in backdrop:fade-in-0 backdrop:duration-200 open:animate-in open:fade-in-0 open:slide-in-from-bottom-4 open:duration-300"
-	class:w-[90vw]={size === 'sm' || size === 'md' || size === 'lg'}
 	class:max-w-sm={size === 'sm'}
 	class:max-w-2xl={size === 'md'}
 	class:max-w-4xl={size === 'lg'}

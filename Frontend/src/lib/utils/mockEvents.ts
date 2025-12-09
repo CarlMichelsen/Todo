@@ -27,7 +27,8 @@ export function generateMockEvents(weekStart: Date): CalendarEvent[] {
 				{
 					id: `${dateStr}-1`,
 					title: 'Team Meeting',
-					date: dateStr,
+					startDate: dateStr,
+					endDate: dateStr,
 					startTime: '09:00',
 					endTime: '10:30',
 					color: '#3b82f6' // blue
@@ -35,7 +36,8 @@ export function generateMockEvents(weekStart: Date): CalendarEvent[] {
 				{
 					id: `${dateStr}-2`,
 					title: 'Lunch Break',
-					date: dateStr,
+					startDate: dateStr,
+					endDate: dateStr,
 					startTime: '12:00',
 					endTime: '13:00',
 					color: '#10b981' // green
@@ -43,7 +45,8 @@ export function generateMockEvents(weekStart: Date): CalendarEvent[] {
 				{
 					id: `${dateStr}-3`,
 					title: 'Project Work',
-					date: dateStr,
+					startDate: dateStr,
+					endDate: dateStr,
 					startTime: '14:00',
 					endTime: '17:00',
 					color: '#ea580c' // orange
@@ -55,7 +58,8 @@ export function generateMockEvents(weekStart: Date): CalendarEvent[] {
 			events.push({
 				id: `${dateStr}-1`,
 				title: 'Weekly Planning',
-				date: dateStr,
+				startDate: dateStr,
+				endDate: dateStr,
 				startTime: '08:00',
 				endTime: '09:00',
 				color: '#8b5cf6' // purple
@@ -67,7 +71,8 @@ export function generateMockEvents(weekStart: Date): CalendarEvent[] {
 				{
 					id: `${dateStr}-1`,
 					title: 'Client Call',
-					date: dateStr,
+					startDate: dateStr,
+					endDate: dateStr,
 					startTime: '10:00',
 					endTime: '11:00',
 					color: '#f59e0b' // amber
@@ -75,7 +80,8 @@ export function generateMockEvents(weekStart: Date): CalendarEvent[] {
 				{
 					id: `${dateStr}-2`,
 					title: 'Design Review',
-					date: dateStr,
+					startDate: dateStr,
+					endDate: dateStr,
 					startTime: '15:30',
 					endTime: '16:30',
 					color: '#ec4899' // pink
@@ -87,7 +93,8 @@ export function generateMockEvents(weekStart: Date): CalendarEvent[] {
 			events.push({
 				id: `${dateStr}-1`,
 				title: 'Team Retrospective',
-				date: dateStr,
+				startDate: dateStr,
+				endDate: dateStr,
 				startTime: '16:00',
 				endTime: '17:30',
 				color: '#06b6d4' // cyan
