@@ -20,6 +20,9 @@
 	function formatHour(hour: number): string {
 		return String(hour).padStart(2, '0');
 	}
+
+	// Current date as YYYY-MM-DD string for TimeSpanEvent
+	const currentDateStr = $derived(date.toISOString().split('T')[0]);
 </script>
 
 <div class="relative h-full flex text-xs">
@@ -55,7 +58,7 @@
 		<!-- Events layer -->
 		<div class="absolute inset-0">
 			{#each events as event (event.id)}
-				<TimeSpanEvent {event} onclick={onEventClick} />
+				<TimeSpanEvent {event} currentDate={currentDateStr} onclick={onEventClick} />
 			{/each}
 		</div>
 	</div>

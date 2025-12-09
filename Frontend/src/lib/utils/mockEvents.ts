@@ -102,5 +102,55 @@ export function generateMockEvents(weekStart: Date): CalendarEvent[] {
 		}
 	}
 
+	// Add some multi-day events for testing
+	// Conference spanning 3 days (Tue-Thu)
+	const tuesday = new Date(weekStart);
+	tuesday.setDate(weekStart.getDate() + 1);
+	const thursday = new Date(weekStart);
+	thursday.setDate(weekStart.getDate() + 3);
+
+	events.push({
+		id: `multi-1`,
+		title: 'Tech Conference',
+		description: 'Annual technology conference',
+		startDate: formatDate(tuesday),
+		endDate: formatDate(thursday),
+		startTime: '09:00',
+		endTime: '17:00',
+		color: '#8b5cf6' // purple
+	});
+
+	// Workshop spanning 2 days (Wed-Thu)
+	const wednesday = new Date(weekStart);
+	wednesday.setDate(weekStart.getDate() + 2);
+
+	events.push({
+		id: `multi-2`,
+		title: 'Leadership Workshop',
+		description: 'Two-day leadership training',
+		startDate: formatDate(wednesday),
+		endDate: formatDate(thursday),
+		startTime: '13:00',
+		endTime: '16:00',
+		color: '#ec4899' // pink
+	});
+
+	// Weekend project spanning Fri-Sun
+	const friday = new Date(weekStart);
+	friday.setDate(weekStart.getDate() + 4);
+	const sunday = new Date(weekStart);
+	sunday.setDate(weekStart.getDate() + 6);
+
+	events.push({
+		id: `multi-3`,
+		title: 'Hackathon',
+		description: 'Weekend coding competition',
+		startDate: formatDate(friday),
+		endDate: formatDate(sunday),
+		startTime: '18:00',
+		endTime: '20:00',
+		color: '#ef4444' // red
+	});
+
 	return events;
 }

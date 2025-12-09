@@ -35,10 +35,7 @@
 		const dateStr = date.toISOString().split('T')[0];
 		const events = storeState.events.filter((event) => {
 			// Event spans this day if date is between startDate and endDate (inclusive)
-			const spansThisDay = event.startDate <= dateStr && event.endDate >= dateStr;
-			// Skip rendering multi-day events for now
-			const isSingleDay = event.startDate === event.endDate;
-			return spansThisDay && isSingleDay;
+			return event.startDate <= dateStr && event.endDate >= dateStr;
 		});
 
 		return {
