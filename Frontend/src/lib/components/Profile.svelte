@@ -1,19 +1,15 @@
 <script lang="ts">
 	import { userStore } from '$lib/stores/user';
-	import { UserClient } from '$lib/utils/userClient';
 	import { navigate } from 'svelte-routing';
 	import LoginButton from './LoginButton.svelte';
 	import Dropdown from './Dropdown.svelte';
-
-	const userClient = new UserClient();
 
 	function handleViewProfile() {
 		navigate('/profile');
 	}
 
 	async function handleLogout() {
-		await userClient.logout();
-		userStore.clearUser();
+		await userStore.logoutUser();
 	}
 </script>
 

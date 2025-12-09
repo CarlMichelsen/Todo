@@ -53,10 +53,7 @@ function createUserStore() {
                     set({ user: null, state: 'unauthenticated', error: null });
                 }
             } catch (error) {
-                // Only actual errors (network issues, 500s, etc.) reach here
-                const errorMessage = error instanceof Error ? error.message : 'Failed to fetch user';
-                console.error('User authentication check failed:', errorMessage);
-                set({ user: null, state: 'error', error: errorMessage });
+                set({ user: null, state: 'unauthenticated', error: null });
             }
         },
 
@@ -70,8 +67,16 @@ function createUserStore() {
         /**
          * Clear the user data (logout)
          */
-        clearUser(): void {
-            set({ user: null, state: 'unauthenticated', error: null });
+        async logoutUser(): Promise<void> {
+            try {
+                await userClient.logout();
+                set({ user: null, state: 'unauthenticated', error: null });
+            }
+            catch(error) {
+                const errorMessage = error instanceof Error ? error.message : 'Failed to fetch user';
+                console.error('User authentication check failed:', errorMessage);
+                set({ user: null, state: 'error', error: errorMessage });
+            }
         },
 
         /**
@@ -89,10 +94,7 @@ function createUserStore() {
                     update(state => ({ ...state, user: null, state: 'unauthenticated', error: null }));
                 }
             } catch (error) {
-                // Only actual errors (network issues, 500s, etc.) reach here
-                const errorMessage = error instanceof Error ? error.message : 'Failed to refresh user';
-                console.error('User refresh failed:', errorMessage);
-                update(state => ({ ...state, user: null, state: 'error', error: errorMessage }));
+                set({ user: null, state: 'unauthenticated', error: null });
             }
         }
     };
