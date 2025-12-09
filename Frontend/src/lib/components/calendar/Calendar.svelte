@@ -2,6 +2,7 @@
 	import CalendarHeader from './CalendarHeader.svelte';
 	import CalendarGrid from './CalendarGrid.svelte';
 	import { getWeekStart, getWeekDates, addWeeks } from '$lib/utils/calendarUtils';
+	import { eventsStore } from '$lib/stores/events';
 
 	// State management
 	let currentWeekStart = $state(getWeekStart(new Date()));
@@ -14,6 +15,58 @@
 
 	// Derived state
 	let weekDates = $derived(getWeekDates(currentWeekStart));
+
+	// Current viewed date range (edge-based comparison)
+	let currentRangeStart = $derived.by(() => {
+		if (isMobile) {
+			// Mobile: start of current day
+			const start = new Date(weekDates[currentDayIndex]);
+			start.setHours(0, 0, 0, 0);
+			return start.getTime();
+		} else {
+			// Desktop: start of week (Monday 00:00)
+			const start = new Date(currentWeekStart);
+			start.setHours(0, 0, 0, 0);
+			return start.getTime();
+		}
+	});
+
+	let currentRangeEnd = $derived.by(() => {
+		if (isMobile) {
+			// Mobile: end of current day
+			const end = new Date(weekDates[currentDayIndex]);
+			end.setHours(23, 59, 59, 999);
+			return end.getTime();
+		} else {
+			// Desktop: end of week (Sunday 23:59)
+			const end = new Date(currentWeekStart);
+			end.setDate(currentWeekStart.getDate() + 6);
+			end.setHours(23, 59, 59, 999);
+			return end.getTime();
+		}
+	});
+
+	// Today's date range
+	let todayStart = $derived.by(() => {
+		const start = new Date();
+		start.setHours(0, 0, 0, 0);
+		return start.getTime();
+	});
+
+	let todayEnd = $derived.by(() => {
+		const end = new Date();
+		end.setHours(23, 59, 59, 999);
+		return end.getTime();
+	});
+
+	// Check if current range contains today
+	let isViewingToday = $derived(currentRangeStart <= todayStart && currentRangeEnd >= todayEnd);
+
+	// Highlight previous if current range is entirely AFTER today
+	let shouldHighlightPrevious = $derived(currentRangeStart > todayEnd);
+
+	// Highlight next if current range is entirely BEFORE today
+	let shouldHighlightNext = $derived(currentRangeEnd < todayStart);
 
 	// Initialize viewport detection and set currentDayIndex to today
 	$effect(() => {
@@ -33,6 +86,11 @@
 
 		window.addEventListener('resize', handleResize);
 		return () => window.removeEventListener('resize', handleResize);
+	});
+
+	// Load events when week changes
+	$effect(() => {
+		eventsStore.setDateRange(currentWeekStart);
 	});
 
 	// Week navigation handlers (desktop)
@@ -83,6 +141,9 @@
 		currentDayIndex={currentDayIndex}
 		weekDates={weekDates}
 		isMobile={isMobile}
+		isViewingToday={isViewingToday}
+		shouldHighlightPrevious={shouldHighlightPrevious}
+		shouldHighlightNext={shouldHighlightNext}
 		onPreviousWeek={handlePreviousWeek}
 		onNextWeek={handleNextWeek}
 		onPreviousDay={handlePreviousDay}

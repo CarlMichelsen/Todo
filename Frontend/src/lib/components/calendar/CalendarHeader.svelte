@@ -6,6 +6,9 @@
 		currentDayIndex: number;
 		weekDates: Date[];
 		isMobile: boolean;
+		isViewingToday: boolean;
+		shouldHighlightPrevious: boolean;
+		shouldHighlightNext: boolean;
 		onPreviousWeek: () => void;
 		onNextWeek: () => void;
 		onPreviousDay: () => void;
@@ -18,6 +21,9 @@
 		currentDayIndex,
 		weekDates,
 		isMobile,
+		isViewingToday,
+		shouldHighlightPrevious,
+		shouldHighlightNext,
 		onPreviousWeek,
 		onNextWeek,
 		onPreviousDay,
@@ -42,7 +48,11 @@
 			<!-- Mobile: Day navigation -->
 			<button
 				onclick={onPreviousDay}
-				class="px-4 py-2 bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors"
+				class={`px-4 py-2 rounded-lg font-medium transition-colors ${
+					shouldHighlightPrevious
+						? 'bg-green-100 dark:bg-green-900 border-2 border-green-500 dark:border-green-400 text-green-700 dark:text-green-300 hover:bg-green-200 dark:hover:bg-green-800'
+						: 'bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 hover:bg-gray-50 dark:hover:bg-gray-700 text-gray-900 dark:text-gray-100'
+				}`}
 				aria-label="Previous day"
 			>
 				← Prev Day
@@ -56,7 +66,11 @@
 			</button>
 			<button
 				onclick={onNextDay}
-				class="px-4 py-2 bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors"
+				class={`px-4 py-2 rounded-lg font-medium transition-colors ${
+					shouldHighlightNext
+						? 'bg-green-100 dark:bg-green-900 border-2 border-green-500 dark:border-green-400 text-green-700 dark:text-green-300 hover:bg-green-200 dark:hover:bg-green-800'
+						: 'bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 hover:bg-gray-50 dark:hover:bg-gray-700 text-gray-900 dark:text-gray-100'
+				}`}
 				aria-label="Next day"
 			>
 				Next Day →
@@ -65,7 +79,11 @@
 			<!-- Desktop: Week navigation -->
 			<button
 				onclick={onPreviousWeek}
-				class="px-4 py-2 bg-gray-200 dark:bg-gray-700 hover:bg-gray-300 dark:hover:bg-gray-600 text-gray-900 dark:text-gray-100 rounded-lg transition-colors"
+				class={`px-4 py-2 rounded-lg font-medium transition-colors ${
+					shouldHighlightPrevious
+						? 'bg-green-100 dark:bg-green-900 border-2 border-green-500 dark:border-green-400 text-green-700 dark:text-green-300 hover:bg-green-200 dark:hover:bg-green-800'
+						: 'bg-gray-200 dark:bg-gray-700 hover:bg-gray-300 dark:hover:bg-gray-600 text-gray-900 dark:text-gray-100'
+				}`}
 				aria-label="Previous week"
 			>
 				← Previous
@@ -79,7 +97,11 @@
 			</button>
 			<button
 				onclick={onNextWeek}
-				class="px-4 py-2 bg-gray-200 dark:bg-gray-700 hover:bg-gray-300 dark:hover:bg-gray-600 text-gray-900 dark:text-gray-100 rounded-lg transition-colors"
+				class={`px-4 py-2 rounded-lg font-medium transition-colors ${
+					shouldHighlightNext
+						? 'bg-green-100 dark:bg-green-900 border-2 border-green-500 dark:border-green-400 text-green-700 dark:text-green-300 hover:bg-green-200 dark:hover:bg-green-800'
+						: 'bg-gray-200 dark:bg-gray-700 hover:bg-gray-300 dark:hover:bg-gray-600 text-gray-900 dark:text-gray-100'
+				}`}
 				aria-label="Next week"
 			>
 				Next →

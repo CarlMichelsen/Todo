@@ -12,6 +12,8 @@ export interface CalendarEvent {
 	title: string;
 	/** Optional event description */
 	description?: string;
+	/** ISO date string (YYYY-MM-DD) */
+	date: string;
 	/** Start time in HH:MM format (e.g., "09:30") */
 	startTime: string;
 	/** End time in HH:MM format (e.g., "10:30") */
