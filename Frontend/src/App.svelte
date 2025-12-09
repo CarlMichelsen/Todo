@@ -2,6 +2,7 @@
 	import { onMount } from 'svelte';
 	import { Router, Route } from 'svelte-routing';
 	import Header from '$lib/components/Header.svelte';
+	import ProtectedRoute from '$lib/components/ProtectedRoute.svelte';
 	import Home from './routes/Home.svelte';
 	import Demo from './routes/Demo.svelte';
 	import ProfilePage from './routes/ProfilePage.svelte';
@@ -28,8 +29,16 @@
 				{#if import.meta.env.DEV}
 					<Route path="/demo"><Demo /></Route>
 				{/if}
-				<Route path="/profile"><ProfilePage /></Route>
-				<Route path="/calendar"><CalendarPage /></Route>
+				<Route path="/profile">
+					<ProtectedRoute>
+						<ProfilePage />
+					</ProtectedRoute>
+				</Route>
+				<Route path="/calendar">
+					<ProtectedRoute>
+						<CalendarPage />
+					</ProtectedRoute>
+				</Route>
 				<Route path="/error"><Error /></Route>
 				<Route><NotFound /></Route>
 			</Router>

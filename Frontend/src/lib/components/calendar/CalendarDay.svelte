@@ -17,8 +17,8 @@
 	);
 </script>
 
-<Card variant={day.isWeekend ? 'blue' : 'default'} class={customClasses}>
-	<div class="flex flex-col h-full">
+<Card variant={day.isWeekend ? 'blue' : 'default'} class={customClasses} padding={false}>
+	<div class="flex flex-col h-full px-2">
 		<!-- Day header -->
 		<div class="flex items-center justify-between mb-2">
 			<div class="text-sm font-semibold uppercase text-gray-600 dark:text-gray-400">

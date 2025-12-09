@@ -20,7 +20,7 @@
 
 <div class="relative h-full flex text-xs">
 	<!-- Left: Time labels (40px wide) -->
-	<div class="w-[40px] flex-shrink-0">
+	<div class="w-[22px] flex-shrink-0">
 		{#each hours as hour}
 			<div class="h-[38.3px] flex items-start justify-end pr-2 text-gray-500 dark:text-gray-500">
 				{formatHour(hour)}

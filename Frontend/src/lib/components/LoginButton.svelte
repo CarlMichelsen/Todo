@@ -2,19 +2,35 @@
 	import { LoginClient, type AuthProvider } from '$lib/utils/loginClient';
 	import Dropdown from './Dropdown.svelte';
 
+	interface Props {
+		/**
+		 * Size variant of the login button
+		 * - 'sm': Compact size for header (default)
+		 * - 'lg': Larger size for standalone pages
+		 */
+		size?: 'sm' | 'lg';
+	}
+
+	let { size = 'sm' }: Props = $props();
+
 	const loginClient = new LoginClient();
 	const providers = loginClient.getAvailableProviders();
 
 	function handleLogin(provider: AuthProvider) {
 		loginClient.login({ provider });
 	}
+
+	// Determine button classes based on size
+	const buttonClasses = $derived(
+		size === 'lg'
+			? 'px-6 py-3 bg-orange-600 hover:bg-orange-700 dark:bg-orange-500 dark:hover:bg-orange-600 text-white rounded-lg font-medium transition-colors text-base'
+			: 'px-4 py-2 bg-orange-600 hover:bg-orange-700 dark:bg-orange-500 dark:hover:bg-orange-600 text-white rounded-lg font-medium transition-colors text-sm'
+	);
 </script>
 
 <Dropdown>
 	{#snippet trigger()}
-		<button
-			class="px-4 py-2 bg-orange-600 hover:bg-orange-700 dark:bg-orange-500 dark:hover:bg-orange-600 text-white rounded-lg font-medium transition-colors text-sm"
-		>
+		<button class={buttonClasses}>
 			Login
 		</button>
 	{/snippet}

@@ -5,12 +5,11 @@ import { UserClient } from '$lib/utils/userClient';
 /**
  * User store state type
  * - 'pending': Initial state, auth check not yet started or completed
- * - 'loading': Actively loading user data
  * - 'authenticated': User is logged in
  * - 'unauthenticated': User is not logged in (normal state)
  * - 'error': Failed to check authentication (network error, etc.)
  */
-type UserStoreState = 'pending' | 'loading' | 'authenticated' | 'unauthenticated' | 'error';
+type UserStoreState = 'pending' | 'authenticated' | 'unauthenticated' | 'error';
 
 /**
  * User store state
@@ -41,7 +40,7 @@ function createUserStore() {
          * This should be called when the application starts
          */
         async initialize(): Promise<void> {
-            update(state => ({ ...state, state: 'loading', error: null }));
+            update(state => ({ ...state, state: 'pending', error: null }));
 
             try {
                 const user = await userClient.getCurrentUser();
@@ -83,8 +82,6 @@ function createUserStore() {
          * Refresh user data from the API
          */
         async refresh(): Promise<void> {
-            update(state => ({ ...state, state: 'loading' }));
-
             try {
                 const user = await userClient.getCurrentUser();
 
