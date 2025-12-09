@@ -130,3 +130,15 @@ export function addWeeks(date: Date, weeks: number): Date {
 	d.setDate(d.getDate() + weeks * 7);
 	return d;
 }
+
+/**
+ * Add or subtract days from a date
+ * @param date - The starting date
+ * @param days - Number of days to add (positive) or subtract (negative)
+ * @returns A new Date object with the days added/subtracted
+ */
+export function addDays(date: Date, days: number): Date {
+	const d = new Date(date);
+	d.setDate(d.getDate() + days);
+	return d;
+}
