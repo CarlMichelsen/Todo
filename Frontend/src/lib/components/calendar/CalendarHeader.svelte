@@ -45,7 +45,7 @@
 	</h2>
 
 	<!-- Navigation Buttons - conditional based on viewport -->
-	<div class="flex gap-2">
+	<div class="flex gap-2 items-center">
 		<!-- Add Event Button -->
 		<button
 			onclick={onAddEvent}
@@ -57,14 +57,18 @@
 			</svg>
 			<span class="hidden sm:inline">Add Event</span>
 		</button>
+
+		<!-- Separator -->
+		<div class="h-8 w-px bg-gray-300 dark:bg-gray-600"></div>
+
 		{#if isMobile}
 			<!-- Mobile: Day navigation -->
 			<button
 				onclick={onPreviousDay}
-				class={`px-4 py-2 rounded-lg font-medium transition-colors ${
+				class={`px-4 py-2 rounded-lg font-medium transition-colors border-2 ${
 					shouldHighlightPrevious
-						? 'bg-green-100 dark:bg-green-900 border-2 border-green-500 dark:border-green-400 text-green-700 dark:text-green-300 hover:bg-green-200 dark:hover:bg-green-800'
-						: 'bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 hover:bg-gray-50 dark:hover:bg-gray-700 text-gray-900 dark:text-gray-100'
+						? 'bg-green-100 dark:bg-green-900 border-green-500 dark:border-green-400 text-green-700 dark:text-green-300 hover:bg-green-200 dark:hover:bg-green-800'
+						: 'bg-white dark:bg-gray-800 border-gray-300 dark:border-gray-600 hover:bg-gray-50 dark:hover:bg-gray-700 text-gray-900 dark:text-gray-100'
 				}`}
 				aria-label="Previous day"
 			>
@@ -79,10 +83,10 @@
 			</button>
 			<button
 				onclick={onNextDay}
-				class={`px-4 py-2 rounded-lg font-medium transition-colors ${
+				class={`px-4 py-2 rounded-lg font-medium transition-colors border-2 ${
 					shouldHighlightNext
-						? 'bg-green-100 dark:bg-green-900 border-2 border-green-500 dark:border-green-400 text-green-700 dark:text-green-300 hover:bg-green-200 dark:hover:bg-green-800'
-						: 'bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 hover:bg-gray-50 dark:hover:bg-gray-700 text-gray-900 dark:text-gray-100'
+						? 'bg-green-100 dark:bg-green-900 border-green-500 dark:border-green-400 text-green-700 dark:text-green-300 hover:bg-green-200 dark:hover:bg-green-800'
+						: 'bg-white dark:bg-gray-800 border-gray-300 dark:border-gray-600 hover:bg-gray-50 dark:hover:bg-gray-700 text-gray-900 dark:text-gray-100'
 				}`}
 				aria-label="Next day"
 			>
@@ -92,10 +96,10 @@
 			<!-- Desktop: Week navigation -->
 			<button
 				onclick={onPreviousWeek}
-				class={`px-4 py-2 rounded-lg font-medium transition-colors ${
+				class={`px-4 py-2 rounded-lg font-medium transition-colors border-2 ${
 					shouldHighlightPrevious
-						? 'bg-green-100 dark:bg-green-900 border-2 border-green-500 dark:border-green-400 text-green-700 dark:text-green-300 hover:bg-green-200 dark:hover:bg-green-800'
-						: 'bg-gray-200 dark:bg-gray-700 hover:bg-gray-300 dark:hover:bg-gray-600 text-gray-900 dark:text-gray-100'
+						? 'bg-green-100 dark:bg-green-900 border-green-500 dark:border-green-400 text-green-700 dark:text-green-300 hover:bg-green-200 dark:hover:bg-green-800'
+						: 'bg-gray-200 dark:bg-gray-700 border-gray-200 dark:border-gray-700 hover:bg-gray-300 dark:hover:bg-gray-600 text-gray-900 dark:text-gray-100'
 				}`}
 				aria-label="Previous week"
 			>
@@ -110,10 +114,10 @@
 			</button>
 			<button
 				onclick={onNextWeek}
-				class={`px-4 py-2 rounded-lg font-medium transition-colors ${
+				class={`px-4 py-2 rounded-lg font-medium transition-colors border-2 ${
 					shouldHighlightNext
-						? 'bg-green-100 dark:bg-green-900 border-2 border-green-500 dark:border-green-400 text-green-700 dark:text-green-300 hover:bg-green-200 dark:hover:bg-green-800'
-						: 'bg-gray-200 dark:bg-gray-700 hover:bg-gray-300 dark:hover:bg-gray-600 text-gray-900 dark:text-gray-100'
+						? 'bg-green-100 dark:bg-green-900 border-green-500 dark:border-green-400 text-green-700 dark:text-green-300 hover:bg-green-200 dark:hover:bg-green-800'
+						: 'bg-gray-200 dark:bg-gray-700 border-gray-200 dark:border-gray-700 hover:bg-gray-300 dark:hover:bg-gray-600 text-gray-900 dark:text-gray-100'
 				}`}
 				aria-label="Next week"
 			>
