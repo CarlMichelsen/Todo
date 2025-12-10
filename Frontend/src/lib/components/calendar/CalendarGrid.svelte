@@ -1,7 +1,7 @@
 <script lang="ts">
 	import CalendarDay from './CalendarDay.svelte';
 	import type { CalendarDay as CalendarDayType, CalendarEvent } from '$lib/types/calendar';
-	import { isToday, isWeekend, formatDayHeader } from '$lib/utils/calendarUtils';
+	import { isToday, isWeekend, formatDayHeader, eventOccursOnDate } from '$lib/utils/calendarUtils';
 	import { eventsStore } from '$lib/stores/events';
 
 	interface Props {
@@ -31,11 +31,9 @@
 		const dayOfWeek = dayHeader.split(',')[0];
 
 		// Filter events for this specific date from the reactive store state
-		// Include events where: startDate <= date <= endDate
-		const dateStr = date.toISOString().split('T')[0];
+		// Include events where the event occurs on this date (ignoring time)
 		const events = storeState.events.filter((event) => {
-			// Event spans this day if date is between startDate and endDate (inclusive)
-			return event.startDate <= dateStr && event.endDate >= dateStr;
+			return eventOccursOnDate(event.start, event.end, date);
 		});
 
 		return {

@@ -1,12 +1,19 @@
 <script lang="ts">
 	import type { CalendarEvent, EventLayout } from '$lib/types/calendar';
+	import {
+		isSameDay,
+		isMultiDayEvent,
+		getDisplayStartTime,
+		getDisplayEndTime,
+		extractTimeString
+	} from '$lib/utils/calendarUtils';
 
 	interface Props {
 		event: CalendarEvent;
 		/**
-		 * The date this event is being rendered for (YYYY-MM-DD format)
+		 * The date this event is being rendered for
 		 */
-		currentDate: string;
+		currentDate: Date;
 		/**
 		 * Layout information for handling overlaps (optional for backwards compatibility)
 		 */
@@ -27,13 +34,15 @@
 	}
 
 	// Determine if this is a multi-day event
-	const isMultiDay = $derived(event.startDate !== event.endDate);
-	const startsBeforeToday = $derived(event.startDate < currentDate);
-	const endsAfterToday = $derived(event.endDate > currentDate);
+	const isMultiDay = $derived(isMultiDayEvent(event.start, event.end));
+	const startsBeforeToday = $derived(!isSameDay(event.start, currentDate) && event.start < currentDate);
+	const endsAfterToday = $derived(!isSameDay(event.end, currentDate) && event.end > currentDate);
 
 	// For multi-day events, adjust the display times
-	const displayStartTime = $derived(startsBeforeToday ? '00:00' : event.startTime);
-	const displayEndTime = $derived(endsAfterToday ? '23:59' : event.endTime);
+	const displayStart = $derived(getDisplayStartTime(event.start, currentDate));
+	const displayEnd = $derived(getDisplayEndTime(event.end, currentDate));
+	const displayStartTime = $derived(extractTimeString(displayStart));
+	const displayEndTime = $derived(extractTimeString(displayEnd));
 
 	// Calculate position and height
 	const topPosition = $derived(timeToPixels(displayStartTime));
@@ -47,16 +56,13 @@
 	const displayDateRange = $derived.by(() => {
 		if (!isMultiDay) return null;
 
-		const startDateObj = new Date(event.startDate);
-		const endDateObj = new Date(event.endDate);
-
 		const monthNames = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun',
 		                    'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
 
-		const startMonth = monthNames[startDateObj.getMonth()];
-		const startDay = startDateObj.getDate();
-		const endMonth = monthNames[endDateObj.getMonth()];
-		const endDay = endDateObj.getDate();
+		const startMonth = monthNames[event.start.getMonth()];
+		const startDay = event.start.getDate();
+		const endMonth = monthNames[event.end.getMonth()];
+		const endDay = event.end.getDate();
 
 		if (startMonth === endMonth) {
 			// Same month: "Jan 14-16"
