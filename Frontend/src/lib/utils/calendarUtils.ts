@@ -160,6 +160,129 @@ export function timeToMinutes(time: string): number {
 }
 
 /**
+ * Convert Date object to minutes since midnight
+ * @param date - Date object
+ * @returns Minutes since midnight (0-1439)
+ */
+export function dateToMinutes(date: Date): number {
+	return date.getHours() * 60 + date.getMinutes();
+}
+
+/**
+ * Date/Time conversion utilities for CalendarEvent with Date objects
+ */
+
+/**
+ * Combine separate date and time strings into a Date object
+ * @param dateStr - ISO date string (YYYY-MM-DD)
+ * @param timeStr - Time string (HH:MM)
+ * @returns Date object with combined date and time
+ */
+export function combineDateAndTime(dateStr: string, timeStr: string): Date {
+	const [hours, minutes] = timeStr.split(':').map(Number);
+	const date = new Date(dateStr);
+	date.setHours(hours, minutes, 0, 0);
+	return date;
+}
+
+/**
+ * Extract date portion from Date object as ISO string
+ * @param date - Date object
+ * @returns ISO date string (YYYY-MM-DD)
+ */
+export function extractDateString(date: Date): string {
+	return date.toISOString().split('T')[0];
+}
+
+/**
+ * Extract time portion from Date object as HH:MM string
+ * @param date - Date object
+ * @returns Time string (HH:MM)
+ */
+export function extractTimeString(date: Date): string {
+	const hours = String(date.getHours()).padStart(2, '0');
+	const minutes = String(date.getMinutes()).padStart(2, '0');
+	return `${hours}:${minutes}`;
+}
+
+/**
+ * Check if an event occurs on a specific date (ignores time)
+ * @param eventStart - Event start Date
+ * @param eventEnd - Event end Date
+ * @param targetDate - Date to check against
+ * @returns True if event spans the target date
+ */
+export function eventOccursOnDate(eventStart: Date, eventEnd: Date, targetDate: Date): boolean {
+	// Normalize all dates to midnight for comparison
+	const startDay = new Date(eventStart);
+	startDay.setHours(0, 0, 0, 0);
+
+	const endDay = new Date(eventEnd);
+	endDay.setHours(0, 0, 0, 0);
+
+	const targetDay = new Date(targetDate);
+	targetDay.setHours(0, 0, 0, 0);
+
+	return startDay.getTime() <= targetDay.getTime() && endDay.getTime() >= targetDay.getTime();
+}
+
+/**
+ * Check if an event spans multiple days (ignores time)
+ * @param eventStart - Event start Date
+ * @param eventEnd - Event end Date
+ * @returns True if event spans more than one calendar day
+ */
+export function isMultiDayEvent(eventStart: Date, eventEnd: Date): boolean {
+	return !isSameDay(eventStart, eventEnd);
+}
+
+/**
+ * Get the start time for display (00:00 if event started before target date)
+ * @param eventStart - Event start Date
+ * @param targetDate - Date being rendered
+ * @returns Date object with appropriate time
+ */
+export function getDisplayStartTime(eventStart: Date, targetDate: Date): Date {
+	const targetDay = new Date(targetDate);
+	targetDay.setHours(0, 0, 0, 0);
+
+	const eventStartDay = new Date(eventStart);
+	eventStartDay.setHours(0, 0, 0, 0);
+
+	if (eventStartDay.getTime() < targetDay.getTime()) {
+		// Event started before this day, show from 00:00
+		const result = new Date(targetDate);
+		result.setHours(0, 0, 0, 0);
+		return result;
+	}
+
+	return eventStart;
+}
+
+/**
+ * Get the end time for display (23:59 if event continues after target date)
+ * @param eventEnd - Event end Date
+ * @param targetDate - Date being rendered
+ * @returns Date object with appropriate time
+ */
+export function getDisplayEndTime(eventEnd: Date, targetDate: Date): Date {
+	const targetDay = new Date(targetDate);
+	targetDay.setHours(0, 0, 0, 0);
+
+	const eventEndDay = new Date(eventEnd);
+	eventEndDay.setHours(0, 0, 0, 0);
+
+	if (eventEndDay.getTime() > targetDay.getTime()) {
+		// Event continues after this day, show until 23:59
+		const result = new Date(targetDate);
+		result.setHours(23, 59, 0, 0);
+		return result;
+	}
+
+	return eventEnd;
+}
+
+/**
  * Check if two events overlap in time
  * Events overlap if one starts before the other ends
  * @param event1 - First event
@@ -167,10 +290,10 @@ export function timeToMinutes(time: string): number {
  * @returns True if events have overlapping time ranges
  */
 export function eventsOverlap(event1: CalendarEvent, event2: CalendarEvent): boolean {
-	const e1Start = timeToMinutes(event1.startTime);
-	const e1End = timeToMinutes(event1.endTime);
-	const e2Start = timeToMinutes(event2.startTime);
-	const e2End = timeToMinutes(event2.endTime);
+	const e1Start = dateToMinutes(event1.start);
+	const e1End = dateToMinutes(event1.end);
+	const e2Start = dateToMinutes(event2.start);
+	const e2End = dateToMinutes(event2.end);
 
 	// Classic interval overlap: A starts before B ends AND B starts before A ends
 	return e1Start < e2End && e2Start < e1End;
@@ -222,14 +345,14 @@ function buildOverlapGroups(sortedEvents: CalendarEvent[]): CalendarEvent[][] {
  */
 function assignColumnsToGroup(group: CalendarEvent[], layout: Map<string, EventLayout>): void {
 	// Sort group by start time
-	const sorted = [...group].sort((a, b) => timeToMinutes(a.startTime) - timeToMinutes(b.startTime));
+	const sorted = [...group].sort((a, b) => dateToMinutes(a.start) - dateToMinutes(b.start));
 
 	// Track which columns are occupied and when they end
 	const columns: Array<{ event: CalendarEvent; endTime: number }> = [];
 
 	for (const event of sorted) {
-		const eventStart = timeToMinutes(event.startTime);
-		const eventEnd = timeToMinutes(event.endTime);
+		const eventStart = dateToMinutes(event.start);
+		const eventEnd = dateToMinutes(event.end);
 
 		// Remove events from columns that have ended before this event starts
 		for (let i = columns.length - 1; i >= 0; i--) {
@@ -280,13 +403,13 @@ export function calculateEventLayout(events: CalendarEvent[]): Map<string, Event
 
 	// Sort events by start time, then by duration (longer first)
 	const sortedEvents = [...events].sort((a, b) => {
-		const aStart = timeToMinutes(a.startTime);
-		const bStart = timeToMinutes(b.startTime);
+		const aStart = dateToMinutes(a.start);
+		const bStart = dateToMinutes(b.start);
 		if (aStart !== bStart) return aStart - bStart;
 
 		// If same start time, longer events first (helps minimize columns)
-		const aDuration = timeToMinutes(a.endTime) - aStart;
-		const bDuration = timeToMinutes(b.endTime) - bStart;
+		const aDuration = dateToMinutes(a.end) - aStart;
+		const bDuration = dateToMinutes(b.end) - bStart;
 		return bDuration - aDuration;
 	});
 

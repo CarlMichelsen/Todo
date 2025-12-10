@@ -1,5 +1,5 @@
 import type { CalendarEvent } from '$lib/types/calendar';
-import { isToday } from './calendarUtils';
+import { isToday, combineDateAndTime, extractDateString } from './calendarUtils';
 
 /**
  * Generate mock events for a given week
@@ -9,16 +9,11 @@ import { isToday } from './calendarUtils';
 export function generateMockEvents(weekStart: Date): CalendarEvent[] {
 	const events: CalendarEvent[] = [];
 
-	// Helper to format date as YYYY-MM-DD
-	const formatDate = (date: Date): string => {
-		return date.toISOString().split('T')[0];
-	};
-
 	// Generate events for each day of the week
 	for (let i = 0; i < 7; i++) {
 		const date = new Date(weekStart);
 		date.setDate(weekStart.getDate() + i);
-		const dateStr = formatDate(date);
+		const dateStr = extractDateString(date);
 		const dayOfWeek = date.getDay();
 
 		// Today's events
@@ -27,28 +22,22 @@ export function generateMockEvents(weekStart: Date): CalendarEvent[] {
 				{
 					id: `${dateStr}-1`,
 					title: 'Team Meeting',
-					startDate: dateStr,
-					endDate: dateStr,
-					startTime: '09:00',
-					endTime: '10:30',
+					start: combineDateAndTime(dateStr, '09:00'),
+					end: combineDateAndTime(dateStr, '10:30'),
 					color: '#3b82f6' // blue
 				},
 				{
 					id: `${dateStr}-2`,
 					title: 'Lunch Break',
-					startDate: dateStr,
-					endDate: dateStr,
-					startTime: '12:00',
-					endTime: '13:00',
+					start: combineDateAndTime(dateStr, '12:00'),
+					end: combineDateAndTime(dateStr, '13:00'),
 					color: '#10b981' // green
 				},
 				{
 					id: `${dateStr}-3`,
 					title: 'Project Work',
-					startDate: dateStr,
-					endDate: dateStr,
-					startTime: '14:00',
-					endTime: '17:00',
+					start: combineDateAndTime(dateStr, '14:00'),
+					end: combineDateAndTime(dateStr, '17:00'),
 					color: '#ea580c' // orange
 				}
 			);
@@ -58,10 +47,8 @@ export function generateMockEvents(weekStart: Date): CalendarEvent[] {
 			events.push({
 				id: `${dateStr}-1`,
 				title: 'Weekly Planning',
-				startDate: dateStr,
-				endDate: dateStr,
-				startTime: '08:00',
-				endTime: '09:00',
+				start: combineDateAndTime(dateStr, '08:00'),
+				end: combineDateAndTime(dateStr, '09:00'),
 				color: '#8b5cf6' // purple
 			});
 		}
@@ -71,19 +58,15 @@ export function generateMockEvents(weekStart: Date): CalendarEvent[] {
 				{
 					id: `${dateStr}-1`,
 					title: 'Client Call',
-					startDate: dateStr,
-					endDate: dateStr,
-					startTime: '10:00',
-					endTime: '11:00',
+					start: combineDateAndTime(dateStr, '10:00'),
+					end: combineDateAndTime(dateStr, '11:00'),
 					color: '#f59e0b' // amber
 				},
 				{
 					id: `${dateStr}-2`,
 					title: 'Design Review',
-					startDate: dateStr,
-					endDate: dateStr,
-					startTime: '15:30',
-					endTime: '16:30',
+					start: combineDateAndTime(dateStr, '15:30'),
+					end: combineDateAndTime(dateStr, '16:30'),
 					color: '#ec4899' // pink
 				}
 			);
@@ -93,10 +76,8 @@ export function generateMockEvents(weekStart: Date): CalendarEvent[] {
 			events.push({
 				id: `${dateStr}-1`,
 				title: 'Team Retrospective',
-				startDate: dateStr,
-				endDate: dateStr,
-				startTime: '16:00',
-				endTime: '17:30',
+				start: combineDateAndTime(dateStr, '16:00'),
+				end: combineDateAndTime(dateStr, '17:30'),
 				color: '#06b6d4' // cyan
 			});
 		}
@@ -113,10 +94,8 @@ export function generateMockEvents(weekStart: Date): CalendarEvent[] {
 		id: `multi-1`,
 		title: 'Tech Conference',
 		description: 'Annual technology conference',
-		startDate: formatDate(tuesday),
-		endDate: formatDate(thursday),
-		startTime: '09:00',
-		endTime: '17:00',
+		start: combineDateAndTime(extractDateString(tuesday), '09:00'),
+		end: combineDateAndTime(extractDateString(thursday), '17:00'),
 		color: '#8b5cf6' // purple
 	});
 
@@ -128,10 +107,8 @@ export function generateMockEvents(weekStart: Date): CalendarEvent[] {
 		id: `multi-2`,
 		title: 'Leadership Workshop',
 		description: 'Two-day leadership training',
-		startDate: formatDate(wednesday),
-		endDate: formatDate(thursday),
-		startTime: '13:00',
-		endTime: '16:00',
+		start: combineDateAndTime(extractDateString(wednesday), '13:00'),
+		end: combineDateAndTime(extractDateString(thursday), '16:00'),
 		color: '#ec4899' // pink
 	});
 
@@ -145,10 +122,8 @@ export function generateMockEvents(weekStart: Date): CalendarEvent[] {
 		id: `multi-3`,
 		title: 'Hackathon',
 		description: 'Weekend coding competition',
-		startDate: formatDate(friday),
-		endDate: formatDate(sunday),
-		startTime: '18:00',
-		endTime: '20:00',
+		start: combineDateAndTime(extractDateString(friday), '18:00'),
+		end: combineDateAndTime(extractDateString(sunday), '20:00'),
 		color: '#ef4444' // red
 	});
 

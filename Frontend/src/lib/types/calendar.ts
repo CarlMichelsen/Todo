@@ -12,14 +12,10 @@ export interface CalendarEvent {
 	title: string;
 	/** Optional event description */
 	description?: string;
-	/** Start date in ISO format (YYYY-MM-DD) */
-	startDate: string;
-	/** End date in ISO format (YYYY-MM-DD) */
-	endDate: string;
-	/** Start time in HH:MM format (e.g., "09:30") */
-	startTime: string;
-	/** End time in HH:MM format (e.g., "10:30") */
-	endTime: string;
+	/** Start date and time */
+	start: Date;
+	/** End date and time */
+	end: Date;
 	/** Optional hex color for event bar (default: orange #ea580c) */
 	color?: string;
 }

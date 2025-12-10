@@ -22,9 +22,6 @@
 		return String(hour).padStart(2, '0');
 	}
 
-	// Current date as YYYY-MM-DD string for TimeSpanEvent
-	const currentDateStr = $derived(date.toISOString().split('T')[0]);
-
 	// Calculate layout for overlapping events
 	const eventLayout = $derived(calculateEventLayout(events));
 </script>
@@ -62,7 +59,7 @@
 		<!-- Events layer -->
 		<div class="absolute inset-0">
 			{#each events as event (event.id)}
-				<TimeSpanEvent {event} currentDate={currentDateStr} layout={eventLayout.get(event.id)} onclick={onEventClick} />
+				<TimeSpanEvent {event} currentDate={date} layout={eventLayout.get(event.id)} onclick={onEventClick} />
 			{/each}
 		</div>
 	</div>

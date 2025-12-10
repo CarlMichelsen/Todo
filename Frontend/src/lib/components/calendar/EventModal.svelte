@@ -2,6 +2,7 @@
 	import FormModal from '$lib/components/modals/FormModal.svelte';
 	import type { CalendarEvent } from '$lib/types/calendar';
 	import { eventsStore } from '$lib/stores/events';
+	import { combineDateAndTime, extractDateString, extractTimeString } from '$lib/utils/calendarUtils';
 
 	interface Props {
 		isOpen?: boolean;
@@ -36,10 +37,10 @@
 			// Edit mode: pre-fill with event data
 			title = event.title;
 			description = event.description || '';
-			startDate = event.startDate;
-			endDate = event.endDate;
-			startTime = event.startTime;
-			endTime = event.endTime;
+			startDate = extractDateString(event.start);
+			endDate = extractDateString(event.end);
+			startTime = extractTimeString(event.start);
+			endTime = extractTimeString(event.end);
 			color = event.color || '#ea580c';
 		} else {
 			// Create mode: reset to defaults
@@ -79,8 +80,14 @@
 			newErrors.endTime = 'End time is required';
 		}
 
-		if (startTime && endTime && startTime >= endTime) {
-			newErrors.endTime = 'End time must be after start time';
+		// Validate that end is after start
+		if (startDate && endDate && startTime && endTime) {
+			const startDateTime = combineDateAndTime(startDate, startTime);
+			const endDateTime = combineDateAndTime(endDate, endTime);
+
+			if (startDateTime >= endDateTime) {
+				newErrors.endTime = 'End must be after start';
+			}
 		}
 
 		errors = newErrors;
@@ -92,15 +99,16 @@
 			return;
 		}
 
+		const startDateTime = combineDateAndTime(startDate, startTime);
+		const endDateTime = combineDateAndTime(endDate, endTime);
+
 		if (isEditMode && event) {
 			// Edit mode: update existing event
 			eventsStore.updateEvent(event.id, {
 				title: title.trim(),
 				description: description.trim() || undefined,
-				startDate,
-				endDate,
-				startTime,
-				endTime,
+				start: startDateTime,
+				end: endDateTime,
 				color
 			});
 		} else {
@@ -109,10 +117,8 @@
 				id: crypto.randomUUID(),
 				title: title.trim(),
 				description: description.trim() || undefined,
-				startDate,
-				endDate,
-				startTime,
-				endTime,
+				start: startDateTime,
+				end: endDateTime,
 				color
 			};
 			eventsStore.addEvent(newEvent);

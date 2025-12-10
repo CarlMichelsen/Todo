@@ -10,6 +10,12 @@ import {
 	addWeeks,
 	addDays,
 	timeToMinutes,
+	dateToMinutes,
+	combineDateAndTime,
+	extractDateString,
+	extractTimeString,
+	eventOccursOnDate,
+	isMultiDayEvent,
 	eventsOverlap,
 	calculateEventLayout
 } from '../calendarUtils';
@@ -222,10 +228,8 @@ describe('calendarUtils', () => {
 		const createEvent = (id: string, startTime: string, endTime: string): CalendarEvent => ({
 			id,
 			title: `Event ${id}`,
-			startDate: '2025-01-15',
-			endDate: '2025-01-15',
-			startTime,
-			endTime
+			start: combineDateAndTime('2025-01-15', startTime),
+			end: combineDateAndTime('2025-01-15', endTime)
 		});
 
 		it('should detect overlap when events intersect', () => {
@@ -269,10 +273,8 @@ describe('calendarUtils', () => {
 		): CalendarEvent => ({
 			id,
 			title: `Event ${id}`,
-			startDate,
-			endDate,
-			startTime,
-			endTime
+			start: combineDateAndTime(startDate, startTime),
+			end: combineDateAndTime(endDate, endTime)
 		});
 
 		it('should return empty map for no events', () => {
@@ -377,6 +379,152 @@ describe('calendarUtils', () => {
 			// Longer event should get column 0 (sorted first)
 			expect(layout.get('long')?.columnIndex).toBe(0);
 			expect(layout.get('short')?.columnIndex).toBe(1);
+		});
+	});
+
+	describe('Date/Time utilities', () => {
+		describe('dateToMinutes', () => {
+			it('should convert midnight to 0', () => {
+				const date = new Date('2025-01-15T00:00:00');
+				expect(dateToMinutes(date)).toBe(0);
+			});
+
+			it('should convert 9:30 AM to 570', () => {
+				const date = new Date('2025-01-15T09:30:00');
+				expect(dateToMinutes(date)).toBe(570);
+			});
+
+			it('should convert noon to 720', () => {
+				const date = new Date('2025-01-15T12:00:00');
+				expect(dateToMinutes(date)).toBe(720);
+			});
+
+			it('should convert 11:59 PM to 1439', () => {
+				const date = new Date('2025-01-15T23:59:00');
+				expect(dateToMinutes(date)).toBe(1439);
+			});
+		});
+
+		describe('combineDateAndTime', () => {
+			it('should combine date and time strings', () => {
+				const result = combineDateAndTime('2025-01-15', '09:30');
+				expect(result.getFullYear()).toBe(2025);
+				expect(result.getMonth()).toBe(0); // January
+				expect(result.getDate()).toBe(15);
+				expect(result.getHours()).toBe(9);
+				expect(result.getMinutes()).toBe(30);
+				expect(result.getSeconds()).toBe(0);
+			});
+
+			it('should handle midnight', () => {
+				const result = combineDateAndTime('2025-01-15', '00:00');
+				expect(result.getHours()).toBe(0);
+				expect(result.getMinutes()).toBe(0);
+			});
+
+			it('should handle end of day', () => {
+				const result = combineDateAndTime('2025-01-15', '23:59');
+				expect(result.getHours()).toBe(23);
+				expect(result.getMinutes()).toBe(59);
+			});
+		});
+
+		describe('extractDateString', () => {
+			it('should extract ISO date string', () => {
+				const date = new Date('2025-01-15T09:30:00');
+				expect(extractDateString(date)).toBe('2025-01-15');
+			});
+
+			it('should handle single-digit months and days', () => {
+				const date = new Date('2025-03-05T10:00:00');
+				expect(extractDateString(date)).toBe('2025-03-05');
+			});
+		});
+
+		describe('extractTimeString', () => {
+			it('should extract time string', () => {
+				const date = new Date('2025-01-15T09:30:00');
+				expect(extractTimeString(date)).toBe('09:30');
+			});
+
+			it('should pad single digits', () => {
+				const date = new Date('2025-01-15T01:05:00');
+				expect(extractTimeString(date)).toBe('01:05');
+			});
+
+			it('should handle midnight', () => {
+				const date = new Date('2025-01-15T00:00:00');
+				expect(extractTimeString(date)).toBe('00:00');
+			});
+
+			it('should handle end of day', () => {
+				const date = new Date('2025-01-15T23:59:00');
+				expect(extractTimeString(date)).toBe('23:59');
+			});
+		});
+
+		describe('eventOccursOnDate', () => {
+			it('should return true for single-day event', () => {
+				const start = combineDateAndTime('2025-01-15', '09:00');
+				const end = combineDateAndTime('2025-01-15', '10:00');
+				const target = new Date('2025-01-15');
+				expect(eventOccursOnDate(start, end, target)).toBe(true);
+			});
+
+			it('should return true for multi-day event on first day', () => {
+				const start = combineDateAndTime('2025-01-15', '09:00');
+				const end = combineDateAndTime('2025-01-17', '10:00');
+				const target = new Date('2025-01-15');
+				expect(eventOccursOnDate(start, end, target)).toBe(true);
+			});
+
+			it('should return true for multi-day event on middle day', () => {
+				const start = combineDateAndTime('2025-01-15', '09:00');
+				const end = combineDateAndTime('2025-01-17', '10:00');
+				const target = new Date('2025-01-16');
+				expect(eventOccursOnDate(start, end, target)).toBe(true);
+			});
+
+			it('should return true for multi-day event on last day', () => {
+				const start = combineDateAndTime('2025-01-15', '09:00');
+				const end = combineDateAndTime('2025-01-17', '10:00');
+				const target = new Date('2025-01-17');
+				expect(eventOccursOnDate(start, end, target)).toBe(true);
+			});
+
+			it('should return false for event outside range', () => {
+				const start = combineDateAndTime('2025-01-15', '09:00');
+				const end = combineDateAndTime('2025-01-15', '10:00');
+				const target = new Date('2025-01-16');
+				expect(eventOccursOnDate(start, end, target)).toBe(false);
+			});
+
+			it('should ignore time when checking date range', () => {
+				const start = combineDateAndTime('2025-01-15', '23:00');
+				const end = combineDateAndTime('2025-01-16', '01:00');
+				const target = new Date('2025-01-15T12:00:00'); // Noon on first day
+				expect(eventOccursOnDate(start, end, target)).toBe(true);
+			});
+		});
+
+		describe('isMultiDayEvent', () => {
+			it('should return false for same-day event', () => {
+				const start = combineDateAndTime('2025-01-15', '09:00');
+				const end = combineDateAndTime('2025-01-15', '17:00');
+				expect(isMultiDayEvent(start, end)).toBe(false);
+			});
+
+			it('should return true for multi-day event', () => {
+				const start = combineDateAndTime('2025-01-15', '09:00');
+				const end = combineDateAndTime('2025-01-17', '17:00');
+				expect(isMultiDayEvent(start, end)).toBe(true);
+			});
+
+			it('should return true for event spanning midnight', () => {
+				const start = combineDateAndTime('2025-01-15', '23:00');
+				const end = combineDateAndTime('2025-01-16', '01:00');
+				expect(isMultiDayEvent(start, end)).toBe(true);
+			});
 		});
 	});
 });
