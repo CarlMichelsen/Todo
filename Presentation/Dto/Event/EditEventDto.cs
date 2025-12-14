@@ -8,4 +8,13 @@ public record EditEventDto(
     [MaxLength(1028 * 32)] string? Description,
     DateTime? Start,
     DateTime? End,
-    [property: HexColor] string? Color);
+    [HexColor] string? Color) : IValidatableObject
+{
+    public IEnumerable<ValidationResult> Validate(ValidationContext validationContext)
+    {
+        if (Start < End)
+        {
+            yield return new ValidationResult("Start must be before than End");
+        }
+    }
+}
