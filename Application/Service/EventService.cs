@@ -28,7 +28,7 @@ public class EventService(
         
         var results = await databaseContext
             .Event
-            .Where(e => e.HostedById == user.UserId || e.StartsAt > start || e.EndsAt > start || e.StartsAt < end)
+            .Where(e => e.HostedById == user.UserId && (e.StartsAt > start || e.EndsAt > start || e.StartsAt < end))
             .Take(MaxCurrentResults)
             .ToListAsync();
 
@@ -88,9 +88,11 @@ public class EventService(
         var user = httpContextAccessor.GetJwtUser()
                    ?? throw new EventAccessException();
         
+        // ReSharper disable once EntityFramework.NPlusOne.IncompleteDataQuery
         var userEntity = await databaseContext
             .User
             .FirstOrDefaultAsync(u => u.Id == user.UserId);
+        var now = timeProvider.GetUtcNow().UtcDateTime;
 
         // Enforce that the user exists in the database before allowing changes.
         if (userEntity is null)
@@ -103,15 +105,14 @@ public class EventService(
                 ProfileImageSmall = user.Profile,
                 ProfileImageMedium = user.ProfileMedium,
                 ProfileImageLarge = user.ProfileLarge,
-                CreatedAt = timeProvider.GetUtcNow().UtcDateTime,
+                CreatedAt = now,
             };
 
             databaseContext.User.Add(userEntity);
         }
 
-        var eventEntity = createEvent.FromDto(
-            timeProvider.GetUtcNow().UtcDateTime,
-            userEntity.Id);
+        // ReSharper disable once EntityFramework.NPlusOne.IncompleteDataUsage
+        var eventEntity = createEvent.FromDto(now, userEntity.Id);
         
         databaseContext.Event.Add(eventEntity);
         await databaseContext.SaveChangesAsync();
