@@ -5,6 +5,7 @@ using Database.Entity;
 using Database.Entity.Id;
 using Microsoft.AspNetCore.Http;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Logging;
 using Presentation.Dto;
 using Presentation.Dto.Event;
 using Presentation.Exception;
@@ -14,10 +15,11 @@ namespace Application.Service;
 
 public class EventService(
     TimeProvider timeProvider,
+    ILogger<EventService> logger,
     IHttpContextAccessor httpContextAccessor,
     DatabaseContext databaseContext) : IEventService
 {
-    private const int MaxCurrentResults = 500;
+    private const int MaxCurrentResults = 200;
     
     public async Task<IEnumerable<EventDto>> GetCurrentEventsInclusive(
         DateTime start,
@@ -28,10 +30,19 @@ public class EventService(
         
         var results = await databaseContext
             .Event
-            .Where(e => e.HostedById == user.UserId && (e.StartsAt > start || e.EndsAt > start || e.StartsAt < end))
-            .OrderByDescending(e => e.StartsAt)
+            .Where(e => e.HostedById == user.UserId
+                        && (e.StartsAt > start || start < e.EndsAt)
+                        && (e.StartsAt < end || end > e.EndsAt))
+            .OrderBy(e => e.StartsAt)
             .Take(MaxCurrentResults)
             .ToListAsync();
+        
+        logger.LogInformation(
+            "{Username}<{UserId}> {MethodName}: {EventAmount}",
+            user.Username,
+            user.UserId,
+            nameof(IEventService.GetCurrentEventsInclusive),
+            results.Count);
 
         return results.Select(EventMapper.ToDto);
     }
@@ -63,6 +74,13 @@ public class EventService(
             .Skip(paginationRequest.Skip)
             .Take(paginationRequest.Take)
             .ToListAsync();
+        
+        logger.LogInformation(
+            "{Username}<{UserId}> {MethodName}: {EventAmount}",
+            user.Username,
+            user.UserId,
+            nameof(IEventService.GetEvents),
+            results.Count);
 
         return new PaginationDto<EventDto>(
             Data: results.Select(EventMapper.ToDto),
@@ -76,10 +94,19 @@ public class EventService(
         var user = httpContextAccessor.GetJwtUser()
                    ?? throw new EventAccessException();
         
+        // ReSharper disable once EntityFramework.NPlusOne.IncompleteDataQuery
         var result = await databaseContext
             .Event
             .Where(e => e.HostedById == user.UserId)
             .FirstOrDefaultAsync(e => e.Id == id);
+        
+        logger.LogInformation(
+            "{Username}<{UserId}> {MethodName}: {EventId}",
+            user.Username,
+            user.UserId,
+            nameof(IEventService.GetEvent),
+            // ReSharper disable once EntityFramework.NPlusOne.IncompleteDataUsage
+            result?.Id);
         
         return result?.ToDto();
     }
@@ -117,6 +144,13 @@ public class EventService(
         
         databaseContext.Event.Add(eventEntity);
         await databaseContext.SaveChangesAsync();
+        
+        logger.LogInformation(
+            "{Username}<{UserId}> {MethodName}: {EventId}",
+            user.Username,
+            user.UserId,
+            nameof(IEventService.AddEvent),
+            eventEntity.Id);
         
         return eventEntity.ToDto();
     }
@@ -157,6 +191,13 @@ public class EventService(
         }
 
         await databaseContext.SaveChangesAsync();
+
+        logger.LogInformation(
+            "{Username}<{UserId}> {MethodName}: {EventId}",
+            user.Username,
+            user.UserId,
+            nameof(IEventService.EditEvent),
+            eventEntity.Id);
         
         return eventEntity.ToDto();
     }
@@ -171,6 +212,15 @@ public class EventService(
             .Where(e => e.HostedById == user.UserId && e.Id == eventId)
             .ExecuteDeleteAsync();
 
-        return result == 1;
+        var success = result == 1;
+
+        logger.LogInformation(
+            "{Username}<{UserId}> {MethodName}: {EventId}",
+            user.Username,
+            user.UserId,
+            nameof(IEventService.DeleteEvent),
+            success ? eventId : "not found");
+
+        return success;
     }
 }
