@@ -1,3 +1,6 @@
+import { ProblemDetails, UnauthorizedError, ValidationProblemDetails } from "$lib/types/api/error";
+import { ApiResponse } from "$lib/types/api/response";
+
 /**
  * Configuration for the API client
  */
@@ -54,7 +57,7 @@ export abstract class HttpClient {
         endpoint: string,
         data?: D,
         options?: RequestOptions
-    ): Promise<T | void> {
+    ): Promise<ApiResponse<T>> {
         const url = this.buildUrl(endpoint);
         const headers = this.mergeHeaders(options);
 
@@ -141,23 +144,52 @@ export abstract class HttpClient {
     /**
      * Handle response and parse JSON
      */
-    private async handleResponse<T>(response: Response): Promise<T | void> {
+    private async handleResponse<T>(response: Response): Promise<ApiResponse<T>> {
         if (!response.ok) {
-            const errorText = await response.text();
-            throw new Error(`HTTP ${response.status}: ${errorText || response.statusText}`);
+            switch (response.status) {
+                case 400:
+                    return {
+                        ok: false,
+                        status: 400,
+                        data: await response.json()
+                    };
+
+                case 401:
+                    const errorText = await response.text();
+                    throw new UnauthorizedError(`HTTP ${response.status}: ${errorText || response.statusText}`);
+
+                default:
+                    return {
+                        ok: false,
+                        status: response.status,
+                        data: await response.json()
+                    }
+            }
         }
 
         // Handle empty responses (204 No Content)
         if (response.status === 204) {
-            return;
+            return {
+                ok: true,
+                status: response.status,
+                data: null
+            };
         }
 
         const contentType = response.headers.get('content-type');
         if (contentType && contentType.includes('application/json')) {
-            return response.json();
+            return {
+                ok: true,
+                status: response.status,
+                data: response.json() as T
+            };
         }
 
-        return response.text() as T;
+        return {
+            ok: true,
+            status: response.status,
+            data: response.text() as T
+        };
     }
 
     /**

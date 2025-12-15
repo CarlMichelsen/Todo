@@ -290,13 +290,82 @@ export function getDisplayEndTime(eventEnd: Date, targetDate: Date): Date {
  * @returns True if events have overlapping time ranges
  */
 export function eventsOverlap(event1: CalendarEvent, event2: CalendarEvent): boolean {
-	const e1Start = dateToMinutes(event1.start);
-	const e1End = dateToMinutes(event1.end);
-	const e2Start = dateToMinutes(event2.start);
-	const e2End = dateToMinutes(event2.end);
+	// Use absolute timestamps instead of time-of-day to handle multi-day events correctly
+	return event1.start.getTime() < event2.end.getTime() && event2.start.getTime() < event1.end.getTime();
+}
 
-	// Classic interval overlap: A starts before B ends AND B starts before A ends
-	return e1Start < e2End && e2Start < e1End;
+/**
+ * Find all events that overlap with a specific event
+ * @param event - The target event
+ * @param allEvents - All events to check against
+ * @returns Array of events that overlap with the target (including the target itself)
+ */
+function findOverlappingEvents(event: CalendarEvent, allEvents: CalendarEvent[]): CalendarEvent[] {
+	return allEvents.filter((e) => e.id === event.id || eventsOverlap(event, e));
+}
+
+/**
+ * Calculate the maximum number of events that overlap with a specific event
+ * at any point during its time span
+ * @param event - The event to calculate overlap for
+ * @param overlappingEvents - Events that overlap with this event (including itself)
+ * @param targetDate - The date being rendered (for display time calculations)
+ * @returns Maximum number of simultaneous overlapping events
+ */
+function calculateMaxOverlapForEvent(
+	event: CalendarEvent,
+	overlappingEvents: CalendarEvent[],
+	targetDate: Date
+): number {
+	if (overlappingEvents.length === 0) return 1;
+
+	// Use DISPLAY times for the target date
+	const eventStart = dateToMinutes(getDisplayStartTime(event.start, targetDate));
+	const eventEnd = dateToMinutes(getDisplayEndTime(event.end, targetDate));
+
+	// Create array of time points (start/end) WITHIN the target event's range
+	interface TimePoint {
+		time: number;
+		isStart: boolean;
+	}
+
+	const timePoints: TimePoint[] = [];
+	for (const e of overlappingEvents) {
+		// Use DISPLAY times for each overlapping event
+		const eStart = dateToMinutes(getDisplayStartTime(e.start, targetDate));
+		const eEnd = dateToMinutes(getDisplayEndTime(e.end, targetDate));
+
+		// Only include this event's time points if they overlap with target event
+		if (eStart < eventEnd && eEnd > eventStart) {
+			// Clamp to target event's time range
+			const clampedStart = Math.max(eStart, eventStart);
+			const clampedEnd = Math.min(eEnd, eventEnd);
+
+			timePoints.push({ time: clampedStart, isStart: true });
+			timePoints.push({ time: clampedEnd, isStart: false });
+		}
+	}
+
+	// Sort by time, with starts before ends at same time
+	timePoints.sort((a, b) => {
+		if (a.time !== b.time) return a.time - b.time;
+		return a.isStart ? -1 : 1; // Starts before ends
+	});
+
+	// Sweep through and track maximum overlap
+	let activeCount = 0;
+	let maxOverlap = 0;
+
+	for (const point of timePoints) {
+		if (point.isStart) {
+			activeCount++;
+			maxOverlap = Math.max(maxOverlap, activeCount);
+		} else {
+			activeCount--;
+		}
+	}
+
+	return maxOverlap;
 }
 
 /**
@@ -342,17 +411,26 @@ function buildOverlapGroups(sortedEvents: CalendarEvent[]): CalendarEvent[][] {
  * Uses greedy algorithm to assign each event to the leftmost available column
  * @param group - Array of overlapping events
  * @param layout - Map to store layout results
+ * @param targetDate - The date being rendered (for display time calculations)
  */
-function assignColumnsToGroup(group: CalendarEvent[], layout: Map<string, EventLayout>): void {
-	// Sort group by start time
-	const sorted = [...group].sort((a, b) => dateToMinutes(a.start) - dateToMinutes(b.start));
+function assignColumnsToGroup(
+	group: CalendarEvent[],
+	layout: Map<string, EventLayout>,
+	targetDate: Date
+): void {
+	// Sort group by display start time
+	const sorted = [...group].sort((a, b) => {
+		const aStart = dateToMinutes(getDisplayStartTime(a.start, targetDate));
+		const bStart = dateToMinutes(getDisplayStartTime(b.start, targetDate));
+		return aStart - bStart;
+	});
 
 	// Track which columns are occupied and when they end
 	const columns: Array<{ event: CalendarEvent; endTime: number }> = [];
 
 	for (const event of sorted) {
-		const eventStart = dateToMinutes(event.start);
-		const eventEnd = dateToMinutes(event.end);
+		const eventStart = dateToMinutes(getDisplayStartTime(event.start, targetDate));
+		const eventEnd = dateToMinutes(getDisplayEndTime(event.end, targetDate));
 
 		// Remove events from columns that have ended before this event starts
 		for (let i = columns.length - 1; i >= 0; i--) {
@@ -363,11 +441,7 @@ function assignColumnsToGroup(group: CalendarEvent[], layout: Map<string, EventL
 
 		// Find first free column index
 		let columnIndex = 0;
-		const occupiedColumns = new Set(
-			columns.map((_, idx) => idx).filter((idx) => idx < columns.length)
-		);
-
-		while (occupiedColumns.has(columnIndex)) {
+		while (columnIndex < columns.length && columns[columnIndex]) {
 			columnIndex++;
 		}
 
@@ -382,12 +456,18 @@ function assignColumnsToGroup(group: CalendarEvent[], layout: Map<string, EventL
 		layout.set(event.id, { columnIndex, totalColumns: 1 });
 	}
 
-	// Update all events in group with the final totalColumns count
-	const maxColumns = columns.length;
+	// Calculate per-event max overlap and set totalColumns
 	for (const event of group) {
+		// Find all events in the group that overlap with this event
+		const overlapping = findOverlappingEvents(event, group);
+
+		// Calculate max simultaneous overlap for this specific event
+		const maxOverlap = calculateMaxOverlapForEvent(event, overlapping, targetDate);
+
+		// Update the layout with the correct totalColumns
 		const current = layout.get(event.id);
 		if (current) {
-			layout.set(event.id, { ...current, totalColumns: maxColumns });
+			layout.set(event.id, { ...current, totalColumns: maxOverlap });
 		}
 	}
 }
@@ -396,20 +476,26 @@ function assignColumnsToGroup(group: CalendarEvent[], layout: Map<string, EventL
  * Calculate layout positions for overlapping events
  * Returns column index and total columns for each event
  * @param events - Array of events for a single day
+ * @param targetDate - The date being rendered (for display time calculations)
  * @returns Map of event ID to layout information
  */
-export function calculateEventLayout(events: CalendarEvent[]): Map<string, EventLayout> {
+export function calculateEventLayout(
+	events: CalendarEvent[],
+	targetDate: Date
+): Map<string, EventLayout> {
 	if (events.length === 0) return new Map();
 
-	// Sort events by start time, then by duration (longer first)
+	// Sort events by display start time, then by duration (longer first)
 	const sortedEvents = [...events].sort((a, b) => {
-		const aStart = dateToMinutes(a.start);
-		const bStart = dateToMinutes(b.start);
+		const aStart = dateToMinutes(getDisplayStartTime(a.start, targetDate));
+		const bStart = dateToMinutes(getDisplayStartTime(b.start, targetDate));
 		if (aStart !== bStart) return aStart - bStart;
 
 		// If same start time, longer events first (helps minimize columns)
-		const aDuration = dateToMinutes(a.end) - aStart;
-		const bDuration = dateToMinutes(b.end) - bStart;
+		const aEnd = dateToMinutes(getDisplayEndTime(a.end, targetDate));
+		const bEnd = dateToMinutes(getDisplayEndTime(b.end, targetDate));
+		const aDuration = aEnd - aStart;
+		const bDuration = bEnd - bStart;
 		return bDuration - aDuration;
 	});
 
@@ -425,7 +511,7 @@ export function calculateEventLayout(events: CalendarEvent[]): Map<string, Event
 			layout.set(group[0].id, { columnIndex: 0, totalColumns: 1 });
 		} else {
 			// Multiple overlapping events - assign columns
-			assignColumnsToGroup(group, layout);
+			assignColumnsToGroup(group, layout, targetDate);
 		}
 	}
 

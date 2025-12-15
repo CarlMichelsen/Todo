@@ -2,6 +2,8 @@ import { writable } from 'svelte/store';
 import type { CalendarEvent } from '$lib/types/calendar';
 import { generateMockEvents } from '$lib/utils/mockEvents';
 import { getWeekStart } from '$lib/utils/calendarUtils';
+import { EventClient } from '$lib/utils/eventClient';
+import { eventDtoToCalendarEvent } from '$lib/utils/eventConverter';
 
 export interface EventStoreState {
 	events: CalendarEvent[];
@@ -38,13 +40,14 @@ function createEventsStore() {
 		 * Set the visible date range and load events for that range
 		 * @param weekStart - Monday of the week to load
 		 */
-		setDateRange(weekStart: Date): void {
+		async setDateRange(weekStart: Date): Promise<void> {
 			const weekEnd = new Date(weekStart);
 			weekEnd.setDate(weekStart.getDate() + 6);
 			weekEnd.setHours(23, 59, 59, 999);
 
 			update((state) => ({
 				...state,
+				events: [],
 				loading: true,
 				error: null,
 				dateRange: {
@@ -54,11 +57,9 @@ function createEventsStore() {
 			}));
 
 			try {
-				// TODO: Replace with API call
-				// const events = await eventClient.getEventsForWeek(weekStart);
-
-				// For now, use mock data
-				const events = generateMockEvents(weekStart);
+				const client = new EventClient();
+				const eventDtos = await client.getEventsForDateRange(weekStart, weekEnd);
+				const events = eventDtos.map(eventDtoToCalendarEvent);
 
 				update((state) => ({
 					...state,

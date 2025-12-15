@@ -27,7 +27,7 @@
 	}
 
 	// Calculate layout for overlapping events
-	const eventLayout = $derived(calculateEventLayout(events));
+	const eventLayout = $derived(calculateEventLayout(events, date));
 
 	// Current time tracking
 	let currentTime = $state(new Date());

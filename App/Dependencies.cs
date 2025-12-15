@@ -1,9 +1,12 @@
 ﻿using System.Text.Json.Serialization;
 using App.Extensions;
 using Application.Configuration;
+using Application.Service;
+using Database;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.Extensions.Diagnostics.HealthChecks;
 using Presentation;
+using Presentation.Service;
 
 namespace App;
 
@@ -65,6 +68,13 @@ public static class Dependencies
                     .AllowCredentials();
             });
         });
+        
+        // Database
+        builder.AddDatabase<DatabaseContext>();
+        
+        // Services
+        builder.Services
+            .AddScoped<IEventService, EventService>();
         
         // Add services to the container.
         // Learn more about configuring OpenAPI at https://aka.ms/aspnet/openapi
