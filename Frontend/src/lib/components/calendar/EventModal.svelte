@@ -1,5 +1,6 @@
 <script lang="ts">
 	import FormModal from '$lib/components/modals/FormModal.svelte';
+	import ConfirmModal from '$lib/components/modals/ConfirmModal.svelte';
 	import type { CalendarEvent } from '$lib/types/calendar';
 	import { eventsStore } from '$lib/stores/events';
 	import { combineDateAndTime, extractDateString, extractTimeString } from '$lib/utils/calendarUtils';
@@ -37,6 +38,7 @@
 	// New states for API integration
 	let isSubmitting = $state(false);
 	let submitError = $state<string | null>(null);
+	let showDeleteConfirm = $state(false);
 
 	// Initialize form when event changes
 	$effect(() => {
@@ -181,11 +183,17 @@
 		resetForm();
 	}
 
-	async function handleDelete() {
+	function handleDeleteClick() {
+		// Show confirmation dialog instead of deleting immediately
+		showDeleteConfirm = true;
+	}
+
+	async function handleConfirmDelete() {
 		if (isEditMode && event) {
 			try {
 				isSubmitting = true;
 				submitError = null;
+				showDeleteConfirm = false; // Close confirmation dialog
 
 				const client = new EventClient();
 				await client.deleteEvent(event.id);
@@ -200,6 +208,10 @@
 				isSubmitting = false;
 			}
 		}
+	}
+
+	function handleCancelDelete() {
+		showDeleteConfirm = false;
 	}
 
 	function resetForm() {
@@ -374,11 +386,28 @@
 				</div>
 			</div>
 
-			<!-- Color -->
+			<!-- Color and Delete Button -->
 			<div>
-				<label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2" for="color-selector">
-					Color
-				</label>
+				<!-- Header row with label and delete button -->
+				<div class="flex items-center justify-between mb-2">
+					<label class="block text-sm font-medium text-gray-700 dark:text-gray-300" for="color-selector">
+						Color
+					</label>
+					{#if isEditMode}
+						<button
+							type="button"
+							onclick={handleDeleteClick}
+							disabled={isSubmitting}
+							class="px-3 py-1.5 bg-red-600 hover:bg-red-700 dark:bg-red-500 dark:hover:bg-red-600 text-white rounded-lg transition-colors text-sm {isSubmitting
+								? 'opacity-50 cursor-not-allowed'
+								: ''}"
+						>
+							Delete Event
+						</button>
+					{/if}
+				</div>
+
+				<!-- Color swatches -->
 				<div class="flex flex-wrap gap-2" id="color-selector">
 					{#each colorOptions as colorOption}
 						<button
@@ -399,19 +428,16 @@
 					{/each}
 				</div>
 			</div>
-
-			<!-- Delete button (only in edit mode) -->
-			{#if isEditMode}
-				<div class="pt-4 border-t border-gray-200 dark:border-gray-700">
-					<button
-						type="button"
-						onclick={handleDelete}
-						class="px-4 py-2 bg-red-600 hover:bg-red-700 dark:bg-red-500 dark:hover:bg-red-600 text-white rounded-lg transition-colors text-sm"
-					>
-						Delete Event
-					</button>
-				</div>
-			{/if}
 		</form>
 	{/snippet}
 </FormModal>
+
+<ConfirmModal
+	isOpen={showDeleteConfirm}
+	title="Delete Event"
+	message="Are you sure you want to delete this event? This action cannot be undone."
+	confirmText="Delete"
+	cancelText="Cancel"
+	onConfirm={handleConfirmDelete}
+	onCancel={handleCancelDelete}
+/>

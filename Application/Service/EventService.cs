@@ -171,6 +171,6 @@ public class EventService(
             .Where(e => e.HostedById == user.UserId && e.Id == eventId)
             .ExecuteDeleteAsync();
 
-        return result == 0;
+        return result == 1;
     }
 }
