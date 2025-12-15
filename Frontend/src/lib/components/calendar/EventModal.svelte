@@ -5,7 +5,7 @@
 	import { combineDateAndTime, extractDateString, extractTimeString } from '$lib/utils/calendarUtils';
 	import { EventClient } from '$lib/utils/eventClient';
 	import { eventDtoToCalendarEvent } from '$lib/utils/eventConverter';
-	import type { CreateEventDto } from '$lib/types/api/event';
+	import type { CreateEventDto, EditEventDto } from '$lib/types/api/event';
 
 	interface Props {
 		isOpen?: boolean;
@@ -118,15 +118,26 @@
 			const endDateTime = combineDateAndTime(endDate, endTime);
 
 			if (isEditMode && event) {
-				// Edit mode: NOT IMPLEMENTED YET (future task)
-				// For now, keep existing behavior
-				eventsStore.updateEvent(event.id, {
+				// Edit mode: Call EventClient API
+				const client = new EventClient();
+
+				// Convert to EditEventDto
+				const editDto: EditEventDto = {
 					title: title.trim(),
-					description: description.trim() || undefined,
-					start: startDateTime,
-					end: endDateTime,
-					color
-				});
+					description: description.trim() || '', // API requires string, not undefined
+					start: startDateTime.toISOString(),
+					end: endDateTime.toISOString(),
+					color: color
+				};
+
+				// Call API
+				const eventDto = await client.updateEvent(event.id, editDto);
+
+				// Convert to CalendarEvent
+				const calendarEvent = eventDtoToCalendarEvent(eventDto);
+
+				// Update store
+				eventsStore.updateEvent(event.id, calendarEvent);
 			} else {
 				// Create mode: Use EventClient API
 				const client = new EventClient();
@@ -170,10 +181,24 @@
 		resetForm();
 	}
 
-	function handleDelete() {
+	async function handleDelete() {
 		if (isEditMode && event) {
-			eventsStore.deleteEvent(event.id);
-			isOpen = false;
+			try {
+				isSubmitting = true;
+				submitError = null;
+
+				const client = new EventClient();
+				await client.deleteEvent(event.id);
+
+				// Success: update store and close modal
+				eventsStore.deleteEvent(event.id);
+				isOpen = false;
+			} catch (error) {
+				submitError = error instanceof Error ? error.message : 'Failed to delete event';
+				console.error('Delete event error:', error);
+			} finally {
+				isSubmitting = false;
+			}
 		}
 	}
 
