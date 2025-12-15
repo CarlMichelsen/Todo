@@ -47,8 +47,18 @@
 	}
 </script>
 
-<div class="grid grid-cols-1 md:grid-cols-7 gap-2">
-	{#each datesToShow as date (date.toISOString())}
-		<CalendarDay day={buildCalendarDay(date)} onEventClick={onEventClick} />
-	{/each}
-</div>
+{#if storeState.error}
+	<div class="flex items-center justify-center h-full min-h-[400px]">
+		<p class="text-red-500 dark:text-red-400">{storeState.error}</p>
+	</div>
+{:else}
+	<div
+		class="grid grid-cols-1 md:grid-cols-7 gap-2 transition-all duration-200 {storeState.loading
+			? 'blur-sm opacity-60 pointer-events-none'
+			: ''}"
+	>
+		{#each datesToShow as date (date.toISOString())}
+			<CalendarDay day={buildCalendarDay(date)} onEventClick={onEventClick} />
+		{/each}
+	</div>
+{/if}

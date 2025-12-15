@@ -96,7 +96,7 @@
 
 	// Load events when week changes
 	$effect(() => {
-		eventsStore.setDateRange(currentWeekStart);
+		void eventsStore.setDateRange(currentWeekStart);
 	});
 
 	// Week navigation handlers (desktop)
