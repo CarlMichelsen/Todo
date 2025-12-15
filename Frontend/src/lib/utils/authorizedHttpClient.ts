@@ -1,3 +1,5 @@
+import { UnauthorizedError } from '$lib/types/api/error';
+import { ApiResponse } from '$lib/types/api/response';
 import { ApiConfig, HttpClient, HttpMethod, type RequestOptions } from './httpClient';
 
 /**
@@ -36,13 +38,13 @@ export abstract class AuthorizedHttpClient extends HttpClient {
         endpoint: string,
         data?: D,
         options?: RequestOptions
-    ): Promise<T | void> {
+    ): Promise<ApiResponse<T>> {
         try {
             // Try the original request
             return await super.request<T, D>(method, endpoint, data, options);
         } catch (error) {
             // Check if this is a 401 Unauthorized error
-            if (error instanceof Error && error.message.includes('HTTP 401')) {
+            if (error instanceof UnauthorizedError && error.status === 401) {
                 // Attempt to refresh the token
                 try {
                     await this.refreshToken();
@@ -51,11 +53,11 @@ export abstract class AuthorizedHttpClient extends HttpClient {
                     return await super.request<T, D>(method, endpoint, data, options);
                 } catch (refreshError) {
                     // If refresh fails, user needs to login
-                    if (refreshError instanceof Error && refreshError.message.includes('HTTP 401')) {
-                        throw new Error('Authentication expired. Please login again.');
+                    if (refreshError instanceof UnauthorizedError && refreshError.status === 401) {
+                        throw new UnauthorizedError('Authentication expired. Please login again.');
                     }
                     // Re-throw other refresh errors
-                    throw new Error(`Token refresh failed: ${refreshError instanceof Error ? refreshError.message : 'Unknown error'}`);
+                    throw new UnauthorizedError(`Token refresh failed: ${refreshError instanceof Error ? refreshError.message : 'Unknown error'}`);
                 }
             }
 

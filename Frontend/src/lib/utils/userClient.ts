@@ -13,22 +13,18 @@ export class UserClient extends AuthorizedHttpClient {
      * Throws error for other failure cases
      */
     async getCurrentUser(): Promise<JwtUser | null> {
-        try {
-            const user = await this.request<JwtUser>(HttpMethod.GET, '/api/v1/User');
+        const response = await this.request<JwtUser>(HttpMethod.GET, '/api/v1/User');
 
-            if (!user) {
-                return null;
-            }
-
-            return user;
-        } catch (error) {
-            // 401 means not authenticated - this is normal, return null
-            if (error instanceof Error && error.message.includes('HTTP 401')) {
-                return null;
-            }
-
-            // Re-throw other errors (network issues, 500s, etc.)
-            throw error;
+        if (!response.ok) {
+            console.error('Failed to get current user:', {
+                status: response.status,
+                type: response.data.type,
+                title: response.data.title,
+                detail: response.data.detail
+            });
+            return null;
         }
+
+        return response.data;
     }
 }

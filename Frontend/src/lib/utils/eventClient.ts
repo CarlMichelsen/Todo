@@ -1,6 +1,7 @@
 import { AuthorizedHttpClient } from './authorizedHttpClient';
 import { HttpMethod } from './httpClient';
 import type { EventDto, CreateEventDto, EditEventDto, PaginationDto } from '$lib/types/api/event';
+import type { BadRequestResponse } from '$lib/types/api/response';
 
 /**
  * Client for event-related API operations
@@ -20,27 +21,25 @@ export class EventClient extends AuthorizedHttpClient {
 	 * @returns Array of EventDto objects with ISO date-time strings
 	 */
 	async getEventsForDateRange(from: Date, to: Date): Promise<EventDto[]> {
-		try {
-			const fromISO = from.toISOString();
-			const toISO = to.toISOString();
+		const fromISO = from.toISOString();
+		const toISO = to.toISOString();
 
-			const events = await this.request<EventDto[]>(
-				HttpMethod.GET,
-				`/api/v1/Event/current?from=${encodeURIComponent(fromISO)}&to=${encodeURIComponent(toISO)}`
-			);
+		const response = await this.request<EventDto[]>(
+			HttpMethod.GET,
+			`/api/v1/Event/current?from=${encodeURIComponent(fromISO)}&to=${encodeURIComponent(toISO)}`
+		);
 
-			if (!events) {
-				return [];
-			}
-
-			return events;
-		} catch (error) {
-			// Handle 401 gracefully (user not authenticated)
-			if (error instanceof Error && error.message.includes('HTTP 401')) {
-				return [];
-			}
-			throw error;
+		if (!response.ok) {
+			console.error('Failed to fetch events for date range:', {
+				status: response.status,
+				from: fromISO,
+				to: toISO,
+				error: response.data
+			});
+			return [];
 		}
+
+		return response.data ?? [];
 	}
 
 	/**
@@ -57,25 +56,32 @@ export class EventClient extends AuthorizedHttpClient {
 		pageSize: number = 50,
 		search?: string
 	): Promise<PaginationDto<EventDto>> {
-		try {
-			let endpoint = `/api/v1/Event?Page=${page}&PageSize=${pageSize}`;
-			if (search) {
-				endpoint += `&search=${encodeURIComponent(search)}`;
-			}
-
-			const response = await this.request<PaginationDto<EventDto>>(HttpMethod.GET, endpoint);
-
-			if (!response) {
-				throw new Error('No response from server');
-			}
-
-			return response;
-		} catch (error) {
-			if (error instanceof Error && error.message.includes('HTTP 401')) {
-				throw new Error('Authentication required');
-			}
-			throw error;
+		let endpoint = `/api/v1/Event?Page=${page}&PageSize=${pageSize}`;
+		if (search) {
+			endpoint += `&search=${encodeURIComponent(search)}`;
 		}
+
+		const response = await this.request<PaginationDto<EventDto>>(HttpMethod.GET, endpoint);
+
+		if (!response.ok) {
+			if (response.status === 400) {
+				const badRequest = response as BadRequestResponse;
+				console.error('Validation error fetching events:', {
+					errors: badRequest.data.errors,
+					detail: badRequest.data.detail
+				});
+				throw new Error(`Invalid pagination parameters: ${badRequest.data.detail || 'Validation failed'}`);
+			}
+
+			console.error('Failed to fetch events:', response.data);
+			throw new Error(`Failed to fetch events: ${response.data.title || 'Unknown error'}`);
+		}
+
+		if (!response.data) {
+			throw new Error('No data returned from server');
+		}
+
+		return response.data;
 	}
 
 	/**
@@ -86,20 +92,32 @@ export class EventClient extends AuthorizedHttpClient {
 	 * @returns EventDto with ISO date-time strings
 	 */
 	async getEvent(eventId: string): Promise<EventDto> {
-		try {
-			const event = await this.request<EventDto>(HttpMethod.GET, `/api/v1/Event/${eventId}`);
+		const response = await this.request<EventDto>(HttpMethod.GET, `/api/v1/Event/${eventId}`);
 
-			if (!event) {
+		if (!response.ok) {
+			if (response.status === 404) {
+				console.warn(`Event not found: ${eventId}`);
 				throw new Error('Event not found');
 			}
 
-			return event;
-		} catch (error) {
-			if (error instanceof Error && error.message.includes('HTTP 404')) {
-				throw new Error('Event not found');
+			if (response.status === 400) {
+				const badRequest = response as BadRequestResponse;
+				console.error('Invalid event ID:', {
+					eventId,
+					errors: badRequest.data.errors
+				});
+				throw new Error('Invalid event ID format');
 			}
-			throw error;
+
+			console.error('Failed to fetch event:', response.data);
+			throw new Error(`Failed to fetch event: ${response.data.title || 'Unknown error'}`);
 		}
+
+		if (!response.data) {
+			throw new Error('Event not found');
+		}
+
+		return response.data;
 	}
 
 	/**
@@ -110,20 +128,36 @@ export class EventClient extends AuthorizedHttpClient {
 	 * @returns Created EventDto with generated ID
 	 */
 	async createEvent(event: CreateEventDto): Promise<EventDto> {
-		try {
-			const created = await this.request<EventDto>(HttpMethod.POST, '/api/v1/Event', event);
+		const response = await this.request<EventDto>(HttpMethod.POST, '/api/v1/Event', event);
 
-			if (!created) {
-				throw new Error('Failed to create event');
+		if (!response.ok) {
+			if (response.status === 400) {
+				const badRequest = response as BadRequestResponse;
+				console.error('Event validation failed:', {
+					errors: badRequest.data.errors,
+					detail: badRequest.data.detail,
+					event
+				});
+
+				// Format validation errors for display
+				const errorMessages = badRequest.data.errors
+					? Object.entries(badRequest.data.errors)
+							.map(([field, messages]) => `${field}: ${messages.join(', ')}`)
+							.join('; ')
+					: badRequest.data.detail || 'Validation failed';
+
+				throw new Error(`Invalid event data: ${errorMessages}`);
 			}
 
-			return created;
-		} catch (error) {
-			if (error instanceof Error && error.message.includes('HTTP 400')) {
-				throw new Error('Invalid event data');
-			}
-			throw error;
+			console.error('Failed to create event:', response.data);
+			throw new Error(`Failed to create event: ${response.data.title || 'Unknown error'}`);
 		}
+
+		if (!response.data) {
+			throw new Error('Failed to create event: No data returned');
+		}
+
+		return response.data;
 	}
 
 	/**
@@ -135,27 +169,46 @@ export class EventClient extends AuthorizedHttpClient {
 	 * @returns Updated EventDto
 	 */
 	async updateEvent(eventId: string, updates: EditEventDto): Promise<EventDto> {
-		try {
-			const updated = await this.request<EventDto>(
-				HttpMethod.PUT,
-				`/api/v1/Event/${eventId}`,
-				updates
-			);
+		const response = await this.request<EventDto>(
+			HttpMethod.PUT,
+			`/api/v1/Event/${eventId}`,
+			updates
+		);
 
-			if (!updated) {
-				throw new Error('Failed to update event');
-			}
-
-			return updated;
-		} catch (error) {
-			if (error instanceof Error && error.message.includes('HTTP 404')) {
+		if (!response.ok) {
+			if (response.status === 404) {
+				console.warn(`Event not found for update: ${eventId}`);
 				throw new Error('Event not found');
 			}
-			if (error instanceof Error && error.message.includes('HTTP 400')) {
-				throw new Error('Invalid event data');
+
+			if (response.status === 400) {
+				const badRequest = response as BadRequestResponse;
+				console.error('Event update validation failed:', {
+					eventId,
+					errors: badRequest.data.errors,
+					detail: badRequest.data.detail,
+					updates
+				});
+
+				// Format validation errors for display
+				const errorMessages = badRequest.data.errors
+					? Object.entries(badRequest.data.errors)
+							.map(([field, messages]) => `${field}: ${messages.join(', ')}`)
+							.join('; ')
+					: badRequest.data.detail || 'Validation failed';
+
+				throw new Error(`Invalid event data: ${errorMessages}`);
 			}
-			throw error;
+
+			console.error('Failed to update event:', response.data);
+			throw new Error(`Failed to update event: ${response.data.title || 'Unknown error'}`);
 		}
+
+		if (!response.data) {
+			throw new Error('Failed to update event: No data returned');
+		}
+
+		return response.data;
 	}
 
 	/**
@@ -166,13 +219,16 @@ export class EventClient extends AuthorizedHttpClient {
 	 * @returns void (throws on error)
 	 */
 	async deleteEvent(eventId: string): Promise<void> {
-		try {
-			await this.request<boolean>(HttpMethod.DELETE, `/api/v1/Event/${eventId}`);
-		} catch (error) {
-			if (error instanceof Error && error.message.includes('HTTP 404')) {
+		const response = await this.request<boolean>(HttpMethod.DELETE, `/api/v1/Event/${eventId}`);
+
+		if (!response.ok) {
+			if (response.status === 404) {
+				console.warn(`Event not found for deletion: ${eventId}`);
 				throw new Error('Event not found');
 			}
-			throw error;
+
+			console.error('Failed to delete event:', response.data);
+			throw new Error(`Failed to delete event: ${response.data.title || 'Unknown error'}`);
 		}
 	}
 }
