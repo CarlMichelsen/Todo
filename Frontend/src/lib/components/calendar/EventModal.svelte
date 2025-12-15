@@ -3,6 +3,9 @@
 	import type { CalendarEvent } from '$lib/types/calendar';
 	import { eventsStore } from '$lib/stores/events';
 	import { combineDateAndTime, extractDateString, extractTimeString } from '$lib/utils/calendarUtils';
+	import { EventClient } from '$lib/utils/eventClient';
+	import { eventDtoToCalendarEvent } from '$lib/utils/eventConverter';
+	import type { CreateEventDto } from '$lib/types/api/event';
 
 	interface Props {
 		isOpen?: boolean;
@@ -30,6 +33,10 @@
 	let startTime = $state('09:00');
 	let endTime = $state('10:00');
 	let color = $state('#ea580c');
+
+	// New states for API integration
+	let isSubmitting = $state(false);
+	let submitError = $state<string | null>(null);
 
 	// Initialize form when event changes
 	$effect(() => {
@@ -94,38 +101,69 @@
 		return Object.keys(newErrors).length === 0;
 	}
 
-	function handleSubmit() {
+	async function handleSubmit(): Promise<boolean> {
+		// Clear previous errors
+		submitError = null;
+
+		// Validate form
 		if (!validateForm()) {
-			return;
+			return false;
 		}
 
-		const startDateTime = combineDateAndTime(startDate, startTime);
-		const endDateTime = combineDateAndTime(endDate, endTime);
+		// Set loading state
+		isSubmitting = true;
 
-		if (isEditMode && event) {
-			// Edit mode: update existing event
-			eventsStore.updateEvent(event.id, {
-				title: title.trim(),
-				description: description.trim() || undefined,
-				start: startDateTime,
-				end: endDateTime,
-				color
-			});
-		} else {
-			// Create mode: add new event
-			const newEvent: CalendarEvent = {
-				id: crypto.randomUUID(),
-				title: title.trim(),
-				description: description.trim() || undefined,
-				start: startDateTime,
-				end: endDateTime,
-				color
-			};
-			eventsStore.addEvent(newEvent);
+		try {
+			const startDateTime = combineDateAndTime(startDate, startTime);
+			const endDateTime = combineDateAndTime(endDate, endTime);
+
+			if (isEditMode && event) {
+				// Edit mode: NOT IMPLEMENTED YET (future task)
+				// For now, keep existing behavior
+				eventsStore.updateEvent(event.id, {
+					title: title.trim(),
+					description: description.trim() || undefined,
+					start: startDateTime,
+					end: endDateTime,
+					color
+				});
+			} else {
+				// Create mode: Use EventClient API
+				const client = new EventClient();
+
+				// Convert to CreateEventDto
+				const createDto: CreateEventDto = {
+					title: title.trim(),
+					description: description.trim() || '', // API requires string, not undefined
+					start: startDateTime.toISOString(),
+					end: endDateTime.toISOString(),
+					color: color
+				};
+
+				// Call API
+				const eventDto = await client.createEvent(createDto);
+
+				// Convert to CalendarEvent
+				const calendarEvent = eventDtoToCalendarEvent(eventDto);
+
+				// Update store
+				eventsStore.addEvent(calendarEvent);
+			}
+
+			// Success: reset form and return true
+			resetForm();
+			return true;
+		} catch (error) {
+			// Handle error: display message and return false
+			if (error instanceof Error) {
+				submitError = error.message;
+			} else {
+				submitError = 'Failed to create event. Please try again.';
+			}
+			return false;
+		} finally {
+			isSubmitting = false;
 		}
-
-		// Reset form (modal close is handled by FormModal)
-		resetForm();
 	}
 
 	function handleCancel() {
@@ -168,6 +206,15 @@
 	onCancel={handleCancel}
 >
 	{#snippet formContent()}
+		<!-- Error banner -->
+		{#if submitError}
+			<div
+				class="mb-4 p-3 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-lg"
+			>
+				<p class="text-sm text-red-600 dark:text-red-400">{submitError}</p>
+			</div>
+		{/if}
+
 		<form class="space-y-4" onsubmit={(e) => e.preventDefault()}>
 			<!-- Title -->
 			<div>
@@ -181,7 +228,10 @@
 					type="text"
 					id="event-title"
 					bind:value={title}
-					class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 focus:ring-2 focus:ring-orange-500 dark:focus:ring-orange-400 focus:border-transparent"
+					disabled={isSubmitting}
+					class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 focus:ring-2 focus:ring-orange-500 dark:focus:ring-orange-400 focus:border-transparent {isSubmitting
+						? 'opacity-50 cursor-not-allowed'
+						: ''}"
 					placeholder="Event title"
 				/>
 				{#if errors.title}
@@ -201,7 +251,10 @@
 					id="event-description"
 					bind:value={description}
 					rows="3"
-					class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 focus:ring-2 focus:ring-orange-500 dark:focus:ring-orange-400 focus:border-transparent"
+					disabled={isSubmitting}
+					class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 focus:ring-2 focus:ring-orange-500 dark:focus:ring-orange-400 focus:border-transparent {isSubmitting
+						? 'opacity-50 cursor-not-allowed'
+						: ''}"
 					placeholder="Optional description"
 				></textarea>
 			</div>
@@ -219,7 +272,10 @@
 						type="date"
 						id="event-start-date"
 						bind:value={startDate}
-						class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 focus:ring-2 focus:ring-orange-500 dark:focus:ring-orange-400 focus:border-transparent"
+						disabled={isSubmitting}
+						class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 focus:ring-2 focus:ring-orange-500 dark:focus:ring-orange-400 focus:border-transparent {isSubmitting
+							? 'opacity-50 cursor-not-allowed'
+							: ''}"
 					/>
 					{#if errors.startDate}
 						<p class="text-sm text-red-600 dark:text-red-400 mt-1">{errors.startDate}</p>
@@ -237,7 +293,10 @@
 						type="date"
 						id="event-end-date"
 						bind:value={endDate}
-						class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 focus:ring-2 focus:ring-orange-500 dark:focus:ring-orange-400 focus:border-transparent"
+						disabled={isSubmitting}
+						class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 focus:ring-2 focus:ring-orange-500 dark:focus:ring-orange-400 focus:border-transparent {isSubmitting
+							? 'opacity-50 cursor-not-allowed'
+							: ''}"
 					/>
 					{#if errors.endDate}
 						<p class="text-sm text-red-600 dark:text-red-400 mt-1">{errors.endDate}</p>
@@ -258,7 +317,10 @@
 						type="time"
 						id="event-start-time"
 						bind:value={startTime}
-						class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 focus:ring-2 focus:ring-orange-500 dark:focus:ring-orange-400 focus:border-transparent"
+						disabled={isSubmitting}
+						class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 focus:ring-2 focus:ring-orange-500 dark:focus:ring-orange-400 focus:border-transparent {isSubmitting
+							? 'opacity-50 cursor-not-allowed'
+							: ''}"
 					/>
 					{#if errors.startTime}
 						<p class="text-sm text-red-600 dark:text-red-400 mt-1">{errors.startTime}</p>
@@ -276,7 +338,10 @@
 						type="time"
 						id="event-end-time"
 						bind:value={endTime}
-						class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 focus:ring-2 focus:ring-orange-500 dark:focus:ring-orange-400 focus:border-transparent"
+						disabled={isSubmitting}
+						class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 focus:ring-2 focus:ring-orange-500 dark:focus:ring-orange-400 focus:border-transparent {isSubmitting
+							? 'opacity-50 cursor-not-allowed'
+							: ''}"
 					/>
 					{#if errors.endTime}
 						<p class="text-sm text-red-600 dark:text-red-400 mt-1">{errors.endTime}</p>
@@ -294,7 +359,10 @@
 						<button
 							type="button"
 							onclick={() => (color = colorOption.value)}
-							class="w-10 h-10 rounded-lg border-2 transition-all hover:scale-110"
+							disabled={isSubmitting}
+							class="w-10 h-10 rounded-lg border-2 transition-all hover:scale-110 {isSubmitting
+								? 'opacity-50 cursor-not-allowed'
+								: ''}"
 							class:border-gray-900={color === colorOption.value}
 							class:dark:border-white={color === colorOption.value}
 							class:border-gray-300={color !== colorOption.value}

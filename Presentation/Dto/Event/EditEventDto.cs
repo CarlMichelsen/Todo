@@ -12,7 +12,7 @@ public record EditEventDto(
 {
     public IEnumerable<ValidationResult> Validate(ValidationContext validationContext)
     {
-        if (Start < End)
+        if (Start > End)
         {
             yield return new ValidationResult("Start must be before than End");
         }

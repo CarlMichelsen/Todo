@@ -8,7 +8,7 @@
 		size?: 'sm' | 'md' | 'lg' | 'full';
 		submitText?: string;
 		cancelText?: string;
-		onSubmit: () => void;
+		onSubmit: () => void | Promise<boolean>;
 		onCancel?: () => void;
 		formContent: Snippet;
 	}
@@ -24,9 +24,19 @@
 		formContent
 	}: Props = $props();
 
-	function handleSubmit() {
-		onSubmit();
-		isOpen = false;
+	async function handleSubmit() {
+		const result = onSubmit();
+
+		// Handle both sync (void) and async (Promise<boolean>) returns
+		if (result instanceof Promise) {
+			const success = await result;
+			if (success) {
+				isOpen = false;
+			}
+		} else {
+			// Sync return, always close (backward compatible)
+			isOpen = false;
+		}
 	}
 
 	function handleCancel() {

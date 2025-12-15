@@ -29,6 +29,7 @@ public class EventService(
         var results = await databaseContext
             .Event
             .Where(e => e.HostedById == user.UserId && (e.StartsAt > start || e.EndsAt > start || e.StartsAt < end))
+            .OrderByDescending(e => e.StartsAt)
             .Take(MaxCurrentResults)
             .ToListAsync();
 
