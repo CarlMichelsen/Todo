@@ -13,12 +13,15 @@ public class DatabaseContext(
     
     public DbSet<EventEntity> Event => Set<EventEntity>();
     
+    public DbSet<SharedCalendarEntity> SharedCalendar => Set<SharedCalendarEntity>();
+    
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
         modelBuilder.HasDefaultSchema(SchemaName);
 
         UserEntity.Configure(modelBuilder);
         EventEntity.Configure(modelBuilder);
+        SharedCalendarEntity.Configure(modelBuilder);
         
         base.OnModelCreating(modelBuilder);
     }

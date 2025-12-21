@@ -27,22 +27,33 @@ public class UserEntity : IEntity
 
     public List<EventEntity> HostedEvents { get; init; } = [];
     
+    public List<SharedCalendarEntity> SharedCalendars { get; init; } = [];
+    
     public required DateTime CreatedAt { get; init; }
     
     public static void Configure(ModelBuilder modelBuilder)
     {
         var entityBuilder = modelBuilder.Entity<UserEntity>();
         
+        // ID
         entityBuilder.HasKey(e => e.Id);
-        
         entityBuilder
             .Property(x => x.Id)
             .RegisterTypedKeyConversion<UserEntity, UserEntityId>(x =>
                 new UserEntityId(x, true));
         
+        // EventEntity
         entityBuilder
             .HasMany(u => u.HostedEvents)
             .WithOne(e => e.HostedBy)
-            .HasForeignKey(e => e.HostedById);
+            .HasForeignKey(e => e.HostedById)
+            .OnDelete(DeleteBehavior.Cascade);
+        
+        // SharedCalendarEntity
+        entityBuilder
+            .HasMany(u => u.SharedCalendars)
+            .WithOne(e => e.User)
+            .HasForeignKey(e => e.UserId)
+            .OnDelete(DeleteBehavior.Cascade);
     }
 }
