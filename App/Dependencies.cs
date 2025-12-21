@@ -93,23 +93,23 @@ public static class Dependencies
             {
                 var timeProvider = builder.Services.BuildServiceProvider()
                     .GetService<TimeProvider>();
-            
-            // Configure JWT settings
-            options.TokenValidationParameters = TokenValidationParametersFactory
-                .AccessValidationParameters(jwtOptions, timeProvider);
-            
-            options.MapInboundClaims = false; // Important!
+                
+                // Configure JWT settings
+                options.TokenValidationParameters = TokenValidationParametersFactory
+                    .AccessValidationParameters(jwtOptions, timeProvider);
+                
+                options.MapInboundClaims = false; // Important!
 
-            // Get token from cookie
-            options.Events = new JwtBearerEvents
-            {
-                OnMessageReceived = context =>
+                // Get token from cookie
+                options.Events = new JwtBearerEvents
                 {
-                    context.Token = context.Request.Cookies[ApplicationConstants.AccessCookieName];
-                    return Task.CompletedTask;
-                },
-            };
-        });
+                    OnMessageReceived = context =>
+                    {
+                        context.Token = context.Request.Cookies[ApplicationConstants.AccessCookieName];
+                        return Task.CompletedTask;
+                    },
+                };
+            });
         
         builder.Services
             .AddAuthorization();

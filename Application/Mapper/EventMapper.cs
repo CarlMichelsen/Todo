@@ -13,22 +13,6 @@ public static class EventMapper
         Start: entity.StartsAt,
         End: entity.EndsAt,
         Color: entity.Color);
-
-    public static EventEntity FromDto(
-        this EventDto dto,
-        DateTime createdAt,
-        UserEntityId hostedById,
-        EventEntityId entityId) => new EventEntity
-    {
-        Id = entityId,
-        Title = dto.Title,
-        Description = dto.Description,
-        Color = dto.Color,
-        StartsAt = dto.Start,
-        EndsAt = dto.End,
-        CreatedAt = createdAt,
-        HostedById = hostedById,
-    };
     
     public static EventEntity FromDto(
         this CreateEventDto dto,

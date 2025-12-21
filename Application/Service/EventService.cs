@@ -127,7 +127,7 @@ public class EventService(
         {
             userEntity = new UserEntity
             {
-                Id = new UserEntityId(user.UserId),
+                Id = new UserEntityId(user.UserId, true),
                 Username = user.Username,
                 Email = user.Email,
                 ProfileImageSmall = user.Profile,
