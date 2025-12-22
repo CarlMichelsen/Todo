@@ -25,9 +25,11 @@ public class UserEntity : IEntity
     // Large
     public Uri? ProfileImageLarge { get; init; }
 
-    public List<EventEntity> HostedEvents { get; init; } = [];
+    public List<CalendarEntity> Calendars { get; init; } = [];
     
-    public List<SharedCalendarEntity> SharedCalendars { get; init; } = [];
+    public List<EventEntity> CreatedEvents { get; init; } = [];
+    
+    public List<CalendarLinkEntity> CalendarLinks { get; init; } = [];
     
     public required DateTime CreatedAt { get; init; }
     
@@ -44,14 +46,21 @@ public class UserEntity : IEntity
         
         // EventEntity
         entityBuilder
-            .HasMany(u => u.HostedEvents)
-            .WithOne(e => e.HostedBy)
-            .HasForeignKey(e => e.HostedById)
+            .HasMany(u => u.CreatedEvents)
+            .WithOne(e => e.CreatedBy)
+            .HasForeignKey(e => e.CreatedById)
             .OnDelete(DeleteBehavior.Cascade);
         
-        // SharedCalendarEntity
+        // Calendars
         entityBuilder
-            .HasMany(u => u.SharedCalendars)
+            .HasMany(x => x.Calendars)
+            .WithOne(c => c.Owner)
+            .HasForeignKey(x => x.OwnerId)
+            .OnDelete(DeleteBehavior.Cascade);
+        
+        // CalendarLinks
+        entityBuilder
+            .HasMany(u => u.CalendarLinks)
             .WithOne(e => e.User)
             .HasForeignKey(e => e.UserId)
             .OnDelete(DeleteBehavior.Cascade);

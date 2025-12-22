@@ -14,50 +14,47 @@ using Presentation.Service;
 namespace Application.Service;
 
 public class EventService(
-    TimeProvider timeProvider,
     ILogger<EventService> logger,
+    TimeProvider timeProvider,
     IHttpContextAccessor httpContextAccessor,
     DatabaseContext databaseContext) : IEventService
 {
     private const int MaxCurrentResults = 200;
     
     public async Task<IEnumerable<EventDto>> GetCurrentEventsInclusive(
-        DateTime start,
-        DateTime end)
+        Guid calendarId,
+        DateTime from,
+        DateTime to)
     {
-        var user = httpContextAccessor.GetJwtUser()
-                   ?? throw new EventAccessException();
-        
+        var user = this.GetUser();
+
         var results = await databaseContext
             .Event
-            .Where(e => e.HostedById == user.UserId
-                        && (e.StartsAt > start || start < e.EndsAt)
-                        && (e.StartsAt < end || end > e.EndsAt))
+            .Include(e => e.Calendar)
+            .Where(e => e.Calendar!.Id == calendarId
+                        && e.Calendar!.OwnerId == user.UserId
+                        && (e.StartsAt < from || from < e.EndsAt))
             .OrderBy(e => e.StartsAt)
             .Take(MaxCurrentResults)
+            .AsNoTracking()
             .ToListAsync();
         
-        logger.LogInformation(
-            "{Username}<{UserId}> {MethodName}: {EventAmount}",
-            user.Username,
-            user.UserId,
-            nameof(IEventService.GetCurrentEventsInclusive),
-            results.Count);
-
         return results.Select(EventMapper.ToDto);
     }
 
     public async Task<PaginationDto<EventDto>> GetEvents(
+        Guid calendarId,
         PaginationRequestDto paginationRequest,
         string? search)
     {
-        var user = httpContextAccessor.GetJwtUser()
-                   ?? throw new EventAccessException();
-
+        var user = this.GetUser();
+        
         var query = databaseContext
             .Event
-            .Where(e => e.HostedById == user.UserId);
-
+            .Include(e => e.Calendar)
+            .Where(e => e.Calendar!.OwnerId == user.UserId
+                && e.Calendar!.Id == calendarId);
+        
         if (!string.IsNullOrWhiteSpace(search))
         {
             query = query.OrderByMatch(
@@ -69,19 +66,13 @@ public class EventService(
         {
             query = query.OrderBy(e => e.StartsAt);
         }
-
+        
         var results = await query
             .Skip(paginationRequest.Skip)
             .Take(paginationRequest.Take)
+            .AsNoTracking()
             .ToListAsync();
         
-        logger.LogInformation(
-            "{Username}<{UserId}> {MethodName}: {EventAmount}",
-            user.Username,
-            user.UserId,
-            nameof(IEventService.GetEvents),
-            results.Count);
-
         return new PaginationDto<EventDto>(
             Data: results.Select(EventMapper.ToDto),
             Page: paginationRequest.Page,
@@ -89,37 +80,33 @@ public class EventService(
             TotalCount: results.Count);
     }
 
-    public async Task<EventDto?> GetEvent(Guid id)
+    public async Task<EventDto?> GetEvent(
+        Guid calendarId,
+        Guid eventId)
     {
-        var user = httpContextAccessor.GetJwtUser()
-                   ?? throw new EventAccessException();
+        var user = this.GetUser();
         
-        // ReSharper disable once EntityFramework.NPlusOne.IncompleteDataQuery
         var result = await databaseContext
             .Event
-            .Where(e => e.HostedById == user.UserId)
-            .FirstOrDefaultAsync(e => e.Id == id);
-        
-        logger.LogInformation(
-            "{Username}<{UserId}> {MethodName}: {EventId}",
-            user.Username,
-            user.UserId,
-            nameof(IEventService.GetEvent),
-            // ReSharper disable once EntityFramework.NPlusOne.IncompleteDataUsage
-            result?.Id);
+            .Include(e => e.Calendar)
+            .Where(e => e.Calendar!.OwnerId == user.UserId
+                && e.Calendar!.Id == calendarId)
+            .AsNoTracking()
+            .FirstOrDefaultAsync(e => e.Id == eventId);
         
         return result?.ToDto();
     }
 
-    public async Task<EventDto> AddEvent(CreateEventDto createEvent)
+    public async Task<EventDto> AddEvent(
+        Guid calendarId,
+        CreateEventDto createEvent)
     {
-        var user = httpContextAccessor.GetJwtUser()
-                   ?? throw new EventAccessException();
+        var user = this.GetUser();
         
-        // ReSharper disable once EntityFramework.NPlusOne.IncompleteDataQuery
         var userEntity = await databaseContext
             .User
             .FirstOrDefaultAsync(u => u.Id == user.UserId);
+        
         var now = timeProvider.GetUtcNow().UtcDateTime;
 
         // Enforce that the user exists in the database before allowing changes.
@@ -138,9 +125,12 @@ public class EventService(
 
             databaseContext.User.Add(userEntity);
         }
-
+        
         // ReSharper disable once EntityFramework.NPlusOne.IncompleteDataUsage
-        var eventEntity = createEvent.FromDto(now, userEntity.Id);
+        var eventEntity = createEvent.FromDto(
+            now,
+            new CalendarEntityId(calendarId, true),
+            userEntity.Id);
         
         databaseContext.Event.Add(eventEntity);
         await databaseContext.SaveChangesAsync();
@@ -155,16 +145,20 @@ public class EventService(
         return eventEntity.ToDto();
     }
 
-    public async Task<EventDto> EditEvent(Guid eventId, EditEventDto editEvent)
+    public async Task<EventDto> EditEvent(
+        Guid calendarId,
+        Guid eventId,
+        EditEventDto editEvent)
     {
-        var user = httpContextAccessor.GetJwtUser()
-                   ?? throw new EventAccessException();
-
+        var user = this.GetUser();
+        
         var eventEntity = await databaseContext
             .Event
-            .Where(e => e.HostedById == user.UserId && e.Id == eventId)
-            .SingleAsync();
-
+            .Include(e => e.Calendar)
+            .Where(e => e.Calendar!.OwnerId == user.UserId
+                        && e.Calendar!.Id == calendarId)
+            .SingleAsync(e => e.Id == eventId);
+        
         if (editEvent.Title is not null)
         {
             eventEntity.Title = editEvent.Title;
@@ -189,9 +183,9 @@ public class EventService(
         {
             eventEntity.Color = editEvent.Color;
         }
-
+        
         await databaseContext.SaveChangesAsync();
-
+        
         logger.LogInformation(
             "{Username}<{UserId}> {MethodName}: {EventId}",
             user.Username,
@@ -202,18 +196,21 @@ public class EventService(
         return eventEntity.ToDto();
     }
 
-    public async Task<bool> DeleteEvent(Guid eventId)
+    public async Task<bool> DeleteEvent(
+        Guid calendarId,
+        Guid eventId)
     {
-        var user = httpContextAccessor.GetJwtUser()
-                   ?? throw new EventAccessException();
+        var user = this.GetUser();
         
         var result = await databaseContext
             .Event
-            .Where(e => e.HostedById == user.UserId && e.Id == eventId)
+            .Include(e => e.Calendar)
+            .Where(e => e.Calendar!.OwnerId == user.UserId
+                        && e.Calendar!.Id == calendarId
+                        && e.Id == eventId)
             .ExecuteDeleteAsync();
-
+        
         var success = result == 1;
-
         logger.LogInformation(
             "{Username}<{UserId}> {MethodName}: {EventId}",
             user.Username,
@@ -222,5 +219,11 @@ public class EventService(
             success ? eventId : "not found");
 
         return success;
+    }
+
+    private JwtUser GetUser()
+    {
+        return httpContextAccessor.GetJwtUser()
+                   ?? throw new CalendarAccessException();
     }
 }

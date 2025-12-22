@@ -19,9 +19,10 @@ public class UserController(
         }
         
         logger.LogInformation(
-            "User '{Username}' <{UserId}> has fetched user information.",
+            "{Username}<{UserId}> {MethodName}",
             jwtUser.Username,
-            jwtUser.UserId);
+            jwtUser.UserId,
+            nameof(GetUser));
         return this.Ok(jwtUser);
     }
 }

@@ -1,6 +1,9 @@
 ﻿using System.Net;
 using System.Text;
 using System.Text.Json;
+using Database;
+using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.DependencyInjection;
 using Presentation.Dto.Event;
 using Shouldly;
 using Test.Integration.Authorization;
@@ -46,5 +49,16 @@ public class EventCreationTest(IntegrationTestFactory factory)
         deserialized.Description.ShouldBe(createEventDto.Description);
         deserialized.Start.ShouldBe(createEventDto.Start);
         deserialized.End.ShouldBe(createEventDto.End);
+
+        await using var dbContext = factory
+            .Services
+            .CreateScope()
+            .ServiceProvider
+            .GetRequiredService<DatabaseContext>();
+        var dbEvent = await dbContext
+            .Event
+            .FirstAsync(e => e.Id == deserialized.Id);
+        dbEvent.Title.ShouldBe(createEventDto.Title);
+        dbEvent.Description.ShouldBe(createEventDto.Description);
     }
 }

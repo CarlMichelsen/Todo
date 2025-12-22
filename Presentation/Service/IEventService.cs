@@ -6,18 +6,29 @@ namespace Presentation.Service;
 public interface IEventService
 {
     Task<IEnumerable<EventDto>> GetCurrentEventsInclusive(
+        Guid calendarId,
         DateTime from,
         DateTime to);
     
     Task<PaginationDto<EventDto>> GetEvents(
+        Guid calendarId,
         PaginationRequestDto paginationRequest,
         string? search);
     
-    Task<EventDto?> GetEvent(Guid id);
+    Task<EventDto?> GetEvent(
+        Guid calendarId,
+        Guid eventId);
 
-    Task<EventDto> AddEvent(CreateEventDto createEvent);
+    Task<EventDto> AddEvent(
+        Guid calendarId,
+        CreateEventDto createEvent);
     
-    Task<EventDto> EditEvent(Guid eventId, EditEventDto editEvent);
+    Task<EventDto> EditEvent(
+        Guid calendarId,
+        Guid eventId,
+        EditEventDto editEvent);
     
-    Task<bool> DeleteEvent(Guid eventId);
+    Task<bool> DeleteEvent(
+        Guid calendarId,
+        Guid eventId);
 }

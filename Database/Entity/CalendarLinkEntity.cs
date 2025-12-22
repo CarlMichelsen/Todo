@@ -4,11 +4,13 @@ using Microsoft.EntityFrameworkCore;
 
 namespace Database.Entity;
 
-public class SharedCalendarEntity : IEntity
+public class CalendarLinkEntity : IEntity
 {
-    public required SharedCalendarEntityId Id { get; init; }
+    public required CalendarLinkEntityId Id { get; init; }
     
     public required Uri CalendarLink { get; init; }
+    
+    public required List<CalendarEntity> Calendars { get; init; }
     
     public required UserEntityId UserId { get; init; }
 
@@ -18,13 +20,13 @@ public class SharedCalendarEntity : IEntity
     
     public static void Configure(ModelBuilder modelBuilder)
     {
-        var entityBuilder = modelBuilder.Entity<SharedCalendarEntity>();
+        var entityBuilder = modelBuilder.Entity<CalendarLinkEntity>();
         
         // ID
         entityBuilder.HasKey(e => e.Id);
         entityBuilder
             .Property(x => x.Id)
-            .RegisterTypedKeyConversion<SharedCalendarEntity, SharedCalendarEntityId>(x =>
-                new SharedCalendarEntityId(x, true));
+            .RegisterTypedKeyConversion<CalendarLinkEntity, CalendarLinkEntityId>(x =>
+                new CalendarLinkEntityId(x, true));
     }
 }

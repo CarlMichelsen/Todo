@@ -17,7 +17,8 @@ public static class EventMapper
     public static EventEntity FromDto(
         this CreateEventDto dto,
         DateTime createdAt,
-        UserEntityId hostedById) => new EventEntity
+        CalendarEntityId calendarId,
+        UserEntityId createdById) => new EventEntity
     {
         Id = new EventEntityId(Guid.CreateVersion7()),
         Title = dto.Title,
@@ -26,6 +27,7 @@ public static class EventMapper
         StartsAt = dto.Start,
         EndsAt = dto.End,
         CreatedAt = createdAt,
-        HostedById = hostedById,
+        CalendarId = calendarId,
+        CreatedById = createdById,
     };
 }
