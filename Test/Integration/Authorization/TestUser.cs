@@ -1,4 +1,5 @@
-﻿using Application;
+﻿using System.Collections.ObjectModel;
+using Application;
 
 namespace Test.Integration.Authorization;
 
@@ -14,9 +15,9 @@ public class TestUser
     
     public required string Username { get; init; }
 
-    public string Email => $"{Username.ToLower()}@test-email.com";
+    public string Email => $"{Username.ToUpperInvariant()}@test-email.com";
 
-    public List<string> Roles { get; init; } = ["default"]; // "admin" can also be added here
+    public ReadOnlyCollection<string> Roles { get; init; } = ["default"]; // "admin" can also be added here
     
     public JwtUser ToJwtUser(DateTimeOffset now, TimeSpan lifetime)
     {

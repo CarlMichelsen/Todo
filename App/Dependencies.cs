@@ -52,7 +52,9 @@ public static class Dependencies
         var corsConfig = builder
             .Configuration
             .GetSection(CorsOptions.SectionName)
-            .Get<CorsOptions>() ?? throw new NullReferenceException("Cors options not found");
+            .Get<CorsOptions>();
+        ArgumentNullException.ThrowIfNull(corsConfig);
+        
         builder.Services.AddCors(options =>
         {
             options.AddDefaultPolicy(policy =>
@@ -85,7 +87,9 @@ public static class Dependencies
     {
         var jwtOptions = builder.Configuration
             .GetSection(JwtOptions.SectionName)
-            .Get<JwtOptions>() ?? throw new NullReferenceException($"Failed to get {nameof(JwtOptions)} during startup");
+            .Get<JwtOptions>();
+        
+        ArgumentNullException.ThrowIfNull(jwtOptions);
         
         builder.Services
             .AddAuthentication()

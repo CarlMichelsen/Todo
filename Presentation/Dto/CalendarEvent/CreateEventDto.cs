@@ -1,14 +1,15 @@
 ﻿using System.ComponentModel.DataAnnotations;
 using Presentation.Attribute;
 
-namespace Presentation.Dto.Event;
+namespace Presentation.Dto.CalendarEvent;
 
-public record EditEventDto(
-    [MinLength(2), MaxLength(1028)] string? Title,
-    [MaxLength(1028 * 32)] string? Description,
-    DateTime? Start,
-    DateTime? End,
-    [HexColor] string? Color) : IValidatableObject
+public record CreateEventDto(
+    [Required, MinLength(2), MaxLength(1028)]
+    string Title,
+    [MaxLength(1028 * 32)] string Description,
+    DateTime Start,
+    DateTime End,
+    [HexColor] string Color) : IValidatableObject
 {
     public IEnumerable<ValidationResult> Validate(ValidationContext validationContext)
     {
@@ -17,4 +18,4 @@ public record EditEventDto(
             yield return new ValidationResult("Start must be before than End");
         }
     }
-}
+};

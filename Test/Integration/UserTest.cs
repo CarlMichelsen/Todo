@@ -9,17 +9,17 @@ using Test.Util;
 
 namespace Test.Integration;
 
-[Collection(nameof(DefaultIntegrationTestCollection))]
+[Collection(nameof(DefaultIntegrationTest))]
 public class UserTest(IntegrationTestFactory factory)
 {
     [Fact]
     public async Task GetUserTest()
     {
         // Arrange
-        var client = factory.GetAuthorizedClient(TestUserCollection.Steve);
+        var client = factory.GetAuthorizedClient(ConfiguredTestUsers.Steve);
 
         // Act
-        var response = await client.GetAsync("/api/v1/user", CancellationToken.None);
+        var response = await client.GetAsync(new Uri("api/v1/user"), CancellationToken.None);
         var responseBody = await response.Content.ReadAsStringAsync();
 
         // Assert
@@ -27,7 +27,7 @@ public class UserTest(IntegrationTestFactory factory)
 
         var deserialized = JsonSerializer.Deserialize<JwtUser>(responseBody, TestJsonOptions.Default);
         deserialized.ShouldNotBeNull();
-        deserialized.UserId.ShouldBe(TestUserCollection.Steve.UserId);
-        deserialized.Username.ShouldBe(TestUserCollection.Steve.Username);
+        deserialized.UserId.ShouldBe(ConfiguredTestUsers.Steve.UserId);
+        deserialized.Username.ShouldBe(ConfiguredTestUsers.Steve.Username);
     }
 }

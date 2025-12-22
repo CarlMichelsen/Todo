@@ -5,7 +5,7 @@ using Test.Integration.Factory;
 
 namespace Test.Integration;
 
-[Collection(nameof(DefaultIntegrationTestCollection))]
+[Collection(nameof(DefaultIntegrationTest))]
 public class HealthCheckTest(IntegrationTestFactory factory)
 {
     [Fact]
@@ -15,7 +15,7 @@ public class HealthCheckTest(IntegrationTestFactory factory)
         var client = factory.CreateDefaultClient();
 
         // Act
-        var response = await client.GetAsync("/health");
+        var response = await client.GetAsync(new Uri("health"));
 
         // Assert
         response.StatusCode.ShouldBe(HttpStatusCode.OK);

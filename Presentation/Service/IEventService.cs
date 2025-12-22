@@ -1,5 +1,5 @@
 ﻿using Presentation.Dto;
-using Presentation.Dto.Event;
+using Presentation.Dto.CalendarEvent;
 
 namespace Presentation.Service;
 

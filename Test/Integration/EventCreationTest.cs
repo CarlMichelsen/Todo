@@ -4,7 +4,7 @@ using System.Text.Json;
 using Database;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
-using Presentation.Dto.Event;
+using Presentation.Dto.CalendarEvent;
 using Shouldly;
 using Test.Integration.Authorization;
 using Test.Integration.Collection;
@@ -13,28 +13,28 @@ using Test.Util;
 
 namespace Test.Integration;
 
-[Collection(nameof(DefaultIntegrationTestCollection))]
+[Collection(nameof(DefaultIntegrationTest))]
 public class EventCreationTest(IntegrationTestFactory factory)
 {
     [Fact]
     public async Task CreateEvent()
     {
         // Arrange
-        var client = factory.GetAuthorizedClient(TestUserCollection.Steve);
+        var client = factory.GetAuthorizedClient(ConfiguredTestUsers.Steve);
         var createEventDto = new CreateEventDto(
             Title: "TestEvent",
             Description: "This is amazing!",
             Start: DateTime.UtcNow,
             End: DateTime.UtcNow.AddHours(2),
             Color: "#FF00FF");
-        var httpContent = new StringContent(
+        using var httpContent = new StringContent(
             JsonSerializer.Serialize(createEventDto, TestJsonOptions.Default),
             Encoding.UTF8,
             "application/json");
 
         // Act
         var response = await client.PostAsync(
-            "/api/v1/event",
+            new Uri("api/v1/event"),
             httpContent,
             CancellationToken.None);
         
@@ -50,11 +50,13 @@ public class EventCreationTest(IntegrationTestFactory factory)
         deserialized.Start.ShouldBe(createEventDto.Start);
         deserialized.End.ShouldBe(createEventDto.End);
 
-        await using var dbContext = factory
+        await using var scope = factory
             .Services
-            .CreateScope()
+            .CreateAsyncScope();
+        var dbContext = scope
             .ServiceProvider
             .GetRequiredService<DatabaseContext>();
+        
         var dbEvent = await dbContext
             .Event
             .FirstAsync(e => e.Id == deserialized.Id);

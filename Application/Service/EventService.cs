@@ -7,7 +7,7 @@ using Microsoft.AspNetCore.Http;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
 using Presentation.Dto;
-using Presentation.Dto.Event;
+using Presentation.Dto.CalendarEvent;
 using Presentation.Exception;
 using Presentation.Service;
 
@@ -135,12 +135,11 @@ public class EventService(
         databaseContext.Event.Add(eventEntity);
         await databaseContext.SaveChangesAsync();
         
-        logger.LogInformation(
-            "{Username}<{UserId}> {MethodName}: {EventId}",
+        logger.LogUsernameUserIdMethodNameEventId(
             user.Username,
             user.UserId,
             nameof(IEventService.AddEvent),
-            eventEntity.Id);
+            eventEntity.Id.ToString());
         
         return eventEntity.ToDto();
     }
@@ -186,12 +185,11 @@ public class EventService(
         
         await databaseContext.SaveChangesAsync();
         
-        logger.LogInformation(
-            "{Username}<{UserId}> {MethodName}: {EventId}",
+        logger.LogUsernameUserIdMethodNameEventId(
             user.Username,
             user.UserId,
             nameof(IEventService.EditEvent),
-            eventEntity.Id);
+            eventEntity.Id.ToString());
         
         return eventEntity.ToDto();
     }
@@ -211,12 +209,11 @@ public class EventService(
             .ExecuteDeleteAsync();
         
         var success = result == 1;
-        logger.LogInformation(
-            "{Username}<{UserId}> {MethodName}: {EventId}",
+        logger.LogUsernameUserIdMethodNameEventId(
             user.Username,
             user.UserId,
             nameof(IEventService.DeleteEvent),
-            success ? eventId : "not found");
+            success ? eventId.ToString() : "not found");
 
         return success;
     }

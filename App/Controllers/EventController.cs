@@ -1,7 +1,7 @@
 ﻿using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Presentation.Dto;
-using Presentation.Dto.Event;
+using Presentation.Dto.CalendarEvent;
 using Presentation.Service;
 
 namespace App.Controllers;

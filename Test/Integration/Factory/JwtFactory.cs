@@ -1,4 +1,5 @@
-﻿using System.IdentityModel.Tokens.Jwt;
+﻿using System.Globalization;
+using System.IdentityModel.Tokens.Jwt;
 using System.Security.Claims;
 using System.Text;
 using Application;
@@ -12,6 +13,8 @@ public class JwtFactory(string? inputJwtSecret = null)
 
     public string CreateJwtToken(JwtUser user)
     {
+        ArgumentNullException.ThrowIfNull(user);
+        
         var issuedAt = new DateTimeOffset(user.TokenIssuedAt);
         var key = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(JwtSecret));
         var signingCredentials = new SigningCredentials(key, SecurityAlgorithms.HmacSha256);
@@ -22,7 +25,7 @@ public class JwtFactory(string? inputJwtSecret = null)
             new(JwtTokenKeys.Name, user.Username),
             new(JwtTokenKeys.Email, user.Email),
             new(JwtTokenKeys.Jti, user.AccessTokenId.ToString()),
-            new(JwtTokenKeys.Iat, issuedAt.ToUnixTimeSeconds().ToString()),
+            new(JwtTokenKeys.Iat, issuedAt.ToUnixTimeSeconds().ToString(CultureInfo.InvariantCulture)),
             new(JwtTokenKeys.Provider, user.AuthenticationProvider),
             new(JwtTokenKeys.ProviderId, user.AuthenticationProviderId),
             new(JwtTokenKeys.Profile, user.Profile.AbsoluteUri),

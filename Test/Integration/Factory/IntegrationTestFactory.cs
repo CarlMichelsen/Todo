@@ -26,6 +26,8 @@ public class IntegrationTestFactory : WebApplicationFactory<Program>, IAsyncLife
     
     protected override IHost CreateHost(IHostBuilder builder)
     {
+        ArgumentNullException.ThrowIfNull(builder);
+
         builder.UseEnvironment("Testing");
         
         // Configure the host BEFORE it's built - setup initial config
@@ -36,6 +38,8 @@ public class IntegrationTestFactory : WebApplicationFactory<Program>, IAsyncLife
 
     protected override void ConfigureWebHost(IWebHostBuilder builder)
     {
+        ArgumentNullException.ThrowIfNull(builder);
+        
         // Set environment here
         builder.UseEnvironment("Testing");
         
@@ -82,6 +86,8 @@ public class IntegrationTestFactory : WebApplicationFactory<Program>, IAsyncLife
 
     public HttpClient GetAuthorizedClient(TestUser testUser)
     {
+        ArgumentNullException.ThrowIfNull(testUser);
+
         var jwtUser = testUser.ToJwtUser(DateTimeOffset.UtcNow, TimeSpan.FromDays(1));
         var cookieJwtToken = jwtFactory.CreateJwtToken(jwtUser);
         var httpClient = this.CreateDefaultClient();

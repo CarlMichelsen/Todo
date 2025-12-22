@@ -1,8 +1,8 @@
 ﻿namespace Test.Integration.Authorization;
 
-public static class TestUserCollection
+public static class ConfiguredTestUsers
 {
-    public static TestUser Steve { get; } = new TestUser
+    public static TestUser Steve { get; } = new()
     {
         UserId = Guid.NewGuid(),
         Username = "Steve",

@@ -1,6 +1,6 @@
 ﻿using Database.Entity;
 using Database.Entity.Id;
-using Presentation.Dto.Event;
+using Presentation.Dto.CalendarEvent;
 
 namespace Application.Mapper;
 

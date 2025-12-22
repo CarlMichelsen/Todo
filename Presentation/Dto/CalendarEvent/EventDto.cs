@@ -1,6 +1,4 @@
-﻿using System.ComponentModel.DataAnnotations;
-
-namespace Presentation.Dto.Event;
+﻿namespace Presentation.Dto.CalendarEvent;
 
 public record EventDto(
     Guid Id,
@@ -13,4 +11,4 @@ public record EventDto(
         Description,
         Start,
         End,
-        Color), IValidatableObject;
+        Color);
