@@ -76,6 +76,7 @@ public static class Dependencies
         
         // Services
         builder.Services
+            .AddScoped<ICalendarService, CalendarService>()
             .AddScoped<IEventService, EventService>();
         
         // Add services to the container.

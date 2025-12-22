@@ -1,4 +1,5 @@
-﻿using Presentation.Configuration;
+﻿using System.Collections.ObjectModel;
+using Presentation.Configuration;
 
 namespace Application.Configuration;
 
@@ -6,7 +7,8 @@ public class JwtOptions : IConfigurationOptions
 {
     public static string SectionName => "Jwt";
     
-    public required List<string> Secrets { get; init; }
+    // ReSharper disable once CollectionNeverUpdated.Global
+    public required Collection<string> Secrets { get; init; }
 
     public required string Issuer { get; init; }
     

@@ -1,3 +1,8 @@
-﻿namespace Presentation.Dto.Calendar;
+﻿using System.ComponentModel.DataAnnotations;
+using Presentation.Attribute;
 
-public record CreateCalendarDto();
+namespace Presentation.Dto.Calendar;
+
+public record CreateCalendarDto(
+    [MaxLength(1028), Required] string Title,
+    [MaxLength(7), HexColor, Required] string Color);

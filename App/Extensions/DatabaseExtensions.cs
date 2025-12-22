@@ -25,7 +25,9 @@ public static class DatabaseExtensions
                         var assemblyName = Assembly
                             .GetExecutingAssembly()
                             .GetName()
-                            .Name!;
+                            .Name;
+                        ArgumentException.ThrowIfNullOrWhiteSpace(assemblyName);
+
                         b.MigrationsAssembly(assemblyName);
                         b.MigrationsHistoryTable("__EFMigrationsHistory", DatabaseContext.SchemaName);
                     })

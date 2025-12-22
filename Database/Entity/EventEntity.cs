@@ -43,16 +43,17 @@ public class EventEntity : IEntity
             .RegisterTypedKeyConversion<EventEntity, EventEntityId>(x =>
                 new EventEntityId(x, true));
         
-        // Calendar
-        entityBuilder
-            .HasOne(e => e.Calendar)
-            .WithMany(c => c.Events)
-            .HasForeignKey(e => e.CalendarId);
-        
         // Owner
         entityBuilder
             .HasOne(e => e.CreatedBy)
             .WithMany(e => e.CreatedEvents)
             .HasForeignKey(e => e.CreatedById);
+        
+        // Index
+        entityBuilder
+            .HasIndex(e => new { e.CalendarId, e.StartsAt, e.EndsAt });
+        
+        entityBuilder
+            .HasIndex(e => new { e.CalendarId, e.Id });
     }
 }

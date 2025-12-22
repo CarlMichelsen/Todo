@@ -2,6 +2,8 @@
 using System.Text;
 using System.Text.Json;
 using Database;
+using Database.Entity;
+using Database.Entity.Id;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
 using Presentation.Dto.CalendarEvent;
@@ -21,6 +23,25 @@ public class EventCreationTest(IntegrationTestFactory factory)
     {
         // Arrange
         var client = factory.GetAuthorizedClient(ConfiguredTestUsers.Steve);
+        await using var scope = factory
+            .Services
+            .CreateAsyncScope();
+        var dbContext = scope
+            .ServiceProvider
+            .GetRequiredService<DatabaseContext>();
+
+        var now = scope.ServiceProvider.GetRequiredService<TimeProvider>().GetUtcNow().UtcDateTime;
+        var calendarId = new CalendarEntityId(Guid.CreateVersion7());
+        dbContext.Calendar.Add(new CalendarEntity
+        {
+            Id = calendarId,
+            Title = "Test Title",
+            Color = "#FF0000",
+            OwnerId = new UserEntityId(ConfiguredTestUsers.Steve.UserId, true),
+            CreatedAt = now,
+        });
+        await dbContext.SaveChangesAsync();
+        
         var createEventDto = new CreateEventDto(
             Title: "TestEvent",
             Description: "This is amazing!",
@@ -34,7 +55,7 @@ public class EventCreationTest(IntegrationTestFactory factory)
 
         // Act
         var response = await client.PostAsync(
-            new Uri("api/v1/event"),
+            new Uri($"api/v1/event/{calendarId}"),
             httpContent,
             CancellationToken.None);
         
@@ -49,13 +70,6 @@ public class EventCreationTest(IntegrationTestFactory factory)
         deserialized.Description.ShouldBe(createEventDto.Description);
         deserialized.Start.ShouldBe(createEventDto.Start);
         deserialized.End.ShouldBe(createEventDto.End);
-
-        await using var scope = factory
-            .Services
-            .CreateAsyncScope();
-        var dbContext = scope
-            .ServiceProvider
-            .GetRequiredService<DatabaseContext>();
         
         var dbEvent = await dbContext
             .Event

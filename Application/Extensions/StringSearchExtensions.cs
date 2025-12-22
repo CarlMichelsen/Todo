@@ -15,12 +15,16 @@ public static class StringSearchExtensions
         Func<T, string> field1,
         Func<T, string> field2) where T : class, IEntity
     {
-        var lowerSearch = search.ToLower();
+        var upperSearch = search.ToUpperInvariant();
+        
+        // Unable to use starts with case-insensitive enum - entity framework core can't understand it.
+#pragma warning disable CA1862
         return query
-            .OrderByDescending(x => field1(x).ToLower().StartsWith(lowerSearch))
-            .ThenByDescending(x => field1(x).ToLower().Contains(lowerSearch))
-            .ThenByDescending(x => field2(x).ToLower().StartsWith(lowerSearch))
-            .ThenByDescending(x => field2(x).ToLower().Contains(lowerSearch));
+            .OrderByDescending(x => field1(x).ToUpperInvariant().StartsWith(upperSearch))
+            .ThenByDescending(x => field1(x).ToUpperInvariant().Contains(upperSearch))
+            .ThenByDescending(x => field2(x).ToUpperInvariant().StartsWith(upperSearch))
+            .ThenByDescending(x => field2(x).ToUpperInvariant().Contains(upperSearch));
+#pragma warning restore CA1862
     }
     
     /// <summary>
@@ -31,8 +35,10 @@ public static class StringSearchExtensions
     {
         var entityType = context.Model.FindEntityType(typeof(T));
         if (entityType == null)
+        {
             throw new InvalidOperationException($"Entity type {typeof(T).Name} not found in the model.");
-        
+        }
+
         var propertyName = GetPropertyName(propertyExpression);
         var property = entityType.FindProperty(propertyName);
         
@@ -49,8 +55,10 @@ public static class StringSearchExtensions
     {
         var entityType = context.Model.FindEntityType(typeof(T));
         if (entityType == null)
+        {
             throw new InvalidOperationException($"Entity type {typeof(T).Name} not found in the model.");
-        
+        }
+
         return entityType.GetProperties()
             .ToDictionary(
                 p => p.Name,

@@ -7,28 +7,34 @@ public interface IEventService
 {
     Task<IEnumerable<EventDto>> GetCurrentEventsInclusive(
         Guid calendarId,
-        DateTime from,
-        DateTime to);
+        DateTime eventFrom,
+        DateTime eventTo,
+        CancellationToken cancellationToken);
     
     Task<PaginationDto<EventDto>> GetEvents(
         Guid calendarId,
         PaginationRequestDto paginationRequest,
-        string? search);
+        string? search,
+        CancellationToken cancellationToken);
     
     Task<EventDto?> GetEvent(
         Guid calendarId,
-        Guid eventId);
+        Guid eventId,
+        CancellationToken cancellationToken);
 
     Task<EventDto> AddEvent(
         Guid calendarId,
-        CreateEventDto createEvent);
+        CreateEventDto createEvent,
+        CancellationToken cancellationToken);
     
     Task<EventDto> EditEvent(
         Guid calendarId,
         Guid eventId,
-        EditEventDto editEvent);
+        EditEventDto editEvent,
+        CancellationToken cancellationToken);
     
     Task<bool> DeleteEvent(
         Guid calendarId,
-        Guid eventId);
+        Guid eventId,
+        CancellationToken cancellationToken);
 }

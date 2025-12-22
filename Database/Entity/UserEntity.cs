@@ -1,4 +1,5 @@
-﻿using System.ComponentModel.DataAnnotations;
+﻿using System.Collections.ObjectModel;
+using System.ComponentModel.DataAnnotations;
 using Database.Entity.Id;
 using Database.Util;
 using Microsoft.EntityFrameworkCore;
@@ -24,12 +25,16 @@ public class UserEntity : IEntity
     
     // Large
     public Uri? ProfileImageLarge { get; init; }
+    
+    public CalendarEntityId? SelectedCalendarId { get; set; }
+    
+    public CalendarEntity? SelectedCalendar { get; set; }
 
-    public List<CalendarEntity> Calendars { get; init; } = [];
+    public Collection<CalendarEntity> Calendars { get; init; } = [];
     
-    public List<EventEntity> CreatedEvents { get; init; } = [];
+    public Collection<EventEntity> CreatedEvents { get; init; } = [];
     
-    public List<CalendarLinkEntity> CalendarLinks { get; init; } = [];
+    public Collection<CalendarLinkEntity> CalendarLinks { get; init; } = [];
     
     public required DateTime CreatedAt { get; init; }
     
@@ -48,8 +53,7 @@ public class UserEntity : IEntity
         entityBuilder
             .HasMany(u => u.CreatedEvents)
             .WithOne(e => e.CreatedBy)
-            .HasForeignKey(e => e.CreatedById)
-            .OnDelete(DeleteBehavior.Cascade);
+            .HasForeignKey(e => e.CreatedById); // let calendar handle cascade delete.
         
         // Calendars
         entityBuilder
@@ -57,6 +61,12 @@ public class UserEntity : IEntity
             .WithOne(c => c.Owner)
             .HasForeignKey(x => x.OwnerId)
             .OnDelete(DeleteBehavior.Cascade);
+        
+        // Selected Calendar
+        entityBuilder
+            .HasOne(e => e.SelectedCalendar)
+            .WithOne()
+            .HasForeignKey<UserEntity>(e => e.SelectedCalendarId);
         
         // CalendarLinks
         entityBuilder

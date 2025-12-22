@@ -1,15 +1,14 @@
-﻿using Application.Service;
-using Microsoft.Extensions.Logging;
+﻿using Microsoft.Extensions.Logging;
 
 namespace Application;
 
 public static partial class Logs
 {
-    [LoggerMessage(LogLevel.Information, "{username}<{userId}> {methodName}: {eventId}")]
+    [LoggerMessage(LogLevel.Information, "{username}<{userId}> {methodName}: {id}")]
     public static partial void LogUsernameUserIdMethodNameEventId(
-        this ILogger<EventService> logger,
+        this ILogger logger,
         string username,
         Guid userId,
         string methodName,
-        string eventId);
+        string id);
 }

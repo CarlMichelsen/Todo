@@ -6,10 +6,8 @@
 
         <AnalysisLevel>latest</AnalysisLevel>
         <AnalysisMode>All</AnalysisMode>
-        <!-- Consider using these
         <TreatWarningsAsErrors>true</TreatWarningsAsErrors>
         <CodeAnalysisTreatWarningsAsErrors>true</CodeAnalysisTreatWarningsAsErrors>
-        -->
         <EnforceCodeStyleInBuild>true</EnforceCodeStyleInBuild>
         
         <!-- Warnings -->
@@ -19,11 +17,6 @@
     </PropertyGroup>
     
     <ItemGroup>
-        <PackageReference Include="Microsoft.CodeAnalysis.NetAnalyzers">
-            <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
-            <PrivateAssets>all</PrivateAssets>
-        </PackageReference>
-
         <PackageReference Include="SonarAnalyzer.CSharp" />
     </ItemGroup>
 </Project>
