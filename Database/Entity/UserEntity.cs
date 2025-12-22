@@ -49,6 +49,11 @@ public class UserEntity : IEntity
             .RegisterTypedKeyConversion<UserEntity, UserEntityId>(x =>
                 new UserEntityId(x, true));
         
+        entityBuilder
+            .Property(x => x.SelectedCalendarId!)
+            .RegisterTypedKeyConversion<CalendarEntity, CalendarEntityId>(x =>
+                new CalendarEntityId(x, true));
+        
         // EventEntity
         entityBuilder
             .HasMany(u => u.CreatedEvents)

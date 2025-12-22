@@ -17,7 +17,7 @@ public class TestUser
 
     public string Email => $"{Username.ToUpperInvariant()}@test-email.com";
 
-    public ReadOnlyCollection<string> Roles { get; init; } = ["default"]; // "admin" can also be added here
+    public Collection<string> Roles { get; init; } = ["default"]; // "admin" can also be added here
     
     public JwtUser ToJwtUser(DateTimeOffset now, TimeSpan lifetime)
     {

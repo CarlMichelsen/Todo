@@ -19,7 +19,7 @@ public class UserTest(IntegrationTestFactory factory)
         var client = factory.GetAuthorizedClient(ConfiguredTestUsers.Steve);
 
         // Act
-        var response = await client.GetAsync(new Uri("api/v1/user"), CancellationToken.None);
+        var response = await client.GetAsync(new Uri("api/v1/user", UriKind.Relative), CancellationToken.None);
         var responseBody = await response.Content.ReadAsStringAsync();
 
         // Assert

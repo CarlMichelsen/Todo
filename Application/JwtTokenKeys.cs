@@ -73,17 +73,16 @@ public static class JwtTokenKeys
             ProfileLarge: Uri.TryCreate(large, UriKind.Absolute, out var largeUri) ? largeUri : null);
     }
 
-    private static ReadOnlyCollection<string> GetClaimValue(this ClaimsPrincipal claimsPrincipal, string claimType)
+    private static Collection<string> GetClaimValue(this ClaimsPrincipal claimsPrincipal, string claimType)
     {
-        return claimsPrincipal
+        return new Collection<string>(claimsPrincipal
             .Identities
             .First()
             .Claims
             .Where(c => c.Type == claimType)
             .Select(c => c.Value)
             .Where(value => !string.IsNullOrWhiteSpace(value))
-            .ToList()
-            .AsReadOnly();
+            .ToList());
     }
     
     private static DateTime ToDateTime(this long epochSeconds)
@@ -103,7 +102,7 @@ public record JwtUser(
     string Audience,
     string AuthenticationProvider,
     string AuthenticationProviderId,
-    ReadOnlyCollection<string> Roles,
+    Collection<string> Roles,
     Uri Profile,
     Uri? ProfileMedium = null,
     Uri? ProfileLarge = null);

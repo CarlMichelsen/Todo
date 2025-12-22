@@ -1,6 +1,7 @@
 ﻿using System.Net;
 using System.Text;
 using System.Text.Json;
+using Application.Extensions;
 using Database;
 using Database.Entity;
 using Database.Entity.Id;
@@ -32,6 +33,12 @@ public class EventCreationTest(IntegrationTestFactory factory)
 
         var now = scope.ServiceProvider.GetRequiredService<TimeProvider>().GetUtcNow().UtcDateTime;
         var calendarId = new CalendarEntityId(Guid.CreateVersion7());
+
+        await dbContext.EnsureUserInDatabase(
+            ConfiguredTestUsers.Steve.ToJwtUser(now, TimeSpan.FromHours(2)),
+            now,
+            false,
+            CancellationToken.None);
         dbContext.Calendar.Add(new CalendarEntity
         {
             Id = calendarId,
@@ -55,7 +62,7 @@ public class EventCreationTest(IntegrationTestFactory factory)
 
         // Act
         var response = await client.PostAsync(
-            new Uri($"api/v1/event/{calendarId}"),
+            new Uri($"api/v1/event/{calendarId}", UriKind.Relative),
             httpContent,
             CancellationToken.None);
         

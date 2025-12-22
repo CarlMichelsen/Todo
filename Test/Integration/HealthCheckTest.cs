@@ -15,7 +15,7 @@ public class HealthCheckTest(IntegrationTestFactory factory)
         var client = factory.CreateDefaultClient();
 
         // Act
-        var response = await client.GetAsync(new Uri("health"));
+        var response = await client.GetAsync(new Uri("health", UriKind.Relative));
 
         // Assert
         response.StatusCode.ShouldBe(HttpStatusCode.OK);
