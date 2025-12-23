@@ -4,10 +4,21 @@
 	import EventModal from './EventModal.svelte';
 	import { getWeekStart, getWeekDates, addWeeks } from '$lib/utils/calendarUtils';
 	import { eventsStore } from '$lib/stores/events';
+	import { calendarsStore } from '$lib/stores/calendars';
 	import type { CalendarEvent } from '$lib/types/calendar';
 
+	// Props
+	interface Props {
+		initialWeekStart?: Date;
+		onWeekChange?: (weekStart: Date) => void;
+	}
+
+	let { initialWeekStart, onWeekChange }: Props = $props();
+
 	// State management
-	let currentWeekStart = $state(getWeekStart(new Date()));
+	let currentWeekStart = $state(
+		initialWeekStart ? initialWeekStart : getWeekStart(new Date())
+	);
 
 	// Mobile: viewport detection (768px = Tailwind md breakpoint)
 	let isMobile = $state(false);
@@ -94,9 +105,21 @@
 		return () => window.removeEventListener('resize', handleResize);
 	});
 
-	// Load events when week changes
+	// Load events when week changes, but only if calendar is ready
 	$effect(() => {
-		void eventsStore.setDateRange(currentWeekStart);
+		const calendarState = $calendarsStore;
+
+		// Wait for calendar store to initialize and ensure there's an active calendar
+		if (!calendarState.loading && calendarState.activeCalendarId) {
+			void eventsStore.setDateRange(currentWeekStart);
+		}
+	});
+
+	// Notify parent of week changes for URL updates
+	$effect(() => {
+		if (onWeekChange) {
+			onWeekChange(currentWeekStart);
+		}
 	});
 
 	// Week navigation handlers (desktop)

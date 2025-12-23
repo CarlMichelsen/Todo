@@ -1,9 +1,13 @@
+import type { UserDto } from './calendar';
+
 /**
  * API event DTO matching backend EventDto from OpenAPI spec
  */
 export interface EventDto {
 	/** Unique identifier (UUID format) */
 	id: string;
+	/** User who created this event */
+	createdBy: UserDto;
 	/** Event title */
 	title: string;
 	/** Event description */

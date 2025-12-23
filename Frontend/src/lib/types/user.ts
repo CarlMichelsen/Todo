@@ -1,18 +1,17 @@
 /**
- * JWT User data returned from the User endpoint
+ * Personal User data returned from the User endpoint
+ * Includes user details and selected calendar information
  */
-export interface JwtUser {
+export interface PersonalUserDto {
     userId: string;
-    username: string;
+    userName: string;
     email: string;
+    selectedCalendarId: string;
     accessTokenId: string;
     tokenIssuedAt: string;
     tokenExpiresAt: string;
-    issuer: string;
-    audience: string;
     authenticationProvider: string;
     authenticationProviderId: string;
-    roles: string[];
     profile: string;
     profileMedium?: string | null;
     profileLarge?: string | null;

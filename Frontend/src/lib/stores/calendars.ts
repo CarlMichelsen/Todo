@@ -1,6 +1,7 @@
-import { writable } from 'svelte/store';
+import { writable, get } from 'svelte/store';
 import type { CalendarDto, CreateCalendarDto } from '$lib/types/api/calendar';
 import { CalendarClient } from '$lib/utils/calendarClient';
+import { userStore } from './user';
 
 export interface CalendarStoreState {
 	calendars: CalendarDto[];
@@ -21,10 +22,10 @@ function createCalendarsStore() {
 		subscribe,
 
 		/**
-		 * Initialize calendars store
+		 * Initialize calendars store from user's calendars
 		 * - Fetches user's calendars
-		 * - Auto-creates default calendar if user has none
-		 * - Sets first calendar as active
+		 * - Sets active calendar from user's selectedCalendarId
+		 * - Falls back to first calendar if selectedCalendarId not found
 		 */
 		async initialize(): Promise<void> {
 			update((state) => ({
@@ -35,23 +36,19 @@ function createCalendarsStore() {
 
 			try {
 				const client = new CalendarClient();
-				let calendars = await client.getCalendars();
+				const calendars = await client.getCalendars();
 
-				// Auto-create default calendar if user has none
-				if (calendars.length === 0) {
-					console.log('No calendars found, creating default calendar');
+				// Get user's selected calendar ID from user store
+				const user = get(userStore).user;
+				const selectedCalendarId = user?.selectedCalendarId;
 
-					const defaultCalendar: CreateCalendarDto = {
-						title: 'My Calendar',
-						color: '#ea580c' // Orange color matching existing theme
-					};
-
-					const createdCalendar = await client.createCalendar(defaultCalendar);
-					calendars = [createdCalendar];
+				// Try to use user's selected calendar, fall back to first calendar
+				let activeCalendarId: string | null = null;
+				if (selectedCalendarId && calendars.some((c) => c.id === selectedCalendarId)) {
+					activeCalendarId = selectedCalendarId;
+				} else if (calendars.length > 0) {
+					activeCalendarId = calendars[0].id;
 				}
-
-				// Set first calendar as active
-				const activeCalendarId = calendars.length > 0 ? calendars[0].id : null;
 
 				update((state) => ({
 					...state,

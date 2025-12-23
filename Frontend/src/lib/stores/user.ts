@@ -1,5 +1,5 @@
 import { writable } from 'svelte/store';
-import type { JwtUser } from '$lib/types/user';
+import type { PersonalUserDto } from '$lib/types/user';
 import { UserClient } from '$lib/utils/userClient';
 
 /**
@@ -15,7 +15,7 @@ type UserStoreState = 'pending' | 'authenticated' | 'unauthenticated' | 'error';
  * User store state
  */
 interface UserState {
-    user: JwtUser | null;
+    user: PersonalUserDto | null;
     state: UserStoreState;
     error: string | null;
 }
@@ -59,7 +59,7 @@ function createUserStore() {
         /**
          * Set the user data (e.g., after successful login)
          */
-        setUser(user: JwtUser): void {
+        setUser(user: PersonalUserDto): void {
             set({ user, state: 'authenticated', error: null });
         },
 

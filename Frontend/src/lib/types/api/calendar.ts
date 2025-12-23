@@ -1,4 +1,16 @@
 /**
+ * Simplified user representation used in Calendar and Event DTOs
+ */
+export interface UserDto {
+	/** Unique identifier (UUID format) */
+	userId: string;
+	/** User's display name */
+	userName: string;
+	/** Profile picture URL */
+	profile: string;
+}
+
+/**
  * API calendar DTO matching backend CalendarDto from OpenAPI spec
  */
 export interface CalendarDto {
@@ -8,8 +20,8 @@ export interface CalendarDto {
 	title: string;
 	/** Hex color code (e.g., "#ea580c") */
 	color: string;
-	/** Owner user ID (UUID format) */
-	ownerId: string;
+	/** Calendar owner information */
+	owner: UserDto;
 }
 
 /**
