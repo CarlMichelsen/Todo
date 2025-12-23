@@ -1,6 +1,5 @@
 import { writable, get } from 'svelte/store';
 import type { CalendarEvent } from '$lib/types/calendar';
-import { generateMockEvents } from '$lib/utils/mockEvents';
 import { getWeekStart } from '$lib/utils/calendarUtils';
 import { EventClient } from '$lib/utils/eventClient';
 import { eventDtoToCalendarEvent } from '$lib/utils/eventConverter';
@@ -17,7 +16,7 @@ export interface EventStoreState {
 }
 
 function createEventsStore() {
-	// Initialize with current week's events to avoid race condition
+	// Initialize with empty events - real data loads when calendar is selected
 	const today = new Date();
 	const currentWeekStart = getWeekStart(today);
 	const currentWeekEnd = new Date(currentWeekStart);
@@ -25,7 +24,7 @@ function createEventsStore() {
 	currentWeekEnd.setHours(23, 59, 59, 999);
 
 	const { subscribe, set, update } = writable<EventStoreState>({
-		events: generateMockEvents(currentWeekStart),
+		events: [],
 		dateRange: {
 			start: currentWeekStart,
 			end: currentWeekEnd
