@@ -36,21 +36,23 @@
 	}: Props = $props();
 </script>
 
-<div class="flex flex-col sm:flex-row items-center justify-between mb-6 gap-4">
-	<!-- Title Display -->
-	<h2 class="text-2xl font-bold text-gray-900 dark:text-gray-100">
-		{#if isMobile}
-			{formatDayHeader(weekDates[currentDayIndex])}
-		{:else}
-			{formatWeekMonth(currentWeekStart)}
-		{/if}
-	</h2>
+<div class="flex flex-col sm:flex-row items-start sm:items-center justify-between mb-6 gap-4">
+	<!-- Left Side: Title and Calendar Selector -->
+	<div class="flex items-center justify-between sm:justify-start w-full sm:w-auto gap-4">
+		<h2 class="text-2xl font-bold text-gray-900 dark:text-gray-100">
+			{#if isMobile}
+				{formatDayHeader(weekDates[currentDayIndex])}
+			{:else}
+				{formatWeekMonth(currentWeekStart)}
+			{/if}
+		</h2>
 
-	<!-- Calendar Selector -->
-	<CalendarSelector />
+		<!-- Calendar Selector -->
+		<CalendarSelector />
+	</div>
 
-	<!-- Navigation Buttons -->
-	<div class="flex gap-2 items-center">
+	<!-- Right Side: Navigation Buttons -->
+	<div class="flex gap-2 items-center w-full sm:w-auto justify-center sm:justify-end">
 		<!-- Add Event Button -->
 		<button
 			onclick={onAddEvent}
