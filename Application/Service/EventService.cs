@@ -30,6 +30,7 @@ public class EventService(
         var results = await databaseContext
             .Event
             .Include(e => e.Calendar)
+            .Include(e => e.CreatedBy)
             .Where(e => e.CalendarId == calendarId
                         && e.Calendar!.OwnerId == user.UserId // Uses index scan, not full join
                         && e.StartsAt < eventTo
@@ -53,6 +54,7 @@ public class EventService(
         var query = databaseContext
             .Event
             .Include(e => e.Calendar)
+            .Include(e => e.CreatedBy)
             .Where(e => e.Calendar!.OwnerId == user.UserId
                 && e.Calendar!.Id == calendarId);
         
@@ -91,6 +93,7 @@ public class EventService(
         var result = await databaseContext
             .Event
             .Include(e => e.Calendar)
+            .Include(e => e.CreatedBy)
             .Where(e => e.Calendar!.OwnerId == user.UserId
                 && e.Calendar!.Id == calendarId)
             .AsNoTracking()
@@ -114,7 +117,7 @@ public class EventService(
         var eventEntity = createEvent.FromDto(
             now,
             new CalendarEntityId(calendarId, true),
-            userEntity.Id);
+            userEntity);
         
         databaseContext.Event.Add(eventEntity);
         await databaseContext.SaveChangesAsync(cancellationToken);
@@ -139,6 +142,7 @@ public class EventService(
         var eventEntity = await databaseContext
             .Event
             .Include(e => e.Calendar)
+            .Include(e => e.CreatedBy)
             .Where(e => e.Calendar!.OwnerId == user.UserId
                         && e.Calendar!.Id == calendarId)
             .SingleAsync(e => e.Id == eventId, cancellationToken);

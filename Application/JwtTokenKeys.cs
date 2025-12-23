@@ -68,7 +68,7 @@ public static class JwtTokenKeys
             AuthenticationProvider: user.GetClaimValue(Provider)[0],
             AuthenticationProviderId: user.GetClaimValue(ProviderId)[0],
             Roles: user.GetClaimValue(Role),
-            Profile: new Uri(user.GetClaimValue(Profile)[0]),
+            Profile: new Uri(user.GetClaimValue(Profile)[0], UriKind.Absolute),
             ProfileMedium: Uri.TryCreate(medium, UriKind.Absolute, out var mediumUri) ? mediumUri : null,
             ProfileLarge: Uri.TryCreate(large, UriKind.Absolute, out var largeUri) ? largeUri : null);
     }

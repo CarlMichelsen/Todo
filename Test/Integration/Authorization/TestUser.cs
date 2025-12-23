@@ -33,7 +33,7 @@ public class TestUser
             AuthenticationProvider: AuthenticationProvider,
             AuthenticationProviderId: UserId.ToString(),
             Roles: Roles,
-            Profile: new Uri($"https://api.dicebear.com/9.x/rings/svg?seed={Username}"),
+            Profile: new Uri($"https://api.dicebear.com/9.x/rings/svg?seed={Username}", UriKind.Absolute),
             ProfileMedium: null,
             ProfileLarge: null);
     }

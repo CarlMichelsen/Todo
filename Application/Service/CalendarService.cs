@@ -26,6 +26,7 @@ public class CalendarService(
 
         var calendars = await databaseContext
             .Calendar
+            .Include(c => c.Owner)
             .Where(c => c.OwnerId == user.UserId)
             .OrderByDescending(c => c.LastSelectedAt)
             .Take(MaxResults)
@@ -42,6 +43,7 @@ public class CalendarService(
         
         var calendar = await databaseContext
             .Calendar
+            .Include(c => c.Owner)
             .Where(c => c.OwnerId == user.UserId && c.Id == calendarId)
             .FirstOrDefaultAsync(cancellationToken);
         
@@ -60,6 +62,7 @@ public class CalendarService(
         
         var calendarEntity = await databaseContext
             .Calendar
+            .Include(c => c.Owner)
             .Where(c => c.OwnerId == user.UserId && c.Id == calendarId)
             .FirstOrDefaultAsync(cancellationToken);
 
@@ -138,6 +141,7 @@ public class CalendarService(
         
         var calendarEntity = await databaseContext
             .Calendar
+            .Include(c => c.Owner)
             .Where(c => c.OwnerId == userEntity.Id && c.Id == calendarId)
             .FirstOrDefaultAsync(cancellationToken);
 

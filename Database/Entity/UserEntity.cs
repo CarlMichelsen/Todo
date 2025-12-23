@@ -26,7 +26,7 @@ public class UserEntity : IEntity
     // Large
     public Uri? ProfileImageLarge { get; init; }
     
-    public CalendarEntityId? SelectedCalendarId { get; set; }
+    public required CalendarEntityId SelectedCalendarId { get; set; }
     
     public CalendarEntity? SelectedCalendar { get; set; }
 
@@ -50,7 +50,7 @@ public class UserEntity : IEntity
                 new UserEntityId(x, true));
         
         entityBuilder
-            .Property(x => x.SelectedCalendarId!)
+            .Property(x => x.SelectedCalendarId)
             .RegisterTypedKeyConversion<CalendarEntity, CalendarEntityId>(x =>
                 new CalendarEntityId(x, true));
         

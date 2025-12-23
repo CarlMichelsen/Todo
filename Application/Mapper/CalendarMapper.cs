@@ -9,5 +9,5 @@ public static class CalendarMapper
         Id: entity.Id.Value,
         Title: entity.Title,
         Color: entity.Color,
-        OwnerId: entity.OwnerId);
+        Owner: entity.Owner!.ToDto());
 }

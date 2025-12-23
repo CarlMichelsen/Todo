@@ -1,8 +1,10 @@
 <script lang="ts">
+	import { get } from 'svelte/store';
 	import FormModal from '$lib/components/modals/FormModal.svelte';
 	import ConfirmModal from '$lib/components/modals/ConfirmModal.svelte';
 	import type { CalendarEvent } from '$lib/types/calendar';
 	import { eventsStore } from '$lib/stores/events';
+	import { calendarsStore } from '$lib/stores/calendars';
 	import { combineDateAndTime, extractDateString, extractTimeString } from '$lib/utils/calendarUtils';
 	import { EventClient } from '$lib/utils/eventClient';
 	import { eventDtoToCalendarEvent } from '$lib/utils/eventConverter';
@@ -119,6 +121,15 @@
 			const startDateTime = combineDateAndTime(startDate, startTime);
 			const endDateTime = combineDateAndTime(endDate, endTime);
 
+			// Get active calendar ID
+			const calendarId = get(calendarsStore).activeCalendarId;
+
+			if (!calendarId) {
+				submitError = 'No calendar selected';
+				isSubmitting = false;
+				return false;
+			}
+
 			if (isEditMode && event) {
 				// Edit mode: Call EventClient API
 				const client = new EventClient();
@@ -133,7 +144,7 @@
 				};
 
 				// Call API
-				const eventDto = await client.updateEvent(event.id, editDto);
+				const eventDto = await client.updateEvent(calendarId, event.id, editDto);
 
 				// Convert to CalendarEvent
 				const calendarEvent = eventDtoToCalendarEvent(eventDto);
@@ -154,7 +165,7 @@
 				};
 
 				// Call API
-				const eventDto = await client.createEvent(createDto);
+				const eventDto = await client.createEvent(calendarId, createDto);
 
 				// Convert to CalendarEvent
 				const calendarEvent = eventDtoToCalendarEvent(eventDto);
@@ -195,8 +206,17 @@
 				submitError = null;
 				showDeleteConfirm = false; // Close confirmation dialog
 
+				// Get active calendar ID
+				const calendarId = get(calendarsStore).activeCalendarId;
+
+				if (!calendarId) {
+					submitError = 'No calendar selected';
+					isSubmitting = false;
+					return;
+				}
+
 				const client = new EventClient();
-				await client.deleteEvent(event.id);
+				await client.deleteEvent(calendarId, event.id);
 
 				// Success: update store and close modal
 				eventsStore.deleteEvent(event.id);

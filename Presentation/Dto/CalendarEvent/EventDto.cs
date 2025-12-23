@@ -1,4 +1,6 @@
-﻿namespace Presentation.Dto.CalendarEvent;
+﻿using Presentation.Dto.User;
+
+namespace Presentation.Dto.CalendarEvent;
 
 public record EventDto(
     Guid Id,
@@ -6,6 +8,7 @@ public record EventDto(
     string Description,
     DateTime Start,
     DateTime End,
+    UserDto CreatedBy,
     string Color) : CreateEventDto(
         Title,
         Description,

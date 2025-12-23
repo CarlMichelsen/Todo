@@ -22,15 +22,31 @@ public static class EnsureUserDatabaseExtensions
         {
             return userEntity;
         }
+
+        var userId = new UserEntityId(user.UserId, true);
+        var defaultCalendarId = new CalendarEntityId(Guid.CreateVersion7());
+        
+        var defaultCalendar = new CalendarEntity
+        {
+            Id = defaultCalendarId,
+            Title = "Default",
+            Color = "#33BD42",
+            UserSelectedId = userId,
+            LastSelectedAt = now,
+            OwnerId = userId,
+            CreatedAt = now,
+        };
         
         userEntity = new UserEntity
         {
-            Id = new UserEntityId(user.UserId, true),
+            Id = userId,
             Username = user.Username,
             Email = user.Email,
             ProfileImageSmall = user.Profile,
             ProfileImageMedium = user.ProfileMedium,
             ProfileImageLarge = user.ProfileLarge,
+            SelectedCalendarId = defaultCalendarId,
+            SelectedCalendar = defaultCalendar,
             CreatedAt = now,
         };
 

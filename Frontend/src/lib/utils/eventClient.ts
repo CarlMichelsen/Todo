@@ -14,19 +14,20 @@ import type { BadRequestResponse } from '$lib/types/api/response';
 export class EventClient extends AuthorizedHttpClient {
 	/**
 	 * Get events for a specific date range
-	 * Uses /api/v1/Event/current endpoint
+	 * Uses /api/v1/Event/span/{calendarId} endpoint
 	 *
+	 * @param calendarId - UUID of the calendar
 	 * @param from - Start date (will be converted to ISO string)
 	 * @param to - End date (will be converted to ISO string)
 	 * @returns Array of EventDto objects with ISO date-time strings
 	 */
-	async getEventsForDateRange(from: Date, to: Date): Promise<EventDto[]> {
+	async getEventsForDateRange(calendarId: string, from: Date, to: Date): Promise<EventDto[]> {
 		const fromISO = from.toISOString();
 		const toISO = to.toISOString();
 
 		const response = await this.request<EventDto[]>(
 			HttpMethod.GET,
-			`/api/v1/Event/current?from=${encodeURIComponent(fromISO)}&to=${encodeURIComponent(toISO)}`
+			`/api/v1/Event/span/${calendarId}?from=${encodeURIComponent(fromISO)}&to=${encodeURIComponent(toISO)}`
 		);
 
 		if (!response.ok) {
@@ -44,19 +45,21 @@ export class EventClient extends AuthorizedHttpClient {
 
 	/**
 	 * Get paginated events (optional search)
-	 * Uses /api/v1/Event endpoint
+	 * Uses /api/v1/Event/{calendarId} endpoint
 	 *
+	 * @param calendarId - UUID of the calendar
 	 * @param page - Page number (1-indexed)
 	 * @param pageSize - Number of items per page
 	 * @param search - Optional search query
 	 * @returns Pagination wrapper containing EventDto array
 	 */
 	async getEvents(
+		calendarId: string,
 		page: number = 1,
 		pageSize: number = 50,
 		search?: string
 	): Promise<PaginationDto<EventDto>> {
-		let endpoint = `/api/v1/Event?Page=${page}&PageSize=${pageSize}`;
+		let endpoint = `/api/v1/Event/${calendarId}?Page=${page}&PageSize=${pageSize}`;
 		if (search) {
 			endpoint += `&search=${encodeURIComponent(search)}`;
 		}
@@ -86,13 +89,14 @@ export class EventClient extends AuthorizedHttpClient {
 
 	/**
 	 * Get a single event by ID
-	 * Uses /api/v1/Event/{eventId} endpoint
+	 * Uses /api/v1/Event/{calendarId}/{eventId} endpoint
 	 *
+	 * @param calendarId - UUID of the calendar
 	 * @param eventId - UUID of the event
 	 * @returns EventDto with ISO date-time strings
 	 */
-	async getEvent(eventId: string): Promise<EventDto> {
-		const response = await this.request<EventDto>(HttpMethod.GET, `/api/v1/Event/${eventId}`);
+	async getEvent(calendarId: string, eventId: string): Promise<EventDto> {
+		const response = await this.request<EventDto>(HttpMethod.GET, `/api/v1/Event/${calendarId}/${eventId}`);
 
 		if (!response.ok) {
 			if (response.status === 404) {
@@ -122,13 +126,14 @@ export class EventClient extends AuthorizedHttpClient {
 
 	/**
 	 * Create a new event
-	 * Uses POST /api/v1/Event endpoint
+	 * Uses POST /api/v1/Event/{calendarId} endpoint
 	 *
+	 * @param calendarId - UUID of the calendar
 	 * @param event - CreateEventDto with all required fields (ISO strings for dates)
 	 * @returns Created EventDto with generated ID
 	 */
-	async createEvent(event: CreateEventDto): Promise<EventDto> {
-		const response = await this.request<EventDto>(HttpMethod.POST, '/api/v1/Event', event);
+	async createEvent(calendarId: string, event: CreateEventDto): Promise<EventDto> {
+		const response = await this.request<EventDto>(HttpMethod.POST, `/api/v1/Event/${calendarId}`, event);
 
 		if (!response.ok) {
 			if (response.status === 400) {
@@ -162,16 +167,17 @@ export class EventClient extends AuthorizedHttpClient {
 
 	/**
 	 * Update an existing event
-	 * Uses PUT /api/v1/Event/{eventId} endpoint
+	 * Uses PUT /api/v1/Event/{calendarId}/{eventId} endpoint
 	 *
+	 * @param calendarId - UUID of the calendar
 	 * @param eventId - UUID of the event to update
 	 * @param updates - EditEventDto with partial/nullable fields (ISO strings for dates)
 	 * @returns Updated EventDto
 	 */
-	async updateEvent(eventId: string, updates: EditEventDto): Promise<EventDto> {
+	async updateEvent(calendarId: string, eventId: string, updates: EditEventDto): Promise<EventDto> {
 		const response = await this.request<EventDto>(
 			HttpMethod.PUT,
-			`/api/v1/Event/${eventId}`,
+			`/api/v1/Event/${calendarId}/${eventId}`,
 			updates
 		);
 
@@ -213,13 +219,14 @@ export class EventClient extends AuthorizedHttpClient {
 
 	/**
 	 * Delete an event
-	 * Uses DELETE /api/v1/Event/{eventId} endpoint
+	 * Uses DELETE /api/v1/Event/{calendarId}/{eventId} endpoint
 	 *
+	 * @param calendarId - UUID of the calendar
 	 * @param eventId - UUID of the event to delete
 	 * @returns void (throws on error)
 	 */
-	async deleteEvent(eventId: string): Promise<void> {
-		const response = await this.request<boolean>(HttpMethod.DELETE, `/api/v1/Event/${eventId}`);
+	async deleteEvent(calendarId: string, eventId: string): Promise<void> {
+		const response = await this.request<boolean>(HttpMethod.DELETE, `/api/v1/Event/${calendarId}/${eventId}`);
 
 		if (!response.ok) {
 			if (response.status === 404) {

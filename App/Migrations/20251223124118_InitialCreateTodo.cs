@@ -25,7 +25,7 @@ namespace App.Migrations
                     profile_image_small = table.Column<string>(type: "text", nullable: false),
                     profile_image_medium = table.Column<string>(type: "text", nullable: true),
                     profile_image_large = table.Column<string>(type: "text", nullable: true),
-                    selected_calendar_id = table.Column<Guid>(type: "uuid", nullable: true),
+                    selected_calendar_id = table.Column<Guid>(type: "uuid", nullable: false),
                     created_at = table.Column<DateTime>(type: "timestamp with time zone", nullable: false)
                 },
                 constraints: table =>
@@ -158,7 +158,7 @@ namespace App.Migrations
                 name: "ix_calendar_owner_id_id",
                 schema: "todo",
                 table: "calendar",
-                columns: ["owner_id", "id"]);
+                columns: [ "owner_id", "id" ]);
 
             migrationBuilder.CreateIndex(
                 name: "ix_calendar_user_selected_id",
@@ -183,13 +183,13 @@ namespace App.Migrations
                 name: "ix_event_calendar_id_id",
                 schema: "todo",
                 table: "event",
-                columns: ["calendar_id", "id"]);
+                columns: [ "calendar_id", "id" ]);
 
             migrationBuilder.CreateIndex(
                 name: "ix_event_calendar_id_starts_at_ends_at",
                 schema: "todo",
                 table: "event",
-                columns: ["calendar_id", "starts_at", "ends_at"]);
+                columns: [ "calendar_id", "starts_at", "ends_at" ]);
 
             migrationBuilder.CreateIndex(
                 name: "ix_event_created_by_id",

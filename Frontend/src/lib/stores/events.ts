@@ -1,9 +1,10 @@
-import { writable } from 'svelte/store';
+import { writable, get } from 'svelte/store';
 import type { CalendarEvent } from '$lib/types/calendar';
 import { generateMockEvents } from '$lib/utils/mockEvents';
 import { getWeekStart } from '$lib/utils/calendarUtils';
 import { EventClient } from '$lib/utils/eventClient';
 import { eventDtoToCalendarEvent } from '$lib/utils/eventConverter';
+import { calendarsStore } from './calendars';
 
 export interface EventStoreState {
 	events: CalendarEvent[];
@@ -45,6 +46,24 @@ function createEventsStore() {
 			weekEnd.setDate(weekStart.getDate() + 6);
 			weekEnd.setHours(23, 59, 59, 999);
 
+			// Get active calendar ID from calendars store
+			const calendarId = get(calendarsStore).activeCalendarId;
+
+			if (!calendarId) {
+				// No calendar available - set empty state with error
+				update((state) => ({
+					...state,
+					events: [],
+					loading: false,
+					error: 'No calendar selected',
+					dateRange: {
+						start: weekStart,
+						end: weekEnd
+					}
+				}));
+				return;
+			}
+
 			update((state) => ({
 				...state,
 				events: [],
@@ -58,7 +77,7 @@ function createEventsStore() {
 
 			try {
 				const client = new EventClient();
-				const eventDtos = await client.getEventsForDateRange(weekStart, weekEnd);
+				const eventDtos = await client.getEventsForDateRange(calendarId, weekStart, weekEnd);
 				const events = eventDtos.map(eventDtoToCalendarEvent);
 
 				update((state) => ({

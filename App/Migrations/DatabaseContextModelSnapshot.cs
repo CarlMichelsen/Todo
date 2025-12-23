@@ -214,7 +214,7 @@ namespace App.Migrations
                         .HasColumnType("text")
                         .HasColumnName("profile_image_small");
 
-                    b.Property<Guid?>("SelectedCalendarId")
+                    b.Property<Guid>("SelectedCalendarId")
                         .HasColumnType("uuid")
                         .HasColumnName("selected_calendar_id");
 

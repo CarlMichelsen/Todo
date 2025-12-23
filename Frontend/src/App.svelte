@@ -11,10 +11,16 @@
 	import NotFound from './routes/NotFound.svelte';
 	import Loading from './routes/Loading.svelte';
 	import { userStore } from '$lib/stores/user';
+	import { calendarsStore } from '$lib/stores/calendars';
 
-	// Initialize user authentication on app startup
+	// Initialize user authentication and calendars on app startup
 	onMount(async () => {
 		await userStore.initialize();
+
+		// Initialize calendars if user is authenticated
+		if ($userStore.state === 'authenticated') {
+			await calendarsStore.initialize();
+		}
 	});
 </script>
 

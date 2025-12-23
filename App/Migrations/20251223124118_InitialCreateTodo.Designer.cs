@@ -12,7 +12,7 @@ using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 namespace App.Migrations
 {
     [DbContext(typeof(DatabaseContext))]
-    [Migration("20251222170308_InitialCreateTodo")]
+    [Migration("20251223124118_InitialCreateTodo")]
     partial class InitialCreateTodo
     {
         /// <inheritdoc />
@@ -217,7 +217,7 @@ namespace App.Migrations
                         .HasColumnType("text")
                         .HasColumnName("profile_image_small");
 
-                    b.Property<Guid?>("SelectedCalendarId")
+                    b.Property<Guid>("SelectedCalendarId")
                         .HasColumnType("uuid")
                         .HasColumnName("selected_calendar_id");
 

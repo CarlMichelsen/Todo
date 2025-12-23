@@ -6,19 +6,20 @@ namespace Application.Mapper;
 
 public static class EventMapper
 {
-    public static EventDto ToDto(this EventEntity entity) => new EventDto(
+    public static EventDto ToDto(this EventEntity entity) => new(
         Id: entity.Id.Value,
         Title: entity.Title,
         Description: entity.Description,
         Start: entity.StartsAt,
         End: entity.EndsAt,
-        Color: entity.Color);
+        Color: entity.Color,
+        CreatedBy: entity.CreatedBy!.ToDto());
     
     public static EventEntity FromDto(
         this CreateEventDto dto,
         DateTime createdAt,
         CalendarEntityId calendarId,
-        UserEntityId createdById) => new EventEntity
+        UserEntity createdBy) => new()
     {
         Id = new EventEntityId(Guid.CreateVersion7()),
         Title = dto.Title,
@@ -28,6 +29,7 @@ public static class EventMapper
         EndsAt = dto.End,
         CreatedAt = createdAt,
         CalendarId = calendarId,
-        CreatedById = createdById,
+        CreatedById = createdBy.Id,
+        CreatedBy = createdBy,
     };
 }
