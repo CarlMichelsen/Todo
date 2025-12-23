@@ -5,6 +5,7 @@
 	import type { CalendarEvent } from '$lib/types/calendar';
 	import { eventsStore } from '$lib/stores/events';
 	import { calendarsStore } from '$lib/stores/calendars';
+	import { toastStore } from '$lib/stores/toast';
 	import { combineDateAndTime, extractDateString, extractTimeString } from '$lib/utils/calendarUtils';
 	import { EventClient } from '$lib/utils/eventClient';
 	import { eventDtoToCalendarEvent } from '$lib/utils/eventConverter';
@@ -174,16 +175,37 @@
 				eventsStore.addEvent(calendarEvent);
 			}
 
-			// Success: reset form and return true
+			// Success: reset form, show toast, and return true
+			submitError = '';
+			toastStore.success(
+				isEditMode ? 'Event updated successfully' : 'Event created successfully',
+				3000
+			);
 			resetForm();
 			return true;
 		} catch (error) {
-			// Handle error: display message and return false
-			if (error instanceof Error) {
-				submitError = error.message;
+			// Parse error message to extract validation errors
+			const errorMessage = error instanceof Error ? error.message : 'Failed to save event';
+
+			// Check if error contains formatted validation errors (from EventClient)
+			if (errorMessage.includes('Invalid event data:')) {
+				// Extract and display individual field errors as toasts
+				const validationPart = errorMessage.replace('Invalid event data: ', '');
+				const fieldErrors = validationPart.split('; ');
+
+				fieldErrors.forEach((fieldError) => {
+					const [field, ...messageParts] = fieldError.split(': ');
+					const message = messageParts.join(': '); // Handle colons in message
+					toastStore.error(`${field}: ${message}`, 7000); // 7s for validation errors
+				});
+
+				submitError = 'Please fix the validation errors above';
 			} else {
-				submitError = 'Failed to create event. Please try again.';
+				// Generic error - show as toast and in banner
+				toastStore.error(errorMessage, 5000);
+				submitError = errorMessage;
 			}
+
 			return false;
 		} finally {
 			isSubmitting = false;

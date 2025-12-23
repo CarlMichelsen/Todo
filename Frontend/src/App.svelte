@@ -3,6 +3,7 @@
 	import { Router, Route } from 'svelte-routing';
 	import Header from '$lib/components/Header.svelte';
 	import ProtectedRoute from '$lib/components/ProtectedRoute.svelte';
+	import ToastContainer from '$lib/components/ToastContainer.svelte';
 	import Home from './routes/Home.svelte';
 	import Demo from './routes/Demo.svelte';
 	import ProfilePage from './routes/ProfilePage.svelte';
@@ -49,5 +50,8 @@
 				<Route><NotFound /></Route>
 			</Router>
 		</main>
+
+		<!-- Toast Notifications -->
+		<ToastContainer />
 	</div>
 {/if}
