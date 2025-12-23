@@ -1,5 +1,7 @@
 <script lang="ts">
+	import { onMount } from 'svelte';
 	import Calendar from '$lib/components/calendar/Calendar.svelte';
+	import { calendarsStore } from '$lib/stores/calendars';
 	import { getWeekStart } from '$lib/utils/calendarUtils';
 
 	// Parse URL parameter immediately during initialization
@@ -41,6 +43,11 @@
 		url.searchParams.set('weekStart', dateStr);
 		window.history.pushState({}, '', url);
 	}
+
+	// Initialize calendars on mount
+	onMount(() => {
+		void calendarsStore.initialize();
+	});
 </script>
 
 <div class="w-full px-4 py-8 h-full">

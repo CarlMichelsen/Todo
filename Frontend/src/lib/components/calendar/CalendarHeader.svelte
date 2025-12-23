@@ -1,5 +1,7 @@
 <script lang="ts">
 	import { formatWeekMonth, formatDayHeader } from '$lib/utils/calendarUtils';
+	import CalendarSelector from './CalendarSelector.svelte';
+	import CalendarMenu from './CalendarMenu.svelte';
 
 	interface Props {
 		currentWeekStart: Date;
@@ -35,7 +37,7 @@
 </script>
 
 <div class="flex flex-col sm:flex-row items-center justify-between mb-6 gap-4">
-	<!-- Title Display - conditional based on viewport -->
+	<!-- Title Display -->
 	<h2 class="text-2xl font-bold text-gray-900 dark:text-gray-100">
 		{#if isMobile}
 			{formatDayHeader(weekDates[currentDayIndex])}
@@ -44,12 +46,15 @@
 		{/if}
 	</h2>
 
-	<!-- Navigation Buttons - conditional based on viewport -->
+	<!-- Calendar Selector -->
+	<CalendarSelector />
+
+	<!-- Navigation Buttons -->
 	<div class="flex gap-2 items-center">
 		<!-- Add Event Button -->
 		<button
 			onclick={onAddEvent}
-			class="px-4 py-2 bg-orange-600 hover:bg-orange-700 dark:bg-orange-500 dark:hover:bg-orange-600 text-white rounded-lg font-medium transition-colors flex items-center gap-2"
+			class="p-2 sm:px-4 sm:py-2 bg-orange-600 hover:bg-orange-700 dark:bg-orange-500 dark:hover:bg-orange-600 text-white rounded-lg font-medium transition-colors flex items-center gap-2"
 			aria-label="Add new event"
 		>
 			<svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -62,17 +67,17 @@
 		<div class="h-8 w-px bg-gray-300 dark:bg-gray-600"></div>
 
 		{#if isMobile}
-			<!-- Mobile: Day navigation -->
+			<!-- Mobile: Day navigation (icon only) -->
 			<button
 				onclick={onPreviousDay}
-				class={`px-4 py-2 rounded-lg font-medium transition-colors border-2 ${
+				class={`p-2 rounded-lg font-medium transition-colors border-2 ${
 					shouldHighlightPrevious
 						? 'bg-green-100 dark:bg-green-900 border-green-500 dark:border-green-400 text-green-700 dark:text-green-300 hover:bg-green-200 dark:hover:bg-green-800'
 						: 'bg-white dark:bg-gray-800 border-gray-300 dark:border-gray-600 hover:bg-gray-50 dark:hover:bg-gray-700 text-gray-900 dark:text-gray-100'
 				}`}
 				aria-label="Previous day"
 			>
-				← Prev Day
+				←
 			</button>
 			<button
 				onclick={onToday}
@@ -83,14 +88,14 @@
 			</button>
 			<button
 				onclick={onNextDay}
-				class={`px-4 py-2 rounded-lg font-medium transition-colors border-2 ${
+				class={`p-2 rounded-lg font-medium transition-colors border-2 ${
 					shouldHighlightNext
 						? 'bg-green-100 dark:bg-green-900 border-green-500 dark:border-green-400 text-green-700 dark:text-green-300 hover:bg-green-200 dark:hover:bg-green-800'
 						: 'bg-white dark:bg-gray-800 border-gray-300 dark:border-gray-600 hover:bg-gray-50 dark:hover:bg-gray-700 text-gray-900 dark:text-gray-100'
 				}`}
 				aria-label="Next day"
 			>
-				Next Day →
+				→
 			</button>
 		{:else}
 			<!-- Desktop: Week navigation -->
@@ -124,5 +129,8 @@
 				Next →
 			</button>
 		{/if}
+
+		<!-- Calendar Menu -->
+		<CalendarMenu />
 	</div>
 </div>

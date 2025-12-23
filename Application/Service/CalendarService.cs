@@ -92,8 +92,6 @@ public class CalendarService(
         var now = timeProvider.GetUtcNow().UtcDateTime;
         var userEntity = await databaseContext
             .EnsureUserInDatabase(user, now, false, cancellationToken);
-
-        var selectedUser = userEntity.SelectedCalendarId is null ? null : userEntity;
         
         var calendarEntity = new CalendarEntity
         {
@@ -102,19 +100,15 @@ public class CalendarService(
             Owner = userEntity,
             Title = createCalendar.Title,
             Color = createCalendar.Color,
-            UserSelected = selectedUser,
-            UserSelectedId = selectedUser?.Id,
+            UserSelected = userEntity,
+            UserSelectedId = userEntity.Id,
             Events = [],
             CalendarLinks = [],
-            LastSelectedAt = selectedUser is not null ? now : null,
+            LastSelectedAt = now,
             CreatedAt = now,
         };
-
-        if (selectedUser is not null)
-        {
-            selectedUser.SelectedCalendar = calendarEntity;
-            selectedUser.SelectedCalendarId = calendarEntity.Id;
-        }
+        
+        userEntity.SelectedCalendarId = calendarEntity.Id;
         
         databaseContext.Calendar.Add(calendarEntity);
         await databaseContext.SaveChangesAsync(cancellationToken);
