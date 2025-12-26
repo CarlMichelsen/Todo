@@ -9,7 +9,7 @@ public class EventEntity : IEntity
 {
     public required EventEntityId Id { get; init; }
     
-    [MaxLength(1028)]
+    [MaxLength(100)]
     public required string Title { get; set; }
     
     [MaxLength(1028 * 32)]

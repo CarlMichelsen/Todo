@@ -10,10 +10,10 @@ public class CalendarLinkEntity : IEntity
 {
     public required CalendarLinkEntityId Id { get; init; }
     
-    [MaxLength(1028)]
-    public required string Title { get; init; }
+    [MaxLength(100)]
+    public required string Title { get; set; }
     
-    public required Uri CalendarLink { get; init; }
+    public required Uri CalendarLink { get; set; }
     
     public required Collection<CalendarEntity> Calendars { get; init; }
     

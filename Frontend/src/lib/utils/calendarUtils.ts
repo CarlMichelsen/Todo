@@ -186,12 +186,15 @@ export function combineDateAndTime(dateStr: string, timeStr: string): Date {
 }
 
 /**
- * Extract date portion from Date object as ISO string
+ * Extract date portion from Date object as ISO string in local timezone
  * @param date - Date object
- * @returns ISO date string (YYYY-MM-DD)
+ * @returns ISO date string (YYYY-MM-DD) in local timezone
  */
 export function extractDateString(date: Date): string {
-	return date.toISOString().split('T')[0];
+	const year = date.getFullYear();
+	const month = String(date.getMonth() + 1).padStart(2, '0');
+	const day = String(date.getDate()).padStart(2, '0');
+	return `${year}-${month}-${day}`;
 }
 
 /**

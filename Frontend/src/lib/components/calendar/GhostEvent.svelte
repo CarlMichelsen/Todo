@@ -45,29 +45,12 @@
 	const topPosition = $derived(timeToPixels(startTime));
 	const bottomPosition = $derived(timeToPixels(endTime));
 	const height = $derived(bottomPosition - topPosition);
-
-	// Adjust position to center the ghost event on the cursor
-	// The ghost event will be centered vertically around the mouse position
-	const adjustedTopPosition = $derived.by(() => {
-		const snappedTop = topPosition;
-		const eventCenter = snappedTop + height / 2;
-		const offset = mouseY - eventCenter;
-
-		// If the offset is small (mouse is near the center), keep the snapped position
-		// Otherwise, nudge it slightly toward the cursor for better UX
-		if (Math.abs(offset) < height / 3) {
-			return snappedTop;
-		}
-
-		// Nudge by up to 25% of the offset to keep it closer to cursor
-		return snappedTop + offset * 0.25;
-	});
 </script>
 
 <!-- Visible ghost event with clickable area -->
 <div
 	class="absolute left-1 right-1 px-2 py-1 overflow-hidden rounded border-2 border-dashed border-orange-400 dark:border-orange-500 bg-orange-200/30 dark:bg-orange-500/20 hover:bg-orange-200/50 dark:hover:bg-orange-500/30 transition-colors cursor-pointer pointer-events-auto z-0"
-	style="top: {adjustedTopPosition - 8}px; height: {height}px;"
+	style="top: {topPosition}px; height: {height}px;"
 	onclick={onclick}
 	role="button"
 	tabindex="0"

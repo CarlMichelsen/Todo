@@ -10,7 +10,7 @@ public class CalendarEntity : IEntity
 {
     public required CalendarEntityId Id { get; init; }
     
-    [MaxLength(1028)]
+    [MaxLength(100)]
     public required string Title { get; set; }
     
     [MaxLength(7)]

@@ -20,7 +20,7 @@
 	// Set calendar configuration for all children components
 	setCalendarConfig({
 		hourHeight,
-		ghostEventDuration: 30,
+		ghostEventDuration: 60,
 		ghostEventSnapInterval: 30
 	});
 

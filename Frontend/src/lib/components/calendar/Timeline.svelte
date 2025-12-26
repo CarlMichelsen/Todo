@@ -30,6 +30,9 @@
 
 	let { date, events, onEventClick, onTimeUpdate, onGhostEventClick }: Props = $props();
 
+	// UI offset
+	const mouseYOffset = 15;
+
 	// Get calendar configuration
 	const config = getCalendarConfig();
 	const hourHeight = $derived(config.hourHeight);
@@ -53,7 +56,7 @@
 		if (!isHovering || isMobile) return null;
 
 		// Convert pixels to time
-		const rawTime = pixelsToTime(mouseY, hourHeight);
+		const rawTime = pixelsToTime(Math.max(mouseY-mouseYOffset, 0), hourHeight);
 
 		// Snap to interval
 		const snappedTime = roundTimeToInterval(rawTime, snapInterval);
