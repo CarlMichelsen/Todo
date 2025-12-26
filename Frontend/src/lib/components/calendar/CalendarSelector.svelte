@@ -106,7 +106,7 @@
 							d="M12 4v16m8-8H4"
 						/>
 					</svg>
-					New Calendar
+					New
 				</button>
 			</div>
 		{/snippet}
