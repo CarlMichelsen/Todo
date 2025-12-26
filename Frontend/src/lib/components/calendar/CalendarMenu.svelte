@@ -1,5 +1,4 @@
 <script lang="ts">
-	import Dropdown from '$lib/components/Dropdown.svelte';
 	import CalendarEditModal from './CalendarEditModal.svelte';
 	import { calendarsStore } from '$lib/stores/calendars';
 
@@ -15,50 +14,33 @@
 	}
 </script>
 
-<Dropdown align="right">
-	{#snippet trigger()}
-		<button
-			class="p-2 rounded-lg bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors"
-			aria-label="Calendar options"
-		>
-			<!-- Burger icon -->
-			<svg
-				class="w-5 h-5 text-gray-700 dark:text-gray-300"
-				fill="none"
-				stroke="currentColor"
-				viewBox="0 0 24 24"
-			>
-				<path
-					stroke-linecap="round"
-					stroke-linejoin="round"
-					stroke-width="2"
-					d="M4 6h16M4 12h16M4 18h16"
-				/>
-			</svg>
-		</button>
-	{/snippet}
-
-	{#snippet content()}
-		<div class="py-1 min-w-[180px]">
-			<!-- Edit Calendar -->
-			<button
-				onclick={handleEditCalendar}
-				disabled={!activeCalendar}
-				class="w-full px-4 py-2 text-left hover:bg-gray-100 dark:hover:bg-gray-700 flex items-center gap-2 text-gray-900 dark:text-gray-100 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
-			>
-				<svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-					<path
-						stroke-linecap="round"
-						stroke-linejoin="round"
-						stroke-width="2"
-						d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"
-					/>
-				</svg>
-				Edit Calendar
-			</button>
-		</div>
-	{/snippet}
-</Dropdown>
+<button
+	onclick={handleEditCalendar}
+	disabled={!activeCalendar}
+	class="flex items-center gap-2 px-4 py-2.5 rounded-lg bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+	aria-label="Calendar settings"
+>
+	<!-- Gear/Settings icon -->
+	<svg
+		class="w-5 h-5 text-gray-700 dark:text-gray-300"
+		fill="none"
+		stroke="currentColor"
+		viewBox="0 0 24 24"
+	>
+		<path
+			stroke-linecap="round"
+			stroke-linejoin="round"
+			stroke-width="2"
+			d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"
+		/>
+		<path
+			stroke-linecap="round"
+			stroke-linejoin="round"
+			stroke-width="2"
+			d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"
+		/>
+	</svg>
+</button>
 
 <!-- Edit Modal -->
 {#if activeCalendar}

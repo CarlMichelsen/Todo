@@ -32,7 +32,7 @@
 						class="w-3 h-3 rounded-full"
 						style="background-color: {activeCalendar.color}"
 					></div>
-					<span class="text-gray-900 dark:text-gray-100 font-medium">
+					<span class="text-gray-900 dark:text-gray-100 font-medium truncate max-w-[110px] sm:max-w-[300px]" title={activeCalendar.title}>
 						{activeCalendar.title}
 					</span>
 				{:else}
@@ -62,15 +62,13 @@
 					<button
 						onclick={() => handleCalendarSelect(calendar.id)}
 						class="w-full px-4 py-2 text-left hover:bg-gray-100 dark:hover:bg-gray-700 flex items-center gap-2 transition-colors"
-						class:bg-gray-50={calendar.id === storeState.activeCalendarId}
-						class:dark:bg-gray-750={calendar.id === storeState.activeCalendarId}
 					>
 						<!-- Color dot -->
 						<div
 							class="w-3 h-3 rounded-full flex-shrink-0"
 							style="background-color: {calendar.color}"
 						></div>
-						<span class="text-gray-900 dark:text-gray-100">{calendar.title}</span>
+						<span class="text-gray-900 dark:text-gray-100 truncate max-w-[110px] sm:max-w-[300px] flex-1" title={calendar.title}>{calendar.title}</span>
 						<!-- Active checkmark -->
 						{#if calendar.id === storeState.activeCalendarId}
 							<svg

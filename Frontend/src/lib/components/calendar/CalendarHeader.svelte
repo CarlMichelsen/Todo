@@ -37,9 +37,9 @@
 </script>
 
 <div class="flex flex-col sm:flex-row items-start sm:items-center justify-between mb-6 gap-4">
-	<!-- Left Side: Title and Calendar Selector -->
-	<div class="flex items-center justify-between sm:justify-start w-full sm:w-auto gap-4">
-		<h2 class="text-2xl font-bold text-gray-900 dark:text-gray-100">
+	<!-- Left Side: Title, Calendar Selector, and Calendar Menu -->
+	<div class="flex items-center justify-between sm:justify-start w-full sm:w-auto gap-2">
+		<h2 class="text-2xl font-bold text-gray-900 dark:text-gray-100 w-42 sm:w-54">
 			{#if isMobile}
 				{formatDayHeader(weekDates[currentDayIndex])}
 			{:else}
@@ -49,6 +49,9 @@
 
 		<!-- Calendar Selector -->
 		<CalendarSelector />
+
+		<!-- Calendar Menu (Gear Icon) -->
+		<CalendarMenu />
 	</div>
 
 	<!-- Right Side: Navigation Buttons -->
@@ -72,7 +75,7 @@
 			<!-- Mobile: Day navigation (icon only) -->
 			<button
 				onclick={onPreviousDay}
-				class={`p-2 rounded-lg font-medium transition-colors border-2 ${
+				class={`py-2 px-6 rounded-lg font-medium transition-colors border-2 ${
 					shouldHighlightPrevious
 						? 'bg-green-100 dark:bg-green-900 border-green-500 dark:border-green-400 text-green-700 dark:text-green-300 hover:bg-green-200 dark:hover:bg-green-800'
 						: 'bg-white dark:bg-gray-800 border-gray-300 dark:border-gray-600 hover:bg-gray-50 dark:hover:bg-gray-700 text-gray-900 dark:text-gray-100'
@@ -90,7 +93,7 @@
 			</button>
 			<button
 				onclick={onNextDay}
-				class={`p-2 rounded-lg font-medium transition-colors border-2 ${
+				class={`py-2 px-6 rounded-lg font-medium transition-colors border-2 ${
 					shouldHighlightNext
 						? 'bg-green-100 dark:bg-green-900 border-green-500 dark:border-green-400 text-green-700 dark:text-green-300 hover:bg-green-200 dark:hover:bg-green-800'
 						: 'bg-white dark:bg-gray-800 border-gray-300 dark:border-gray-600 hover:bg-gray-50 dark:hover:bg-gray-700 text-gray-900 dark:text-gray-100'
@@ -131,8 +134,5 @@
 				Next →
 			</button>
 		{/if}
-
-		<!-- Calendar Menu -->
-		<CalendarMenu />
 	</div>
 </div>

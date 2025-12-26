@@ -42,6 +42,7 @@
 	// Ghost event modal state
 	let modalInitialStartTime = $state<string | undefined>(undefined);
 	let modalInitialEndTime = $state<string | undefined>(undefined);
+	let modalInitialDate = $state<string | undefined>(undefined);
 
 	// Derived state
 	let weekDates = $derived(getWeekDates(currentWeekStart));
@@ -180,6 +181,7 @@
 		editingEvent = event;
 		modalInitialStartTime = undefined; // Clear ghost times
 		modalInitialEndTime = undefined;
+		modalInitialDate = undefined; // Clear ghost date
 		isEventModalOpen = true;
 	}
 
@@ -187,11 +189,13 @@
 		editingEvent = undefined; // Clear editing event for create mode
 		modalInitialStartTime = undefined; // Clear ghost times
 		modalInitialEndTime = undefined;
+		modalInitialDate = undefined; // Clear ghost date
 		isEventModalOpen = true;
 	}
 
 	function handleGhostEventClick(dateStr: string, startTime: string, endTime: string) {
-		// Set modal initial times
+		// Set modal initial date and times
+		modalInitialDate = dateStr;
 		modalInitialStartTime = startTime;
 		modalInitialEndTime = endTime;
 
@@ -238,7 +242,7 @@
 	<EventModal
 		bind:isOpen={isEventModalOpen}
 		event={editingEvent}
-		initialDate={initialDate()}
+		initialDate={modalInitialDate ?? initialDate()}
 		initialStartTime={modalInitialStartTime}
 		initialEndTime={modalInitialEndTime}
 	/>

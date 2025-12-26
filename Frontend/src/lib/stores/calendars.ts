@@ -110,8 +110,8 @@ function createCalendarsStore() {
 			update((state) => ({
 				...state,
 				calendars: [...state.calendars, createdCalendar],
-				// Set as active if it's the first calendar
-				activeCalendarId: state.calendars.length === 0 ? createdCalendar.id : state.activeCalendarId
+				// Always set as active - backend automatically selects newly created calendars
+				activeCalendarId: createdCalendar.id
 			}));
 
 			return createdCalendar;
