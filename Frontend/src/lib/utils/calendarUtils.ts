@@ -517,3 +517,44 @@ export function calculateEventLayout(
 
 	return layout;
 }
+
+/**
+ * Pixel-to-time conversion utilities for click-to-create functionality
+ */
+
+/**
+ * Convert pixel position to time
+ * Used for click-to-create events by converting mouse position to time
+ * @param pixels - Vertical pixel offset from top of timeline
+ * @param hourHeight - Height of one hour in pixels
+ * @returns Time string in HH:MM format
+ */
+export function pixelsToTime(pixels: number, hourHeight: number): string {
+	const totalHours = pixels / hourHeight;
+	const hours = Math.floor(totalHours);
+	const minutes = Math.round((totalHours - hours) * 60);
+
+	// Clamp to valid range (0-23:59)
+	const clampedHours = Math.max(0, Math.min(23, hours));
+	const clampedMinutes = Math.max(0, Math.min(59, minutes));
+
+	return `${String(clampedHours).padStart(2, '0')}:${String(clampedMinutes).padStart(2, '0')}`;
+}
+
+/**
+ * Round time to nearest interval
+ * Useful for snapping event times to 15-minute or 30-minute intervals
+ * @param time - Time string in HH:MM format
+ * @param intervalMinutes - Interval to round to (default: 15 minutes)
+ * @returns Rounded time string in HH:MM format
+ */
+export function roundTimeToInterval(time: string, intervalMinutes: number = 15): string {
+	const [hours, minutes] = time.split(':').map(Number);
+	const totalMinutes = hours * 60 + minutes;
+	const roundedMinutes = Math.round(totalMinutes / intervalMinutes) * intervalMinutes;
+
+	const finalHours = Math.floor(roundedMinutes / 60) % 24;
+	const finalMinutes = roundedMinutes % 60;
+
+	return `${String(finalHours).padStart(2, '0')}:${String(finalMinutes).padStart(2, '0')}`;
+}

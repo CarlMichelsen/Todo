@@ -1,6 +1,7 @@
 <script lang="ts">
 	import Card from '$lib/components/Card.svelte';
 	import Timeline from './Timeline.svelte';
+	import { getCalendarConfig } from '$lib/stores/calendarConfig';
 	import type { CalendarDay, CalendarEvent } from '$lib/types/calendar';
 
 	interface Props {
@@ -13,15 +14,19 @@
 
 	let { day, onEventClick }: Props = $props();
 
-	// Build custom classes for today indicator
+	// Get calendar configuration
+	const config = getCalendarConfig();
+	const containerHeight = $derived(config.hourHeight * 24); // 24 hours
+
+	// Build custom classes for today indicator (removed fixed height)
 	let customClasses = $derived(
 		day.isToday
-			? 'border-l-4 border-l-orange-600 dark:border-l-orange-400 h-[960px]'
-			: 'h-[960px]'
+			? 'border-l-4 border-l-orange-600 dark:border-l-orange-400'
+			: ''
 	);
 </script>
 
-<Card variant={day.isWeekend ? 'blue' : 'default'} class={customClasses} padding={false}>
+<Card variant={day.isWeekend ? 'blue' : 'default'} class={customClasses} padding={false} style="height: {containerHeight}px;">
 	<div class="flex flex-col h-full px-2">
 		<!-- Day header -->
 		<div class="flex items-center justify-between mb-2">

@@ -5,15 +5,20 @@
 	import { getWeekStart, getWeekDates, addWeeks } from '$lib/utils/calendarUtils';
 	import { eventsStore } from '$lib/stores/events';
 	import { calendarsStore } from '$lib/stores/calendars';
+	import { setCalendarConfig } from '$lib/stores/calendarConfig';
 	import type { CalendarEvent } from '$lib/types/calendar';
 
 	// Props
 	interface Props {
 		initialWeekStart?: Date;
 		onWeekChange?: (weekStart: Date) => void;
+		hourHeight?: number;
 	}
 
-	let { initialWeekStart, onWeekChange }: Props = $props();
+	let { initialWeekStart, onWeekChange, hourHeight = 40 }: Props = $props();
+
+	// Set calendar configuration for all children components
+	setCalendarConfig({ hourHeight});
 
 	// State management
 	let currentWeekStart = $state(

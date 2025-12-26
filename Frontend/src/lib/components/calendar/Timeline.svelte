@@ -2,6 +2,7 @@
 	import type { CalendarEvent } from '$lib/types/calendar';
 	import TimeSpanEvent from './TimeSpanEvent.svelte';
 	import { calculateEventLayout, isSameDay } from '$lib/utils/calendarUtils';
+	import { getCalendarConfig } from '$lib/stores/calendarConfig';
 
 	interface Props {
 		date: Date;
@@ -17,6 +18,11 @@
 	}
 
 	let { date, events, onEventClick, onTimeUpdate }: Props = $props();
+
+	// Get calendar configuration
+	const config = getCalendarConfig();
+	const hourHeight = $derived(config.hourHeight);
+	const halfHourHeight = $derived(hourHeight / 2);
 
 	// Generate 24 hours (0-23)
 	const hours = Array.from({ length: 24 }, (_, i) => i);
@@ -41,7 +47,7 @@
 		const hours = currentTime.getHours();
 		const minutes = currentTime.getMinutes();
 		const totalHours = hours + minutes / 60;
-		return totalHours * 38.3; // 38.3px per hour
+		return totalHours * hourHeight; // Dynamic hourHeight
 	});
 
 	// Update current time every minute
@@ -78,7 +84,7 @@
 	<!-- Left: Time labels (40px wide) -->
 	<div class="w-[22px] flex-shrink-0">
 		{#each hours as hour}
-			<div class="h-[38.3px] flex items-start justify-end pr-2 text-gray-500 dark:text-gray-500">
+			<div class="flex items-start justify-end pr-2 text-gray-500 dark:text-gray-500" style="height: {hourHeight}px;">
 				{formatHour(hour)}
 			</div>
 		{/each}
@@ -92,13 +98,13 @@
 				<!-- Full hour line -->
 				<div
 					class="absolute w-full border-t border-gray-300 dark:border-gray-700"
-					style="top: {hour * 38.3}px;"
+					style="top: {hour * hourHeight}px;"
 				></div>
 				<!-- Half-hour line (lighter) -->
 				{#if hour < 23}
 					<div
 						class="absolute w-full border-t border-gray-200 dark:border-gray-800"
-						style="top: {hour * 38.3 + 19.15}px;"
+						style="top: {hour * hourHeight + halfHourHeight}px;"
 					></div>
 				{/if}
 			{/each}
