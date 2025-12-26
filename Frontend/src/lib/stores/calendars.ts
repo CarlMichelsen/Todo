@@ -68,23 +68,35 @@ function createCalendarsStore() {
 		},
 
 		/**
-		 * Set the active calendar
+		 * Set the active calendar and persist to server
 		 * @param calendarId - ID of the calendar to set as active
 		 */
-		setActiveCalendar(calendarId: string): void {
-			update((state) => {
-				// Verify calendar exists
-				const calendar = state.calendars.find((c) => c.id === calendarId);
-				if (!calendar) {
-					console.warn(`Attempted to set non-existent calendar as active: ${calendarId}`);
-					return state;
-				}
+		async setActiveCalendar(calendarId: string): Promise<void> {
+			const state = get({ subscribe });
 
-				return {
-					...state,
-					activeCalendarId: calendarId
-				};
-			});
+			// Verify calendar exists
+			const calendar = state.calendars.find((c) => c.id === calendarId);
+			if (!calendar) {
+				console.warn(`Attempted to set non-existent calendar as active: ${calendarId}`);
+				return;
+			}
+
+			// Optimistic update - update local state immediately
+			update((s) => ({
+				...s,
+				activeCalendarId: calendarId
+			}));
+
+			// Persist to server
+			try {
+				const client = new CalendarClient();
+				await client.selectCalendar(calendarId);
+				// Server call succeeded - local state already updated
+			} catch (error) {
+				console.error('Failed to persist calendar selection to server:', error);
+				// Keep local state updated even if server call fails
+				// This allows offline usage and graceful degradation
+			}
 		},
 
 		/**

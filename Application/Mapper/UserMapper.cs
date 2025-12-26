@@ -17,7 +17,7 @@ public static class UserMapper
     
     public static PersonalUserDto ToPersonalUserDto(this UserEntity userEntity, JwtUser jwtUser) => new(
         UserId: userEntity.Id,
-        SelectedCalendarId: userEntity.SelectedCalendarId,
+        SelectedCalendarId: userEntity.SelectedCalendarId!,
         AccessTokenId: jwtUser.AccessTokenId,
         TokenIssuedAt: jwtUser.TokenIssuedAt,
         TokenExpiresAt: jwtUser.TokenExpiresAt,

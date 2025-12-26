@@ -26,9 +26,7 @@ public class UserEntity : IEntity
     // Large
     public Uri? ProfileImageLarge { get; init; }
     
-    public required CalendarEntityId SelectedCalendarId { get; set; }
-    
-    public CalendarEntity? SelectedCalendar { get; set; }
+    public required CalendarEntityId? SelectedCalendarId { get; set; }
 
     public Collection<CalendarEntity> Calendars { get; init; } = [];
     
@@ -50,7 +48,7 @@ public class UserEntity : IEntity
                 new UserEntityId(x, true));
         
         entityBuilder
-            .Property(x => x.SelectedCalendarId)
+            .Property(x => x.SelectedCalendarId!)
             .RegisterTypedKeyConversion<CalendarEntity, CalendarEntityId>(x =>
                 new CalendarEntityId(x, true));
         
@@ -60,18 +58,19 @@ public class UserEntity : IEntity
             .WithOne(e => e.CreatedBy)
             .HasForeignKey(e => e.CreatedById); // let calendar handle cascade delete.
         
+        // SelectedCalendar
+        entityBuilder
+            .HasOne<CalendarEntity>()
+            .WithMany()
+            .HasForeignKey(e => e.SelectedCalendarId)
+            .OnDelete(DeleteBehavior.Restrict);
+        
         // Calendars
         entityBuilder
             .HasMany(x => x.Calendars)
             .WithOne(c => c.Owner)
             .HasForeignKey(x => x.OwnerId)
             .OnDelete(DeleteBehavior.Cascade);
-        
-        // Selected Calendar
-        entityBuilder
-            .HasOne(e => e.SelectedCalendar)
-            .WithOne()
-            .HasForeignKey<UserEntity>(e => e.SelectedCalendarId);
         
         // CalendarLinks
         entityBuilder

@@ -12,7 +12,7 @@ using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 namespace App.Migrations
 {
     [DbContext(typeof(DatabaseContext))]
-    [Migration("20251223124118_InitialCreateTodo")]
+    [Migration("20251226122224_InitialCreateTodo")]
     partial class InitialCreateTodo
     {
         /// <inheritdoc />
@@ -65,7 +65,7 @@ namespace App.Migrations
                         .HasColumnType("timestamp with time zone")
                         .HasColumnName("last_selected_at");
 
-                    b.Property<Guid>("OwnerId")
+                    b.Property<Guid?>("OwnerId")
                         .HasColumnType("uuid")
                         .HasColumnName("owner_id");
 
@@ -75,19 +75,11 @@ namespace App.Migrations
                         .HasColumnType("character varying(1028)")
                         .HasColumnName("title");
 
-                    b.Property<Guid?>("UserSelectedId")
-                        .HasColumnType("uuid")
-                        .HasColumnName("user_selected_id");
-
                     b.HasKey("Id")
                         .HasName("pk_calendar");
 
                     b.HasIndex("OwnerId")
                         .HasDatabaseName("ix_calendar_owner_id");
-
-                    b.HasIndex("UserSelectedId")
-                        .IsUnique()
-                        .HasDatabaseName("ix_calendar_user_selected_id");
 
                     b.HasIndex("OwnerId", "Id")
                         .HasDatabaseName("ix_calendar_owner_id_id");
@@ -217,7 +209,7 @@ namespace App.Migrations
                         .HasColumnType("text")
                         .HasColumnName("profile_image_small");
 
-                    b.Property<Guid>("SelectedCalendarId")
+                    b.Property<Guid?>("SelectedCalendarId")
                         .HasColumnType("uuid")
                         .HasColumnName("selected_calendar_id");
 
@@ -229,6 +221,9 @@ namespace App.Migrations
 
                     b.HasKey("Id")
                         .HasName("pk_user");
+
+                    b.HasIndex("SelectedCalendarId")
+                        .HasDatabaseName("ix_user_selected_calendar_id");
 
                     b.ToTable("user", "todo");
                 });
@@ -256,17 +251,9 @@ namespace App.Migrations
                         .WithMany("Calendars")
                         .HasForeignKey("OwnerId")
                         .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired()
                         .HasConstraintName("fk_calendar_user_owner_id");
 
-                    b.HasOne("Database.Entity.UserEntity", "UserSelected")
-                        .WithOne("SelectedCalendar")
-                        .HasForeignKey("Database.Entity.CalendarEntity", "UserSelectedId")
-                        .HasConstraintName("fk_calendar_user_user_selected_id");
-
                     b.Navigation("Owner");
-
-                    b.Navigation("UserSelected");
                 });
 
             modelBuilder.Entity("Database.Entity.CalendarLinkEntity", b =>
@@ -302,6 +289,15 @@ namespace App.Migrations
                     b.Navigation("CreatedBy");
                 });
 
+            modelBuilder.Entity("Database.Entity.UserEntity", b =>
+                {
+                    b.HasOne("Database.Entity.CalendarEntity", null)
+                        .WithMany()
+                        .HasForeignKey("SelectedCalendarId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .HasConstraintName("fk_user_calendar_selected_calendar_id");
+                });
+
             modelBuilder.Entity("Database.Entity.CalendarEntity", b =>
                 {
                     b.Navigation("Events");
@@ -314,8 +310,6 @@ namespace App.Migrations
                     b.Navigation("Calendars");
 
                     b.Navigation("CreatedEvents");
-
-                    b.Navigation("SelectedCalendar");
                 });
 #pragma warning restore 612, 618
         }

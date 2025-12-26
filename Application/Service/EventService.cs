@@ -32,7 +32,7 @@ public class EventService(
             .Include(e => e.Calendar)
             .Include(e => e.CreatedBy)
             .Where(e => e.CalendarId == calendarId
-                        && e.Calendar!.OwnerId == user.UserId // Uses index scan, not full join
+                        && e.Calendar!.OwnerId! == user.UserId // Uses index scan, not full join
                         && e.StartsAt < eventTo
                         && e.EndsAt > eventFrom) // Events overlapping the range
             .OrderBy(e => e.StartsAt)
@@ -55,7 +55,7 @@ public class EventService(
             .Event
             .Include(e => e.Calendar)
             .Include(e => e.CreatedBy)
-            .Where(e => e.Calendar!.OwnerId == user.UserId
+            .Where(e => e.Calendar!.OwnerId! == user.UserId
                 && e.Calendar!.Id == calendarId);
         
         if (!string.IsNullOrWhiteSpace(search))
@@ -94,7 +94,7 @@ public class EventService(
             .Event
             .Include(e => e.Calendar)
             .Include(e => e.CreatedBy)
-            .Where(e => e.Calendar!.OwnerId == user.UserId
+            .Where(e => e.Calendar!.OwnerId! == user.UserId
                 && e.Calendar!.Id == calendarId)
             .AsNoTracking()
             .FirstOrDefaultAsync(e => e.Id == eventId, cancellationToken);
@@ -111,7 +111,8 @@ public class EventService(
         
         var now = timeProvider.GetUtcNow().UtcDateTime;
         var userEntity = await databaseContext
-            .EnsureUserInDatabase(user, now, false, cancellationToken);
+            .User
+            .FirstAsync(u => u.Id == user.UserId, cancellationToken);
         
         // ReSharper disable once EntityFramework.NPlusOne.IncompleteDataUsage
         var eventEntity = createEvent.FromDto(
@@ -143,7 +144,7 @@ public class EventService(
             .Event
             .Include(e => e.Calendar)
             .Include(e => e.CreatedBy)
-            .Where(e => e.Calendar!.OwnerId == user.UserId
+            .Where(e => e.Calendar!.OwnerId! == user.UserId
                         && e.Calendar!.Id == calendarId)
             .SingleAsync(e => e.Id == eventId, cancellationToken);
         
@@ -193,7 +194,7 @@ public class EventService(
         var result = await databaseContext
             .Event
             .Include(e => e.Calendar)
-            .Where(e => e.Calendar!.OwnerId == user.UserId
+            .Where(e => e.Calendar!.OwnerId! == user.UserId
                         && e.Calendar!.Id == calendarId
                         && e.Id == eventId)
             .ExecuteDeleteAsync(cancellationToken);

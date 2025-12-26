@@ -1,58 +1,45 @@
 $currentDir = Get-Location
 
-# Stop and remove existing jobs
-Get-Job -Name "IdentityApp", "MainApp" -ErrorAction SilentlyContinue | Stop-Job
-Get-Job -Name "IdentityApp", "MainApp" -ErrorAction SilentlyContinue | Remove-Job
+# Function to clean up jobs and processes quickly
+function Stop-AppJobs {
+    # Stop jobs forcefully first
+    Get-Job -Name "IdentityApp", "MainApp" -ErrorAction SilentlyContinue | Stop-Job -PassThru | Remove-Job -Force
 
-# Kill any dotnet processes running these specific projects
-Get-Process dotnet -ErrorAction SilentlyContinue | ForEach-Object {
-    $processId = $_.Id
-    $commandLine = (Get-CimInstance Win32_Process -Filter "ProcessId = $processId").CommandLine
-    if ($commandLine -like "*Identity/App/App.csproj*" -or $commandLine -like "*./App/App.csproj*") {
-        Stop-Process -Id $processId -Force
-        Write-Host "Killed dotnet process: $processId"
-    }
-}
+    # Kill dotnet processes efficiently (without slow WMI queries)
+    Get-Process -Name dotnet -ErrorAction SilentlyContinue | Where-Object {
+        $_.Path -and (
+        (Get-Process -Id $_.Id -ErrorAction SilentlyContinue).CommandLine -like "*Identity/App/App.csproj*" -or
+                (Get-Process -Id $_.Id -ErrorAction SilentlyContinue).CommandLine -like "*./App/App.csproj*"
+        )
+    } | Stop-Process -Force -ErrorAction SilentlyContinue
 
-# Register Ctrl+C handler
-$null = Register-EngineEvent -SourceIdentifier PowerShell.Exiting -Action {
-    Get-Job -Name "IdentityApp", "MainApp" -ErrorAction SilentlyContinue | Stop-Job
-    Get-Job -Name "IdentityApp", "MainApp" -ErrorAction SilentlyContinue | Remove-Job
-
-    Get-Process dotnet -ErrorAction SilentlyContinue | ForEach-Object {
-        $processId = $_.Id
-        $commandLine = (Get-CimInstance Win32_Process -Filter "ProcessId = $processId").CommandLine
-        if ($commandLine -like "*Identity/App/App.csproj*" -or $commandLine -like "*./App/App.csproj*") {
-            Stop-Process -Id $processId -Force
+    # Alternative: Kill ALL dotnet processes from child processes of the jobs
+    Get-Job -Name "IdentityApp", "MainApp" -ErrorAction SilentlyContinue | ForEach-Object {
+        if ($_.ChildJobs[0].Output) {
+            Get-Process -Id $_.ChildJobs[0].ProcessId -ErrorAction SilentlyContinue |
+                    ForEach-Object { Stop-Process -Id $_.Id -Force -ErrorAction SilentlyContinue }
         }
     }
 }
+
+# Initial cleanup
+Stop-AppJobs
 
 # Start the jobs
 Start-Job -Name "IdentityApp" -ScriptBlock {
     Set-Location $using:currentDir
     dotnet run --project ../Identity/App/App.csproj
-}
+} | Out-Null
 
 Start-Job -Name "MainApp" -ScriptBlock {
     Set-Location $using:currentDir
     dotnet run --project ./App/App.csproj
-}
+} | Out-Null
 
 try {
     # View output from both jobs
     Get-Job | Receive-Job -Wait -AutoRemoveJob
 }
 finally {
-    # Clean up on exit or Ctrl+C
-    Get-Job -Name "IdentityApp", "MainApp" -ErrorAction SilentlyContinue | Stop-Job
-    Get-Job -Name "IdentityApp", "MainApp" -ErrorAction SilentlyContinue | Remove-Job
-
-    Get-Process dotnet -ErrorAction SilentlyContinue | ForEach-Object {
-        $processId = $_.Id
-        $commandLine = (Get-CimInstance Win32_Process -Filter "ProcessId = $processId").CommandLine
-        if ($commandLine -like "*Identity/App/App.csproj*" -or $commandLine -like "*./App/App.csproj*") {
-            Stop-Process -Id $processId -Force
-        }
-    }
+    Stop-AppJobs
 }

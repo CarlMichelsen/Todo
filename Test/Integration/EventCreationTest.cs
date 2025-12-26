@@ -3,7 +3,6 @@ using System.Text;
 using System.Text.Json;
 using Application.Extensions;
 using Database;
-using Database.Entity;
 using Database.Entity.Id;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
@@ -37,16 +36,7 @@ public class EventCreationTest(IntegrationTestFactory factory)
         await dbContext.EnsureUserInDatabase(
             ConfiguredTestUsers.Steve.ToJwtUser(now, TimeSpan.FromHours(2)),
             now,
-            false,
             CancellationToken.None);
-        dbContext.Calendar.Add(new CalendarEntity
-        {
-            Id = calendarId,
-            Title = "Test Title",
-            Color = "#FF0000",
-            OwnerId = new UserEntityId(ConfiguredTestUsers.Steve.UserId, true),
-            CreatedAt = now,
-        });
         await dbContext.SaveChangesAsync();
         
         var createEventDto = new CreateEventDto(

@@ -13,7 +13,7 @@
 	let isCalendarModalOpen = $state(false);
 
 	function handleCalendarSelect(calendarId: string) {
-		calendarsStore.setActiveCalendar(calendarId);
+		void calendarsStore.setActiveCalendar(calendarId);
 	}
 
 	function handleNewCalendar() {

@@ -41,3 +41,8 @@ dotnet ef migrations add InitialCreateTodo --project ./App
 ```bash
 dotnet ef database update --project ./App
 ```
+
+### Update ef-core cli tool
+```bash
+dotnet tool update --global dotnet-ef
+```

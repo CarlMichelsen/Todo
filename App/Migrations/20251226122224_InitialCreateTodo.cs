@@ -15,6 +15,23 @@ namespace App.Migrations
                 name: "todo");
 
             migrationBuilder.CreateTable(
+                name: "calendar",
+                schema: "todo",
+                columns: table => new
+                {
+                    id = table.Column<Guid>(type: "uuid", nullable: false),
+                    title = table.Column<string>(type: "character varying(1028)", maxLength: 1028, nullable: false),
+                    color = table.Column<string>(type: "character varying(7)", maxLength: 7, nullable: false),
+                    owner_id = table.Column<Guid>(type: "uuid", nullable: true),
+                    last_selected_at = table.Column<DateTime>(type: "timestamp with time zone", nullable: true),
+                    created_at = table.Column<DateTime>(type: "timestamp with time zone", nullable: false)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("pk_calendar", x => x.id);
+                });
+
+            migrationBuilder.CreateTable(
                 name: "user",
                 schema: "todo",
                 columns: table => new
@@ -25,43 +42,19 @@ namespace App.Migrations
                     profile_image_small = table.Column<string>(type: "text", nullable: false),
                     profile_image_medium = table.Column<string>(type: "text", nullable: true),
                     profile_image_large = table.Column<string>(type: "text", nullable: true),
-                    selected_calendar_id = table.Column<Guid>(type: "uuid", nullable: false),
+                    selected_calendar_id = table.Column<Guid>(type: "uuid", nullable: true),
                     created_at = table.Column<DateTime>(type: "timestamp with time zone", nullable: false)
                 },
                 constraints: table =>
                 {
                     table.PrimaryKey("pk_user", x => x.id);
-                });
-
-            migrationBuilder.CreateTable(
-                name: "calendar",
-                schema: "todo",
-                columns: table => new
-                {
-                    id = table.Column<Guid>(type: "uuid", nullable: false),
-                    title = table.Column<string>(type: "character varying(1028)", maxLength: 1028, nullable: false),
-                    color = table.Column<string>(type: "character varying(7)", maxLength: 7, nullable: false),
-                    user_selected_id = table.Column<Guid>(type: "uuid", nullable: true),
-                    owner_id = table.Column<Guid>(type: "uuid", nullable: false),
-                    last_selected_at = table.Column<DateTime>(type: "timestamp with time zone", nullable: true),
-                    created_at = table.Column<DateTime>(type: "timestamp with time zone", nullable: false)
-                },
-                constraints: table =>
-                {
-                    table.PrimaryKey("pk_calendar", x => x.id);
                     table.ForeignKey(
-                        name: "fk_calendar_user_owner_id",
-                        column: x => x.owner_id,
+                        name: "fk_user_calendar_selected_calendar_id",
+                        column: x => x.selected_calendar_id,
                         principalSchema: "todo",
-                        principalTable: "user",
+                        principalTable: "calendar",
                         principalColumn: "id",
-                        onDelete: ReferentialAction.Cascade);
-                    table.ForeignKey(
-                        name: "fk_calendar_user_user_selected_id",
-                        column: x => x.user_selected_id,
-                        principalSchema: "todo",
-                        principalTable: "user",
-                        principalColumn: "id");
+                        onDelete: ReferentialAction.Restrict);
                 });
 
             migrationBuilder.CreateTable(
@@ -161,13 +154,6 @@ namespace App.Migrations
                 columns: [ "owner_id", "id" ]);
 
             migrationBuilder.CreateIndex(
-                name: "ix_calendar_user_selected_id",
-                schema: "todo",
-                table: "calendar",
-                column: "user_selected_id",
-                unique: true);
-
-            migrationBuilder.CreateIndex(
                 name: "ix_calendar_entity_calendar_link_entity_calendars_id",
                 schema: "todo",
                 table: "calendar_entity_calendar_link_entity",
@@ -196,11 +182,32 @@ namespace App.Migrations
                 schema: "todo",
                 table: "event",
                 column: "created_by_id");
+
+            migrationBuilder.CreateIndex(
+                name: "ix_user_selected_calendar_id",
+                schema: "todo",
+                table: "user",
+                column: "selected_calendar_id");
+
+            migrationBuilder.AddForeignKey(
+                name: "fk_calendar_user_owner_id",
+                schema: "todo",
+                table: "calendar",
+                column: "owner_id",
+                principalSchema: "todo",
+                principalTable: "user",
+                principalColumn: "id",
+                onDelete: ReferentialAction.Cascade);
         }
 
         /// <inheritdoc />
         protected override void Down(MigrationBuilder migrationBuilder)
         {
+            migrationBuilder.DropForeignKey(
+                name: "fk_calendar_user_owner_id",
+                schema: "todo",
+                table: "calendar");
+
             migrationBuilder.DropTable(
                 name: "calendar_entity_calendar_link_entity",
                 schema: "todo");
@@ -214,11 +221,11 @@ namespace App.Migrations
                 schema: "todo");
 
             migrationBuilder.DropTable(
-                name: "calendar",
+                name: "user",
                 schema: "todo");
 
             migrationBuilder.DropTable(
-                name: "user",
+                name: "calendar",
                 schema: "todo");
         }
     }

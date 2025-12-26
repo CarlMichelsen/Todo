@@ -68,6 +68,46 @@ export class CalendarClient extends AuthorizedHttpClient {
 	}
 
 	/**
+	 * Select a calendar as the active calendar for the current user
+	 * Uses POST /api/v1/Calendar/{calendarId} endpoint
+	 * This persists the selection to the server so it's restored on next login
+	 *
+	 * @param calendarId - UUID of the calendar to select
+	 * @returns The selected CalendarDto
+	 */
+	async selectCalendar(calendarId: string): Promise<CalendarDto> {
+		const response = await this.request<CalendarDto>(
+			HttpMethod.POST,
+			`/api/v1/Calendar/${calendarId}`
+		);
+
+		if (!response.ok) {
+			if (response.status === 404) {
+				console.warn(`Calendar not found for selection: ${calendarId}`);
+				throw new Error('Calendar not found');
+			}
+
+			if (response.status === 400) {
+				const badRequest = response as BadRequestResponse;
+				console.error('Invalid calendar ID for selection:', {
+					calendarId,
+					errors: badRequest.data.errors
+				});
+				throw new Error('Invalid calendar ID format');
+			}
+
+			console.error('Failed to select calendar:', response.data);
+			throw new Error(`Failed to select calendar: ${response.data.title || 'Unknown error'}`);
+		}
+
+		if (!response.data) {
+			throw new Error('Calendar selection returned no data');
+		}
+
+		return response.data;
+	}
+
+	/**
 	 * Create a new calendar
 	 * Uses POST /api/v1/Calendar endpoint
 	 *

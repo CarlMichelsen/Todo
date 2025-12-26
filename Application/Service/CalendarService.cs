@@ -27,7 +27,7 @@ public class CalendarService(
         var calendars = await databaseContext
             .Calendar
             .Include(c => c.Owner)
-            .Where(c => c.OwnerId == user.UserId)
+            .Where(c => c.OwnerId! == user.UserId)
             .OrderByDescending(c => c.LastSelectedAt)
             .Take(MaxResults)
             .ToListAsync(cancellationToken);
@@ -44,7 +44,7 @@ public class CalendarService(
         var calendar = await databaseContext
             .Calendar
             .Include(c => c.Owner)
-            .Where(c => c.OwnerId == user.UserId && c.Id == calendarId)
+            .Where(c => c.OwnerId! == user.UserId && c.Id == calendarId)
             .FirstOrDefaultAsync(cancellationToken);
         
         return calendar?.ToDto();
@@ -58,18 +58,19 @@ public class CalendarService(
         
         var now = timeProvider.GetUtcNow().UtcDateTime;
         var userEntity = await databaseContext
-            .EnsureUserInDatabase(user, now, false, cancellationToken);
+            .User
+            .FirstAsync(u => u.Id == user.UserId, cancellationToken);
         
         var calendarEntity = await databaseContext
             .Calendar
             .Include(c => c.Owner)
-            .Where(c => c.OwnerId == user.UserId && c.Id == calendarId)
+            .Where(c => c.OwnerId == userEntity.Id && c.Id == calendarId)
             .FirstOrDefaultAsync(cancellationToken);
 
-        if (calendarEntity is not null)
+        if (calendarEntity is not null && userEntity.SelectedCalendarId != calendarEntity.Id)
         {
-            userEntity.SelectedCalendar = calendarEntity;
             userEntity.SelectedCalendarId = calendarEntity.Id;
+            calendarEntity.LastSelectedAt = now;
         }
         
         await databaseContext.SaveChangesAsync(cancellationToken);
@@ -91,7 +92,8 @@ public class CalendarService(
         
         var now = timeProvider.GetUtcNow().UtcDateTime;
         var userEntity = await databaseContext
-            .EnsureUserInDatabase(user, now, false, cancellationToken);
+            .User
+            .FirstAsync(u => u.Id == user.UserId, cancellationToken);
         
         var calendarEntity = new CalendarEntity
         {
@@ -100,8 +102,6 @@ public class CalendarService(
             Owner = userEntity,
             Title = createCalendar.Title,
             Color = createCalendar.Color,
-            UserSelected = userEntity,
-            UserSelectedId = userEntity.Id,
             Events = [],
             CalendarLinks = [],
             LastSelectedAt = now,
@@ -128,10 +128,9 @@ public class CalendarService(
         CancellationToken cancellationToken)
     {
         var user = httpContextAccessor.GetJwtUser();
-        
-        var now = timeProvider.GetUtcNow().UtcDateTime;
         var userEntity = await databaseContext
-            .EnsureUserInDatabase(user, now, false, cancellationToken);
+            .User
+            .FirstAsync(u => u.Id == user.UserId, cancellationToken);
         
         var calendarEntity = await databaseContext
             .Calendar
@@ -173,7 +172,7 @@ public class CalendarService(
         
         var result = await databaseContext
             .Calendar
-            .Where(e => e.OwnerId == user.UserId && e.Id == calendarId)
+            .Where(e => e.OwnerId! == user.UserId && e.Id == calendarId)
             .ExecuteDeleteAsync(cancellationToken);
         
         var success = result == 1;

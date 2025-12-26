@@ -15,18 +15,14 @@ public class CalendarEntity : IEntity
     
     [MaxLength(7)]
     public required string Color { get; set; }
-    
-    public UserEntityId? UserSelectedId { get; set; }
-    
-    public UserEntity? UserSelected { get; set; }
 
     public Collection<EventEntity> Events { get; init; } = [];
     
     public Collection<CalendarLinkEntity> CalendarLinks { get; init; } = [];
     
-    public required UserEntityId OwnerId { get; init; }
+    public required UserEntityId? OwnerId { get; set; }
 
-    public UserEntity? Owner { get; init; }
+    public UserEntity? Owner { get; set; }
     
     public DateTime? LastSelectedAt { get; set; }
 
@@ -36,6 +32,7 @@ public class CalendarEntity : IEntity
     {
         var entityBuilder = modelBuilder.Entity<CalendarEntity>();
         
+        // Id
         entityBuilder.HasKey(e => e.Id);
         entityBuilder
             .Property(x => x.Id)
@@ -48,12 +45,6 @@ public class CalendarEntity : IEntity
             .WithOne(e => e.Calendar)
             .HasForeignKey(e => e.CalendarId)
             .OnDelete(DeleteBehavior.Cascade);
-        
-        // UserSelected
-        entityBuilder
-            .HasOne(c => c.UserSelected)
-            .WithOne(u => u.SelectedCalendar)
-            .HasForeignKey<CalendarEntity>(c => c.UserSelectedId);
         
         // Index
         entityBuilder

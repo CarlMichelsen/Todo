@@ -24,11 +24,10 @@ public partial class UserController(
             return this.Unauthorized();
         }
 
-        var now = timeProvider.GetUtcNow().UtcDateTime;
+        // Creates the user in the database if it is not there already.
         var userEntity = await dbContext.EnsureUserInDatabase(
             jwtUser,
-            now,
-            true,
+            timeProvider.GetUtcNow().UtcDateTime,
             ct);
         
         LogUsernameUseridMethodName(logger, jwtUser.Username, jwtUser.UserId, nameof(GetUserData));
