@@ -170,18 +170,34 @@ public class CalendarService(
     {
         var user = httpContextAccessor.GetJwtUser();
         
-        var result = await databaseContext
-            .Calendar
-            .Where(e => e.OwnerId! == user.UserId && e.Id == calendarId)
-            .ExecuteDeleteAsync(cancellationToken);
+        var userEntity = await databaseContext
+            .User
+            .Include(u => u.Calendars)
+            .FirstAsync(u => u.Id == user.UserId, cancellationToken);
         
-        var success = result == 1;
+        var selectedCalendarId = userEntity.SelectedCalendarId;
+
+        if (userEntity.Calendars.Count <= 1)
+        {
+            return false;
+        }
+        
+        var calendarToBeDeleted = userEntity.Calendars.First(c => c.Id == selectedCalendarId);
+        userEntity.SelectedCalendarId = userEntity
+            .Calendars
+            .OrderByDescending(c => c.LastSelectedAt)
+            .First(c => c.Id != calendarToBeDeleted.Id)
+            .Id;
+        
+        databaseContext.Calendar.Remove(calendarToBeDeleted);
+        await databaseContext.SaveChangesAsync(cancellationToken);
+        
         logger.LogUsernameUserIdMethodNameEventId(
             user.Username,
             user.UserId,
             nameof(ICalendarService.DeleteCalendar),
-            success ? calendarId.ToString() : "calendar not found");
+            calendarId.ToString());
         
-        return success;
+        return true;
     }
 }
