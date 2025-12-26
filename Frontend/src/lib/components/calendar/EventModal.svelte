@@ -18,13 +18,27 @@
 		 */
 		initialDate?: string;
 		/**
+		 * Initial start time for new events (HH:MM format)
+		 */
+		initialStartTime?: string;
+		/**
+		 * Initial end time for new events (HH:MM format)
+		 */
+		initialEndTime?: string;
+		/**
 		 * Event to edit. If provided, modal is in edit mode.
 		 * If undefined, modal is in create mode.
 		 */
 		event?: CalendarEvent;
 	}
 
-	let { isOpen = $bindable(false), initialDate, event }: Props = $props();
+	let {
+		isOpen = $bindable(false),
+		initialDate,
+		initialStartTime,
+		initialEndTime,
+		event
+	}: Props = $props();
 
 	// Determine if we're editing or creating
 	let isEditMode = $derived(event !== undefined);
@@ -60,8 +74,8 @@
 			description = '';
 			startDate = initialDate || new Date().toISOString().split('T')[0];
 			endDate = initialDate || new Date().toISOString().split('T')[0];
-			startTime = '09:00';
-			endTime = '10:00';
+			startTime = initialStartTime || '09:00';
+			endTime = initialEndTime || '10:00';
 			color = '#ea580c';
 		}
 	});

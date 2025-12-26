@@ -18,7 +18,11 @@
 	let { initialWeekStart, onWeekChange, hourHeight = 40 }: Props = $props();
 
 	// Set calendar configuration for all children components
-	setCalendarConfig({ hourHeight});
+	setCalendarConfig({
+		hourHeight,
+		ghostEventDuration: 30,
+		ghostEventSnapInterval: 30
+	});
 
 	// State management
 	let currentWeekStart = $state(
@@ -34,6 +38,10 @@
 	// Modal state
 	let isEventModalOpen = $state(false);
 	let editingEvent = $state<CalendarEvent | undefined>(undefined);
+
+	// Ghost event modal state
+	let modalInitialStartTime = $state<string | undefined>(undefined);
+	let modalInitialEndTime = $state<string | undefined>(undefined);
 
 	// Derived state
 	let weekDates = $derived(getWeekDates(currentWeekStart));
@@ -170,11 +178,25 @@
 
 	function handleEventClick(event: CalendarEvent) {
 		editingEvent = event;
+		modalInitialStartTime = undefined; // Clear ghost times
+		modalInitialEndTime = undefined;
 		isEventModalOpen = true;
 	}
 
 	function handleAddEvent() {
 		editingEvent = undefined; // Clear editing event for create mode
+		modalInitialStartTime = undefined; // Clear ghost times
+		modalInitialEndTime = undefined;
+		isEventModalOpen = true;
+	}
+
+	function handleGhostEventClick(dateStr: string, startTime: string, endTime: string) {
+		// Set modal initial times
+		modalInitialStartTime = startTime;
+		modalInitialEndTime = endTime;
+
+		// Open modal in create mode
+		editingEvent = undefined;
 		isEventModalOpen = true;
 	}
 
@@ -209,8 +231,15 @@
 		isMobile={isMobile}
 		currentDayIndex={currentDayIndex}
 		onEventClick={handleEventClick}
+		onGhostEventClick={handleGhostEventClick}
 	/>
 
 	<!-- Event Modal -->
-	<EventModal bind:isOpen={isEventModalOpen} event={editingEvent} initialDate={initialDate()} />
+	<EventModal
+		bind:isOpen={isEventModalOpen}
+		event={editingEvent}
+		initialDate={initialDate()}
+		initialStartTime={modalInitialStartTime}
+		initialEndTime={modalInitialEndTime}
+	/>
 </div>

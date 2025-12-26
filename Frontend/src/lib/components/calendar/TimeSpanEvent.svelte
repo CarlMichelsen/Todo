@@ -23,9 +23,13 @@
 		 * Callback when event is clicked
 		 */
 		onclick?: (event: CalendarEvent) => void;
+		/**
+		 * Callback when hover state changes
+		 */
+		onHoverChange?: (eventId: string | null) => void;
 	}
 
-	let { event, currentDate, layout, onclick }: Props = $props();
+	let { event, currentDate, layout, onclick, onHoverChange }: Props = $props();
 
 	// Get calendar configuration
 	const config = getCalendarConfig();
@@ -100,12 +104,14 @@
 </script>
 
 <div
-	class="absolute px-2 py-1 overflow-hidden transition-transform hover:scale-x-[1.02] hover:z-10 cursor-pointer shadow-sm"
+	class="absolute px-2 py-1 overflow-hidden transition-transform hover:scale-x-[1.02] hover:z-20 cursor-pointer shadow-sm z-10"
 	class:rounded={!isMultiDay}
 	class:rounded-t={isMultiDay && !startsBeforeToday}
 	class:rounded-b={isMultiDay && !endsAfterToday}
 	style="top: {topPosition}px; height: {height}px; left: {leftOffset}; width: {width}; background-color: {backgroundColor};"
 	onclick={() => onclick?.(event)}
+	onmouseenter={() => onHoverChange?.(event.id)}
+	onmouseleave={() => onHoverChange?.(null)}
 	role="button"
 	tabindex="0"
 	onkeydown={(e) => {

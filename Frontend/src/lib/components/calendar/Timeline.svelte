@@ -1,7 +1,14 @@
 <script lang="ts">
 	import type { CalendarEvent } from '$lib/types/calendar';
 	import TimeSpanEvent from './TimeSpanEvent.svelte';
-	import { calculateEventLayout, isSameDay } from '$lib/utils/calendarUtils';
+	import GhostEvent from './GhostEvent.svelte';
+	import {
+		calculateEventLayout,
+		isSameDay,
+		pixelsToTime,
+		roundTimeToInterval,
+		extractDateString
+	} from '$lib/utils/calendarUtils';
 	import { getCalendarConfig } from '$lib/stores/calendarConfig';
 
 	interface Props {
@@ -15,14 +22,44 @@
 		 * Optional callback that runs every time the current time line updates (once per minute)
 		 */
 		onTimeUpdate?: (currentTime: Date) => void;
+		/**
+		 * Callback when ghost event is clicked
+		 */
+		onGhostEventClick?: (date: string, startTime: string, endTime: string) => void;
 	}
 
-	let { date, events, onEventClick, onTimeUpdate }: Props = $props();
+	let { date, events, onEventClick, onTimeUpdate, onGhostEventClick }: Props = $props();
 
 	// Get calendar configuration
 	const config = getCalendarConfig();
 	const hourHeight = $derived(config.hourHeight);
 	const halfHourHeight = $derived(hourHeight / 2);
+	const ghostDuration = $derived(config.ghostEventDuration);
+	const snapInterval = $derived(config.ghostEventSnapInterval);
+
+	// Ghost event state
+	let isHovering = $state(false);
+	let mouseY = $state(0);
+	let isMobile = $state(false);
+	let hoveredEventId = $state<string | null>(null);
+
+	// Detect mobile on mount
+	$effect(() => {
+		isMobile = window.matchMedia('(max-width: 767px)').matches;
+	});
+
+	// Calculate ghost event time from mouse position
+	const ghostStartTime = $derived.by(() => {
+		if (!isHovering || isMobile) return null;
+
+		// Convert pixels to time
+		const rawTime = pixelsToTime(mouseY, hourHeight);
+
+		// Snap to interval
+		const snappedTime = roundTimeToInterval(rawTime, snapInterval);
+
+		return snappedTime;
+	});
 
 	// Generate 24 hours (0-23)
 	const hours = Array.from({ length: 24 }, (_, i) => i);
@@ -30,6 +67,29 @@
 	// Format hour for display (24-hour format without minutes)
 	function formatHour(hour: number): string {
 		return String(hour).padStart(2, '0');
+	}
+
+	// Ghost event click handler
+	function handleGhostEventClick() {
+		if (!ghostStartTime) return;
+
+		// Calculate end time
+		const [hours, minutes] = ghostStartTime.split(':').map(Number);
+		const totalMinutes = hours * 60 + minutes + ghostDuration;
+		const endHours = Math.floor(totalMinutes / 60);
+		const endMinutes = totalMinutes % 60;
+		const endTime = `${String(endHours).padStart(2, '0')}:${String(endMinutes).padStart(2, '0')}`;
+
+		// Get date string
+		const dateStr = extractDateString(date);
+
+		// Call parent callback
+		onGhostEventClick?.(dateStr, ghostStartTime, endTime);
+	}
+
+	// Event hover change handler
+	function handleEventHoverChange(eventId: string | null) {
+		hoveredEventId = eventId;
 	}
 
 	// Calculate layout for overlapping events
@@ -91,7 +151,22 @@
 	</div>
 
 	<!-- Right: Timeline grid + events -->
-	<div class="relative flex-1">
+	<div
+		class="relative flex-1"
+		role="region"
+		aria-label="Calendar timeline"
+		onmousemove={(e) => {
+			if (!isMobile) {
+				isHovering = true;
+				// Use currentTarget to get position relative to timeline container, not the event target
+				const rect = e.currentTarget.getBoundingClientRect();
+				mouseY = e.clientY - rect.top;
+			}
+		}}
+		onmouseleave={() => {
+			isHovering = false;
+		}}
+	>
 		<!-- Background grid lines -->
 		<div class="absolute inset-0">
 			{#each hours as hour}
@@ -113,9 +188,27 @@
 		<!-- Events layer -->
 		<div class="absolute inset-0">
 			{#each events as event (event.id)}
-				<TimeSpanEvent {event} currentDate={date} layout={eventLayout.get(event.id)} onclick={onEventClick} />
+				<TimeSpanEvent
+					{event}
+					currentDate={date}
+					layout={eventLayout.get(event.id)}
+					onclick={onEventClick}
+					onHoverChange={handleEventHoverChange}
+				/>
 			{/each}
 		</div>
+
+		<!-- Ghost event layer (shows on hover, hidden when over real event) -->
+		{#if ghostStartTime && !isMobile && !hoveredEventId}
+			<div class="absolute inset-0 pointer-events-none">
+				<GhostEvent
+					startTime={ghostStartTime}
+					duration={ghostDuration}
+					mouseY={mouseY}
+					onclick={handleGhostEventClick}
+				/>
+			</div>
+		{/if}
 
 		<!-- Current time indicator (shows above events) -->
 		{#if currentTimePosition !== null}

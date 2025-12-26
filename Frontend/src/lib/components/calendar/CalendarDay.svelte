@@ -10,9 +10,13 @@
 		 * Callback when an event is clicked
 		 */
 		onEventClick?: (event: CalendarEvent) => void;
+		/**
+		 * Callback when ghost event is clicked
+		 */
+		onGhostEventClick?: (date: string, startTime: string, endTime: string) => void;
 	}
 
-	let { day, onEventClick }: Props = $props();
+	let { day, onEventClick, onGhostEventClick }: Props = $props();
 
 	// Get calendar configuration
 	const config = getCalendarConfig();
@@ -42,7 +46,12 @@
 
 		<!-- Timeline with events -->
 		<div class="flex-1 overflow-hidden">
-			<Timeline date={day.date} events={day.events} onEventClick={onEventClick} />
+			<Timeline
+				date={day.date}
+				events={day.events}
+				onEventClick={onEventClick}
+				onGhostEventClick={onGhostEventClick}
+			/>
 		</div>
 	</div>
 </Card>
