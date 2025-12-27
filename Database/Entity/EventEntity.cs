@@ -9,7 +9,7 @@ public class EventEntity : IEntity
 {
     public required EventEntityId Id { get; init; }
     
-    [MaxLength(1028)]
+    [MaxLength(100)]
     public required string Title { get; set; }
     
     [MaxLength(1028 * 32)]
@@ -24,9 +24,13 @@ public class EventEntity : IEntity
     
     public required DateTime CreatedAt { get; init; }
     
-    public required UserEntityId HostedById { get; init; }
+    public required CalendarEntityId CalendarId { get; init; }
+    
+    public CalendarEntity? Calendar { get; init; }
+    
+    public required UserEntityId CreatedById { get; init; }
 
-    public UserEntity? HostedBy { get; init; }
+    public UserEntity? CreatedBy { get; init; }
     
     public static void Configure(ModelBuilder modelBuilder)
     {
@@ -39,9 +43,17 @@ public class EventEntity : IEntity
             .RegisterTypedKeyConversion<EventEntity, EventEntityId>(x =>
                 new EventEntityId(x, true));
         
+        // Owner
         entityBuilder
-            .HasOne(e => e.HostedBy)
-            .WithMany(e => e.HostedEvents)
-            .HasForeignKey(e => e.HostedById);
+            .HasOne(e => e.CreatedBy)
+            .WithMany(e => e.CreatedEvents)
+            .HasForeignKey(e => e.CreatedById);
+        
+        // Index
+        entityBuilder
+            .HasIndex(e => new { e.CalendarId, e.StartsAt, e.EndsAt });
+        
+        entityBuilder
+            .HasIndex(e => new { e.CalendarId, e.Id });
     }
 }

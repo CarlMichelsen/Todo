@@ -1,4 +1,6 @@
-﻿using System.Security.Claims;
+﻿using System.Collections.ObjectModel;
+using System.Globalization;
+using System.Security.Claims;
 using Microsoft.AspNetCore.Http;
 
 namespace Application;
@@ -37,6 +39,8 @@ public static class JwtTokenKeys
 
     public static JwtUser? GetJwtUser(this HttpContext context)
     {
+        ArgumentNullException.ThrowIfNull(context);
+        
         if (context.User.Identity?.IsAuthenticated != true)
         {
             return null;
@@ -53,32 +57,32 @@ public static class JwtTokenKeys
             .FirstOrDefault();
 
         return new JwtUser(
-            UserId: Guid.Parse(user.GetClaimValue(Sub).First()),
-            Username: user.GetClaimValue(Name).First(),
-            Email: user.GetClaimValue(Email).First(),
-            AccessTokenId: Guid.Parse(user.GetClaimValue(Jti).First()),
-            TokenIssuedAt: long.Parse(user.GetClaimValue(Iat).First()).ToDateTime(),
-            TokenExpiresAt: long.Parse(user.GetClaimValue(Exp).First()).ToDateTime(),
-            Issuer: user.GetClaimValue(Issuer).First(),
-            Audience: user.GetClaimValue(Audience).First(),
-            AuthenticationProvider: user.GetClaimValue(Provider).First(),
-            AuthenticationProviderId: user.GetClaimValue(ProviderId).First(),
+            UserId: Guid.Parse(user.GetClaimValue(Sub)[0]),
+            Username: user.GetClaimValue(Name)[0],
+            Email: user.GetClaimValue(Email)[0],
+            AccessTokenId: Guid.Parse(user.GetClaimValue(Jti)[0]),
+            TokenIssuedAt: long.Parse(user.GetClaimValue(Iat)[0], CultureInfo.InvariantCulture).ToDateTime(),
+            TokenExpiresAt: long.Parse(user.GetClaimValue(Exp)[0], CultureInfo.InvariantCulture).ToDateTime(),
+            Issuer: user.GetClaimValue(Issuer)[0],
+            Audience: user.GetClaimValue(Audience)[0],
+            AuthenticationProvider: user.GetClaimValue(Provider)[0],
+            AuthenticationProviderId: user.GetClaimValue(ProviderId)[0],
             Roles: user.GetClaimValue(Role),
-            Profile: new Uri(user.GetClaimValue(Profile).First()),
+            Profile: new Uri(user.GetClaimValue(Profile)[0], UriKind.Absolute),
             ProfileMedium: Uri.TryCreate(medium, UriKind.Absolute, out var mediumUri) ? mediumUri : null,
             ProfileLarge: Uri.TryCreate(large, UriKind.Absolute, out var largeUri) ? largeUri : null);
     }
 
-    private static List<string> GetClaimValue(this ClaimsPrincipal claimsPrincipal, string claimType)
+    private static Collection<string> GetClaimValue(this ClaimsPrincipal claimsPrincipal, string claimType)
     {
-        return claimsPrincipal
+        return new Collection<string>(claimsPrincipal
             .Identities
             .First()
             .Claims
             .Where(c => c.Type == claimType)
             .Select(c => c.Value)
             .Where(value => !string.IsNullOrWhiteSpace(value))
-            .ToList();
+            .ToList());
     }
     
     private static DateTime ToDateTime(this long epochSeconds)
@@ -98,7 +102,7 @@ public record JwtUser(
     string Audience,
     string AuthenticationProvider,
     string AuthenticationProviderId,
-    List<string> Roles,
+    Collection<string> Roles,
     Uri Profile,
     Uri? ProfileMedium = null,
     Uri? ProfileLarge = null);

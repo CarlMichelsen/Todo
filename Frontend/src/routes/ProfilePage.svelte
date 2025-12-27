@@ -18,12 +18,12 @@
 			<div class="flex items-center gap-6">
 				<img
 					src={$userStore.user!.profileLarge || $userStore.user!.profileMedium || $userStore.user!.profile}
-					alt={$userStore.user!.username}
+					alt={$userStore.user!.userName}
 					class="w-32 h-32 rounded-full object-cover border-4 border-orange-500 dark:border-orange-400"
 				/>
 				<div>
 					<h2 class="text-3xl font-bold text-gray-900 dark:text-gray-100 mb-2">
-						{$userStore.user!.username}
+						{$userStore.user!.userName}
 					</h2>
 					<p class="text-lg text-gray-600 dark:text-gray-400">
 						{$userStore.user!.email}
@@ -44,17 +44,15 @@
 				</div>
 				<div>
 					<p class="text-sm font-medium text-gray-500 dark:text-gray-400">Username</p>
-					<p class="text-base text-gray-900 dark:text-gray-100">{$userStore.user!.username}</p>
+					<p class="text-base text-gray-900 dark:text-gray-100">{$userStore.user!.userName}</p>
 				</div>
 				<div>
 					<p class="text-sm font-medium text-gray-500 dark:text-gray-400">Email</p>
 					<p class="text-base text-gray-900 dark:text-gray-100">{$userStore.user!.email}</p>
 				</div>
 				<div>
-					<p class="text-sm font-medium text-gray-500 dark:text-gray-400">Roles</p>
-					<p class="text-base text-gray-900 dark:text-gray-100">
-						{$userStore.user!.roles.length > 0 ? $userStore.user!.roles.join(', ') : 'No roles assigned'}
-					</p>
+					<p class="text-sm font-medium text-gray-500 dark:text-gray-400">Selected Calendar ID</p>
+					<p class="text-base text-gray-900 dark:text-gray-100 font-mono">{$userStore.user!.selectedCalendarId}</p>
 				</div>
 			</div>
 		</Card>
@@ -93,14 +91,6 @@
 				<div>
 					<p class="text-sm font-medium text-gray-500 dark:text-gray-400">Expires At</p>
 					<p class="text-base text-gray-900 dark:text-gray-100">{formatDate($userStore.user!.tokenExpiresAt)}</p>
-				</div>
-				<div>
-					<p class="text-sm font-medium text-gray-500 dark:text-gray-400">Issuer</p>
-					<p class="text-base text-gray-900 dark:text-gray-100 break-all">{$userStore.user!.issuer}</p>
-				</div>
-				<div>
-					<p class="text-sm font-medium text-gray-500 dark:text-gray-400">Audience</p>
-					<p class="text-base text-gray-900 dark:text-gray-100 break-all">{$userStore.user!.audience}</p>
 				</div>
 			</div>
 		</Card>

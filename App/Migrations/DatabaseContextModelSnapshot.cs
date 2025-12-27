@@ -18,12 +18,31 @@ namespace App.Migrations
 #pragma warning disable 612, 618
             modelBuilder
                 .HasDefaultSchema("todo")
-                .HasAnnotation("ProductVersion", "10.0.1")
+                .HasAnnotation("ProductVersion", "10.0.0")
                 .HasAnnotation("Relational:MaxIdentifierLength", 63);
 
             NpgsqlModelBuilderExtensions.UseIdentityByDefaultColumns(modelBuilder);
 
-            modelBuilder.Entity("Database.Entity.EventEntity", b =>
+            modelBuilder.Entity("CalendarEntityCalendarLinkEntity", b =>
+                {
+                    b.Property<Guid>("CalendarLinksId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("calendar_links_id");
+
+                    b.Property<Guid>("CalendarsId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("calendars_id");
+
+                    b.HasKey("CalendarLinksId", "CalendarsId")
+                        .HasName("pk_calendar_entity_calendar_link_entity");
+
+                    b.HasIndex("CalendarsId")
+                        .HasDatabaseName("ix_calendar_entity_calendar_link_entity_calendars_id");
+
+                    b.ToTable("calendar_entity_calendar_link_entity", "todo");
+                });
+
+            modelBuilder.Entity("Database.Entity.CalendarEntity", b =>
                 {
                     b.Property<Guid>("Id")
                         .HasColumnType("uuid")
@@ -39,6 +58,90 @@ namespace App.Migrations
                         .HasColumnType("timestamp with time zone")
                         .HasColumnName("created_at");
 
+                    b.Property<DateTime?>("LastSelectedAt")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("last_selected_at");
+
+                    b.Property<Guid?>("OwnerId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("owner_id");
+
+                    b.Property<string>("Title")
+                        .IsRequired()
+                        .HasMaxLength(1028)
+                        .HasColumnType("character varying(1028)")
+                        .HasColumnName("title");
+
+                    b.HasKey("Id")
+                        .HasName("pk_calendar");
+
+                    b.HasIndex("OwnerId")
+                        .HasDatabaseName("ix_calendar_owner_id");
+
+                    b.HasIndex("OwnerId", "Id")
+                        .HasDatabaseName("ix_calendar_owner_id_id");
+
+                    b.ToTable("calendar", "todo");
+                });
+
+            modelBuilder.Entity("Database.Entity.CalendarLinkEntity", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .HasColumnType("uuid")
+                        .HasColumnName("id");
+
+                    b.Property<string>("CalendarLink")
+                        .IsRequired()
+                        .HasColumnType("text")
+                        .HasColumnName("calendar_link");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("created_at");
+
+                    b.Property<string>("Title")
+                        .IsRequired()
+                        .HasMaxLength(1028)
+                        .HasColumnType("character varying(1028)")
+                        .HasColumnName("title");
+
+                    b.Property<Guid>("UserId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("user_id");
+
+                    b.HasKey("Id")
+                        .HasName("pk_calendar_link");
+
+                    b.HasIndex("UserId")
+                        .HasDatabaseName("ix_calendar_link_user_id");
+
+                    b.ToTable("calendar_link", "todo");
+                });
+
+            modelBuilder.Entity("Database.Entity.EventEntity", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .HasColumnType("uuid")
+                        .HasColumnName("id");
+
+                    b.Property<Guid>("CalendarId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("calendar_id");
+
+                    b.Property<string>("Color")
+                        .IsRequired()
+                        .HasMaxLength(7)
+                        .HasColumnType("character varying(7)")
+                        .HasColumnName("color");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("created_at");
+
+                    b.Property<Guid>("CreatedById")
+                        .HasColumnType("uuid")
+                        .HasColumnName("created_by_id");
+
                     b.Property<string>("Description")
                         .IsRequired()
                         .HasMaxLength(32896)
@@ -48,10 +151,6 @@ namespace App.Migrations
                     b.Property<DateTime>("EndsAt")
                         .HasColumnType("timestamp with time zone")
                         .HasColumnName("ends_at");
-
-                    b.Property<Guid>("HostedById")
-                        .HasColumnType("uuid")
-                        .HasColumnName("hosted_by_id");
 
                     b.Property<DateTime>("StartsAt")
                         .HasColumnType("timestamp with time zone")
@@ -66,8 +165,14 @@ namespace App.Migrations
                     b.HasKey("Id")
                         .HasName("pk_event");
 
-                    b.HasIndex("HostedById")
-                        .HasDatabaseName("ix_event_hosted_by_id");
+                    b.HasIndex("CreatedById")
+                        .HasDatabaseName("ix_event_created_by_id");
+
+                    b.HasIndex("CalendarId", "Id")
+                        .HasDatabaseName("ix_event_calendar_id_id");
+
+                    b.HasIndex("CalendarId", "StartsAt", "EndsAt")
+                        .HasDatabaseName("ix_event_calendar_id_starts_at_ends_at");
 
                     b.ToTable("event", "todo");
                 });
@@ -101,6 +206,10 @@ namespace App.Migrations
                         .HasColumnType("text")
                         .HasColumnName("profile_image_small");
 
+                    b.Property<Guid?>("SelectedCalendarId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("selected_calendar_id");
+
                     b.Property<string>("Username")
                         .IsRequired()
                         .HasMaxLength(256)
@@ -110,24 +219,94 @@ namespace App.Migrations
                     b.HasKey("Id")
                         .HasName("pk_user");
 
+                    b.HasIndex("SelectedCalendarId")
+                        .HasDatabaseName("ix_user_selected_calendar_id");
+
                     b.ToTable("user", "todo");
+                });
+
+            modelBuilder.Entity("CalendarEntityCalendarLinkEntity", b =>
+                {
+                    b.HasOne("Database.Entity.CalendarLinkEntity", null)
+                        .WithMany()
+                        .HasForeignKey("CalendarLinksId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired()
+                        .HasConstraintName("fk_calendar_entity_calendar_link_entity_calendar_link_calendar");
+
+                    b.HasOne("Database.Entity.CalendarEntity", null)
+                        .WithMany()
+                        .HasForeignKey("CalendarsId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired()
+                        .HasConstraintName("fk_calendar_entity_calendar_link_entity_calendar_calendars_id");
+                });
+
+            modelBuilder.Entity("Database.Entity.CalendarEntity", b =>
+                {
+                    b.HasOne("Database.Entity.UserEntity", "Owner")
+                        .WithMany("Calendars")
+                        .HasForeignKey("OwnerId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .HasConstraintName("fk_calendar_user_owner_id");
+
+                    b.Navigation("Owner");
+                });
+
+            modelBuilder.Entity("Database.Entity.CalendarLinkEntity", b =>
+                {
+                    b.HasOne("Database.Entity.UserEntity", "User")
+                        .WithMany("CalendarLinks")
+                        .HasForeignKey("UserId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired()
+                        .HasConstraintName("fk_calendar_link_user_user_id");
+
+                    b.Navigation("User");
                 });
 
             modelBuilder.Entity("Database.Entity.EventEntity", b =>
                 {
-                    b.HasOne("Database.Entity.UserEntity", "HostedBy")
-                        .WithMany("HostedEvents")
-                        .HasForeignKey("HostedById")
+                    b.HasOne("Database.Entity.CalendarEntity", "Calendar")
+                        .WithMany("Events")
+                        .HasForeignKey("CalendarId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired()
-                        .HasConstraintName("fk_event_user_hosted_by_id");
+                        .HasConstraintName("fk_event_calendar_calendar_id");
 
-                    b.Navigation("HostedBy");
+                    b.HasOne("Database.Entity.UserEntity", "CreatedBy")
+                        .WithMany("CreatedEvents")
+                        .HasForeignKey("CreatedById")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired()
+                        .HasConstraintName("fk_event_user_created_by_id");
+
+                    b.Navigation("Calendar");
+
+                    b.Navigation("CreatedBy");
                 });
 
             modelBuilder.Entity("Database.Entity.UserEntity", b =>
                 {
-                    b.Navigation("HostedEvents");
+                    b.HasOne("Database.Entity.CalendarEntity", null)
+                        .WithMany()
+                        .HasForeignKey("SelectedCalendarId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .HasConstraintName("fk_user_calendar_selected_calendar_id");
+                });
+
+            modelBuilder.Entity("Database.Entity.CalendarEntity", b =>
+                {
+                    b.Navigation("Events");
+                });
+
+            modelBuilder.Entity("Database.Entity.UserEntity", b =>
+                {
+                    b.Navigation("CalendarLinks");
+
+                    b.Navigation("Calendars");
+
+                    b.Navigation("CreatedEvents");
                 });
 #pragma warning restore 612, 618
         }

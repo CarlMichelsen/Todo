@@ -4,6 +4,7 @@
 	interface Props {
 		variant?: 'default' | 'blue' | 'yellow' | 'purple';
 		class?: string;
+		style?: string;
 		padding?: boolean;
 		children: Snippet;
 	}
@@ -11,6 +12,7 @@
 	let {
 		variant = 'default',
 		class: className = '',
+		style = '',
 		padding = true,
 		children
 	}: Props = $props();
@@ -26,6 +28,6 @@
 	const fullClasses = `${baseClasses} ${variantClasses[variant]} ${className}`;
 </script>
 
-<div class={fullClasses}>
+<div class={fullClasses} {style}>
 	{@render children()}
 </div>

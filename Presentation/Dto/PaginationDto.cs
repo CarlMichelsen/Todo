@@ -66,12 +66,6 @@ public record PaginationDto<T>(
     public bool IsLastPage => Page >= TotalPages;
     
     /// <summary>
-    /// Creates an empty pagination result.
-    /// </summary>
-    public static PaginationDto<T> Empty(int page = 1, int pageSize = 10) =>
-        new([], page, pageSize, 0);
-    
-    /// <summary>
     /// Maps the data to a different type while preserving pagination metadata.
     /// </summary>
     public PaginationDto<TResult> Map<TResult>(Func<T, TResult> mapper) where TResult : class =>

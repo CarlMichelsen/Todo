@@ -3,6 +3,7 @@
 	import { Router, Route } from 'svelte-routing';
 	import Header from '$lib/components/Header.svelte';
 	import ProtectedRoute from '$lib/components/ProtectedRoute.svelte';
+	import ToastContainer from '$lib/components/ToastContainer.svelte';
 	import Home from './routes/Home.svelte';
 	import Demo from './routes/Demo.svelte';
 	import ProfilePage from './routes/ProfilePage.svelte';
@@ -11,10 +12,16 @@
 	import NotFound from './routes/NotFound.svelte';
 	import Loading from './routes/Loading.svelte';
 	import { userStore } from '$lib/stores/user';
+	import { calendarsStore } from '$lib/stores/calendars';
 
-	// Initialize user authentication on app startup
+	// Initialize user authentication and calendars on app startup
 	onMount(async () => {
 		await userStore.initialize();
+
+		// Initialize calendars if user is authenticated
+		if ($userStore.state === 'authenticated') {
+			await calendarsStore.initialize();
+		}
 	});
 </script>
 
@@ -43,5 +50,8 @@
 				<Route><NotFound /></Route>
 			</Router>
 		</main>
+
+		<!-- Toast Notifications -->
+		<ToastContainer />
 	</div>
 {/if}

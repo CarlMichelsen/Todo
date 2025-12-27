@@ -1,23 +1,40 @@
 ﻿using Presentation.Dto;
-using Presentation.Dto.Event;
+using Presentation.Dto.CalendarEvent;
 
 namespace Presentation.Service;
 
 public interface IEventService
 {
     Task<IEnumerable<EventDto>> GetCurrentEventsInclusive(
-        DateTime from,
-        DateTime to);
+        Guid calendarId,
+        DateTime eventFrom,
+        DateTime eventTo,
+        CancellationToken cancellationToken);
     
     Task<PaginationDto<EventDto>> GetEvents(
+        Guid calendarId,
         PaginationRequestDto paginationRequest,
-        string? search);
+        string? search,
+        CancellationToken cancellationToken);
     
-    Task<EventDto?> GetEvent(Guid id);
+    Task<EventDto?> GetEvent(
+        Guid calendarId,
+        Guid eventId,
+        CancellationToken cancellationToken);
 
-    Task<EventDto> AddEvent(CreateEventDto createEvent);
+    Task<EventDto> AddEvent(
+        Guid calendarId,
+        CreateEventDto createEvent,
+        CancellationToken cancellationToken);
     
-    Task<EventDto> EditEvent(Guid eventId, EditEventDto editEvent);
+    Task<EventDto> EditEvent(
+        Guid calendarId,
+        Guid eventId,
+        EditEventDto editEvent,
+        CancellationToken cancellationToken);
     
-    Task<bool> DeleteEvent(Guid eventId);
+    Task<bool> DeleteEvent(
+        Guid calendarId,
+        Guid eventId,
+        CancellationToken cancellationToken);
 }

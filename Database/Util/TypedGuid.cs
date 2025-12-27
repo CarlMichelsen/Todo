@@ -1,4 +1,5 @@
-﻿using Database.Entity;
+﻿using System.Diagnostics.CodeAnalysis;
+using Database.Entity;
 
 namespace Database.Util;
 
@@ -11,7 +12,7 @@ public class TypedGuid<TEntity>
     {
         if (!allowWrongVersion && value.Version != AllowedVersion)
         {
-            throw new Exception(
+            throw new TypedGuidException(
                 $"Attempted to instantiate {nameof(TypedGuid<TEntity>)} with a guid not of the allowed version {AllowedVersion}.");
         }
 
@@ -26,11 +27,18 @@ public class TypedGuid<TEntity>
     public Guid Value { get; }
 
     // EF Core compatibility
-    public static implicit operator Guid(TypedGuid<TEntity> id) => id.Value;
-    
+#pragma warning disable CA2225
+    public static implicit operator Guid(TypedGuid<TEntity> id)
+    {
+        ArgumentNullException.ThrowIfNull(id);
+        return id.Value;
+    }
+
     public static explicit operator TypedGuid<TEntity>(Guid value) => new(value);
+#pragma warning restore CA2225
 
     // Equality operators
+    [SuppressMessage("Blocker Code Smell", "S3875:\"operator==\" should not be overloaded on reference types")]
     public static bool operator ==(TypedGuid<TEntity>? a, TypedGuid<TEntity>? b) => a?.Value == b?.Value;
 
     public static bool operator !=(TypedGuid<TEntity>? a, TypedGuid<TEntity>? b) => a?.Value != b?.Value;

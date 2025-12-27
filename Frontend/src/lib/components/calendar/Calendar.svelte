@@ -4,10 +4,30 @@
 	import EventModal from './EventModal.svelte';
 	import { getWeekStart, getWeekDates, addWeeks } from '$lib/utils/calendarUtils';
 	import { eventsStore } from '$lib/stores/events';
+	import { calendarsStore } from '$lib/stores/calendars';
+	import { setCalendarConfig } from '$lib/stores/calendarConfig';
 	import type { CalendarEvent } from '$lib/types/calendar';
 
+	// Props
+	interface Props {
+		initialWeekStart?: Date;
+		onWeekChange?: (weekStart: Date) => void;
+		hourHeight?: number;
+	}
+
+	let { initialWeekStart, onWeekChange, hourHeight = 40 }: Props = $props();
+
+	// Set calendar configuration for all children components
+	setCalendarConfig({
+		hourHeight,
+		ghostEventDuration: 60,
+		ghostEventSnapInterval: 30
+	});
+
 	// State management
-	let currentWeekStart = $state(getWeekStart(new Date()));
+	let currentWeekStart = $state(
+		initialWeekStart ? initialWeekStart : getWeekStart(new Date())
+	);
 
 	// Mobile: viewport detection (768px = Tailwind md breakpoint)
 	let isMobile = $state(false);
@@ -18,6 +38,11 @@
 	// Modal state
 	let isEventModalOpen = $state(false);
 	let editingEvent = $state<CalendarEvent | undefined>(undefined);
+
+	// Ghost event modal state
+	let modalInitialStartTime = $state<string | undefined>(undefined);
+	let modalInitialEndTime = $state<string | undefined>(undefined);
+	let modalInitialDate = $state<string | undefined>(undefined);
 
 	// Derived state
 	let weekDates = $derived(getWeekDates(currentWeekStart));
@@ -94,9 +119,21 @@
 		return () => window.removeEventListener('resize', handleResize);
 	});
 
-	// Load events when week changes
+	// Load events when week changes, but only if calendar is ready
 	$effect(() => {
-		void eventsStore.setDateRange(currentWeekStart);
+		const calendarState = $calendarsStore;
+
+		// Wait for calendar store to initialize and ensure there's an active calendar
+		if (!calendarState.loading && calendarState.activeCalendarId) {
+			void eventsStore.setDateRange(currentWeekStart);
+		}
+	});
+
+	// Notify parent of week changes for URL updates
+	$effect(() => {
+		if (onWeekChange) {
+			onWeekChange(currentWeekStart);
+		}
 	});
 
 	// Week navigation handlers (desktop)
@@ -142,11 +179,28 @@
 
 	function handleEventClick(event: CalendarEvent) {
 		editingEvent = event;
+		modalInitialStartTime = undefined; // Clear ghost times
+		modalInitialEndTime = undefined;
+		modalInitialDate = undefined; // Clear ghost date
 		isEventModalOpen = true;
 	}
 
 	function handleAddEvent() {
 		editingEvent = undefined; // Clear editing event for create mode
+		modalInitialStartTime = undefined; // Clear ghost times
+		modalInitialEndTime = undefined;
+		modalInitialDate = undefined; // Clear ghost date
+		isEventModalOpen = true;
+	}
+
+	function handleGhostEventClick(dateStr: string, startTime: string, endTime: string) {
+		// Set modal initial date and times
+		modalInitialDate = dateStr;
+		modalInitialStartTime = startTime;
+		modalInitialEndTime = endTime;
+
+		// Open modal in create mode
+		editingEvent = undefined;
 		isEventModalOpen = true;
 	}
 
@@ -181,8 +235,15 @@
 		isMobile={isMobile}
 		currentDayIndex={currentDayIndex}
 		onEventClick={handleEventClick}
+		onGhostEventClick={handleGhostEventClick}
 	/>
 
 	<!-- Event Modal -->
-	<EventModal bind:isOpen={isEventModalOpen} event={editingEvent} initialDate={initialDate()} />
+	<EventModal
+		bind:isOpen={isEventModalOpen}
+		event={editingEvent}
+		initialDate={modalInitialDate ?? initialDate()}
+		initialStartTime={modalInitialStartTime}
+		initialEndTime={modalInitialEndTime}
+	/>
 </div>

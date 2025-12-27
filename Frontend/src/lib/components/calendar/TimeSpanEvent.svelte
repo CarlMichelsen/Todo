@@ -7,6 +7,7 @@
 		getDisplayEndTime,
 		extractTimeString
 	} from '$lib/utils/calendarUtils';
+	import { getCalendarConfig } from '$lib/stores/calendarConfig';
 
 	interface Props {
 		event: CalendarEvent;
@@ -22,15 +23,23 @@
 		 * Callback when event is clicked
 		 */
 		onclick?: (event: CalendarEvent) => void;
+		/**
+		 * Callback when hover state changes
+		 */
+		onHoverChange?: (eventId: string | null) => void;
 	}
 
-	let { event, currentDate, layout, onclick }: Props = $props();
+	let { event, currentDate, layout, onclick, onHoverChange }: Props = $props();
+
+	// Get calendar configuration
+	const config = getCalendarConfig();
+	const hourHeight = $derived(config.hourHeight);
 
 	// Convert HH:MM time string to pixels from top
 	function timeToPixels(time: string): number {
 		const [hours, minutes] = time.split(':').map(Number);
 		const totalHours = hours + minutes / 60;
-		return totalHours * 38.3; // 38.3px per hour
+		return totalHours * hourHeight; // Dynamic hourHeight
 	}
 
 	// Determine if this is a multi-day event
@@ -89,15 +98,20 @@
 		const percentage = (100 / layout.totalColumns) - 1; // Subtract 1% for gap
 		return `${percentage}%`;
 	});
+
+	// Dynamic text visibility threshold - 75% of hour height
+	const minTextHeight = $derived(hourHeight * 0.75);
 </script>
 
 <div
-	class="absolute px-2 py-1 overflow-hidden transition-transform hover:scale-x-[1.02] hover:z-10 cursor-pointer shadow-sm"
+	class="absolute px-2 py-1 overflow-hidden transition-transform hover:scale-x-[1.02] hover:z-20 cursor-pointer shadow-sm z-10"
 	class:rounded={!isMultiDay}
 	class:rounded-t={isMultiDay && !startsBeforeToday}
 	class:rounded-b={isMultiDay && !endsAfterToday}
 	style="top: {topPosition}px; height: {height}px; left: {leftOffset}; width: {width}; background-color: {backgroundColor};"
 	onclick={() => onclick?.(event)}
+	onmouseenter={() => onHoverChange?.(event.id)}
+	onmouseleave={() => onHoverChange?.(null)}
 	role="button"
 	tabindex="0"
 	onkeydown={(e) => {
@@ -117,7 +131,7 @@
 	<div class="text-xs font-semibold text-white truncate" class:mt-2={startsBeforeToday}>
 		{event.title}
 	</div>
-	{#if height > 30}
+	{#if height > minTextHeight}
 		<div class="text-xs text-white/90">
 			{#if isMultiDay}
 				{displayDateRange}

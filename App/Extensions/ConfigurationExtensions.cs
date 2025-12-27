@@ -18,9 +18,7 @@ public static class ConfigurationExtensions
         IConfiguration configuration)
         where TOptions : class, IConfigurationOptions
     {
-        ArgumentNullException.ThrowIfNull(
-            configuration,
-            $"Unable to get IConfiguration when registering {TOptions.SectionName}");
+        ArgumentNullException.ThrowIfNull( configuration);
 
         var section = configuration.GetSection(TOptions.SectionName);
         if (!section.Exists())

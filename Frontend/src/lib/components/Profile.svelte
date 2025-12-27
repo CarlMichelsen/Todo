@@ -19,7 +19,7 @@
 		<!-- Profile Image -->
 		<img
 			src={$userStore.user.profileMedium || $userStore.user.profile}
-			alt={$userStore.user.username}
+			alt={$userStore.user.userName}
 			class="w-10 h-10 rounded-full object-cover border-2 border-gray-200 dark:border-gray-700"
 		/>
 
@@ -51,7 +51,7 @@
 				<!-- User Info Section -->
 				<div class="px-4 py-3 border-b border-gray-200 dark:border-gray-700">
 					<p class="text-sm font-medium text-gray-900 dark:text-gray-100">
-						{$userStore.user?.username}
+						{$userStore.user?.userName}
 					</p>
 					<p class="text-xs text-gray-500 dark:text-gray-400 truncate">
 						{$userStore.user?.email}

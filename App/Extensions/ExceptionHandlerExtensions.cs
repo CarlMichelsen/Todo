@@ -4,7 +4,7 @@ using Microsoft.AspNetCore.Mvc;
 
 namespace App.Extensions;
 
-public static class ExceptionHandlerExtensions
+public static partial class ExceptionHandlerExtensions
 {
     public static void UseGlobalExceptionHandler(this IApplicationBuilder app, ILogger logger)
     {
@@ -48,7 +48,7 @@ public static class ExceptionHandlerExtensions
                         break;
                 }
 
-                logger.LogError(exception, "Unhandled exception occurred: {Message}", exception.Message);
+                LogUnhandledExceptionOccurredMessage(logger, exception, exception.Message);
 
                 context.Response.ContentType = "application/problem+json";
                 context.Response.StatusCode = problem.Status ?? 500;
@@ -57,4 +57,7 @@ public static class ExceptionHandlerExtensions
             });
         });
     }
+
+    [LoggerMessage(LogLevel.Error, "Unhandled exception occurred: {message}")]
+    static partial void LogUnhandledExceptionOccurredMessage(this ILogger logger, Exception exception, string message);
 }

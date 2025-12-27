@@ -13,6 +13,24 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Frontend", "Frontend\Fronte
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Database", "Database\Database.csproj", "{B3B36500-B745-4490-95BC-1128DBAA44BE}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Test", "Test\Test.csproj", "{EFF8CEDF-963A-4EAB-9E92-046454AE211A}"
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "src", "src", "{CDE8DB09-EAC7-48F8-BAE5-77DAD8D2B96F}"
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "SolutionItems", "SolutionItems", "{1899FA4E-176D-4AAC-9B0C-50B0D66F0E90}"
+	ProjectSection(SolutionItems) = preProject
+		Dockerfile = Dockerfile
+		LICENSE = LICENSE
+		README.md = README.md
+		Directory.Build.props = Directory.Build.props
+		Directory.Packages.props = Directory.Packages.props
+		.gitignore = .gitignore
+		.dockerignore = .dockerignore
+		sonar-project.properties = sonar-project.properties
+	EndProjectSection
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "tests", "tests", "{1A0DAC56-C2EB-4F64-ACCC-03E7B4C9D895}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -83,8 +101,28 @@ Global
 		{B3B36500-B745-4490-95BC-1128DBAA44BE}.Release|x64.Build.0 = Release|Any CPU
 		{B3B36500-B745-4490-95BC-1128DBAA44BE}.Release|x86.ActiveCfg = Release|Any CPU
 		{B3B36500-B745-4490-95BC-1128DBAA44BE}.Release|x86.Build.0 = Release|Any CPU
+		{EFF8CEDF-963A-4EAB-9E92-046454AE211A}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{EFF8CEDF-963A-4EAB-9E92-046454AE211A}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{EFF8CEDF-963A-4EAB-9E92-046454AE211A}.Debug|x64.ActiveCfg = Debug|Any CPU
+		{EFF8CEDF-963A-4EAB-9E92-046454AE211A}.Debug|x64.Build.0 = Debug|Any CPU
+		{EFF8CEDF-963A-4EAB-9E92-046454AE211A}.Debug|x86.ActiveCfg = Debug|Any CPU
+		{EFF8CEDF-963A-4EAB-9E92-046454AE211A}.Debug|x86.Build.0 = Debug|Any CPU
+		{EFF8CEDF-963A-4EAB-9E92-046454AE211A}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{EFF8CEDF-963A-4EAB-9E92-046454AE211A}.Release|Any CPU.Build.0 = Release|Any CPU
+		{EFF8CEDF-963A-4EAB-9E92-046454AE211A}.Release|x64.ActiveCfg = Release|Any CPU
+		{EFF8CEDF-963A-4EAB-9E92-046454AE211A}.Release|x64.Build.0 = Release|Any CPU
+		{EFF8CEDF-963A-4EAB-9E92-046454AE211A}.Release|x86.ActiveCfg = Release|Any CPU
+		{EFF8CEDF-963A-4EAB-9E92-046454AE211A}.Release|x86.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(NestedProjects) = preSolution
+		{2FC60162-9B4F-481E-97AF-732F0B03EC0D} = {CDE8DB09-EAC7-48F8-BAE5-77DAD8D2B96F}
+		{E10EDB0E-BAF3-41B4-9F8B-97F4CA4D35D8} = {CDE8DB09-EAC7-48F8-BAE5-77DAD8D2B96F}
+		{B3B36500-B745-4490-95BC-1128DBAA44BE} = {CDE8DB09-EAC7-48F8-BAE5-77DAD8D2B96F}
+		{90146765-92A1-4EAD-A0C7-CF1EFF00CBC9} = {CDE8DB09-EAC7-48F8-BAE5-77DAD8D2B96F}
+		{DFB63A6F-FBD9-4328-B487-69769146CDC7} = {CDE8DB09-EAC7-48F8-BAE5-77DAD8D2B96F}
+		{EFF8CEDF-963A-4EAB-9E92-046454AE211A} = {1A0DAC56-C2EB-4F64-ACCC-03E7B4C9D895}
 	EndGlobalSection
 EndGlobal

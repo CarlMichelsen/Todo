@@ -16,11 +16,6 @@ public static class DatabaseExtensions
     public static void AddDatabase<TContext>(this WebApplicationBuilder builder)
         where TContext : DbContext
     {
-        if (builder.Configuration.GetValue<string>("IntegrationTest") == "true")
-        {
-            return;
-        }
-        
         builder.Services.AddDbContext<TContext>(options =>
         {
             options.UseNpgsql(
@@ -30,7 +25,9 @@ public static class DatabaseExtensions
                         var assemblyName = Assembly
                             .GetExecutingAssembly()
                             .GetName()
-                            .Name ?? throw new NullReferenceException("Unable to get assembly name");
+                            .Name;
+                        ArgumentException.ThrowIfNullOrWhiteSpace(assemblyName);
+
                         b.MigrationsAssembly(assemblyName);
                         b.MigrationsHistoryTable("__EFMigrationsHistory", DatabaseContext.SchemaName);
                     })

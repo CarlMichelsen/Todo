@@ -1,7 +1,7 @@
 ﻿using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Presentation.Dto;
-using Presentation.Dto.Event;
+using Presentation.Dto.CalendarEvent;
 using Presentation.Service;
 
 namespace App.Controllers;
@@ -12,55 +12,67 @@ namespace App.Controllers;
 public class EventController(
     IEventService eventService) : ControllerBase
 {
-    [HttpGet("current")]
+    [HttpGet("span/{calendarId:guid}")]
     public async Task<ActionResult<IEnumerable<EventDto>>> GetCurrentEvents(
+        [FromRoute] Guid calendarId,
         [FromQuery] DateTime from,
-        [FromQuery] DateTime to)
+        [FromQuery] DateTime to,
+        CancellationToken cancellationToken)
     {
         var foundEvents = await eventService
-            .GetCurrentEventsInclusive(from, to);
+            .GetCurrentEventsInclusive(calendarId, from, to, cancellationToken);
         return this.Ok(foundEvents);
     }
     
-    [HttpGet]
+    [HttpGet("{calendarId:guid}")]
     public async Task<ActionResult<PaginationDto<EventDto>>> GetEvent(
+        [FromRoute] Guid calendarId,
         [FromQuery] PaginationRequestDto paginationRequest,
-        [FromQuery] string? search)
+        [FromQuery] string? search,
+        CancellationToken cancellationToken)
     {
         return await eventService
-            .GetEvents(paginationRequest, search);
+            .GetEvents(calendarId, paginationRequest, search, cancellationToken);
     }
     
-    [HttpGet("{eventId:guid}")]
+    [HttpGet("{calendarId:guid}/{eventId:guid}")]
     public async Task<ActionResult<EventDto?>> GetEvent(
-        [FromRoute] Guid eventId)
+        [FromRoute] Guid calendarId,
+        [FromRoute] Guid eventId,
+        CancellationToken cancellationToken)
     {
-        var foundEvent = await eventService.GetEvent(eventId);
+        var foundEvent = await eventService.GetEvent(calendarId, eventId, cancellationToken);
         return foundEvent is null
             ? this.NotFound()
             : this.Ok(foundEvent);
     }
     
-    [HttpPost]
+    [HttpPost("{calendarId:guid}")]
     public async Task<ActionResult<EventDto>> CreateEvent(
-        [FromBody] CreateEventDto createEvent)
+        [FromRoute] Guid calendarId,
+        [FromBody] CreateEventDto createEvent,
+        CancellationToken cancellationToken)
     {
-        return this.Ok(await eventService.AddEvent(createEvent));
+        return this.Ok(await eventService.AddEvent(calendarId, createEvent, cancellationToken));
     }
     
-    [HttpPut("{eventId:guid}")]
+    [HttpPut("{calendarId:guid}/{eventId:guid}")]
     public async Task<ActionResult<EventDto>> EditEvent(
+        [FromRoute] Guid calendarId,
         [FromRoute] Guid eventId,
-        [FromBody] EditEventDto editEvent)
+        [FromBody] EditEventDto editEvent,
+        CancellationToken cancellationToken)
     {
-        return this.Ok(await eventService.EditEvent(eventId, editEvent));
+        return this.Ok(await eventService.EditEvent(calendarId, eventId, editEvent, cancellationToken));
     }
     
-    [HttpDelete("{eventId:guid}")]
-    public async Task<ActionResult<bool>> DeleteEvent(
-        [FromRoute] Guid eventId)
+    [HttpDelete("{calendarId:guid}/{eventId:guid}")]
+    public async Task<ActionResult> DeleteEvent(
+        [FromRoute] Guid calendarId,
+        [FromRoute] Guid eventId,
+        CancellationToken cancellationToken)
     {
-        return await eventService.DeleteEvent(eventId)
+        return await eventService.DeleteEvent(calendarId, eventId, cancellationToken)
             ? this.Ok()
             : this.NotFound();
     }

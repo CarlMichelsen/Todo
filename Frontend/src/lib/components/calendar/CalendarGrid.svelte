@@ -12,9 +12,13 @@
 		 * Callback when an event is clicked
 		 */
 		onEventClick?: (event: CalendarEvent) => void;
+		/**
+		 * Callback when ghost event is clicked
+		 */
+		onGhostEventClick?: (date: string, startTime: string, endTime: string) => void;
 	}
 
-	let { weekDates, isMobile, currentDayIndex, onEventClick }: Props = $props();
+	let { weekDates, isMobile, currentDayIndex, onEventClick, onGhostEventClick }: Props = $props();
 
 	// Filter dates based on viewport - show 1 day on mobile, all 7 on desktop
 	let datesToShow = $derived(isMobile ? [weekDates[currentDayIndex]] : weekDates);
@@ -58,7 +62,7 @@
 			: ''}"
 	>
 		{#each datesToShow as date (date.toISOString())}
-			<CalendarDay day={buildCalendarDay(date)} onEventClick={onEventClick} />
+			<CalendarDay day={buildCalendarDay(date)} onEventClick={onEventClick} onGhostEventClick={onGhostEventClick} />
 		{/each}
 	</div>
 {/if}

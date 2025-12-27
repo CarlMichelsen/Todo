@@ -1,10 +1,10 @@
 ﻿using System.ComponentModel.DataAnnotations;
 using Presentation.Attribute;
 
-namespace Presentation.Dto.Event;
+namespace Presentation.Dto.CalendarEvent;
 
 public record CreateEventDto(
-    [Required, MinLength(2), MaxLength(1028)]
+    [Required, MinLength(2), MaxLength(100)]
     string Title,
     [MaxLength(1028 * 32)] string Description,
     DateTime Start,

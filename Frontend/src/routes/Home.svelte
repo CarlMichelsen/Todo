@@ -21,7 +21,7 @@
 	{#if $userStore.state === 'authenticated' && $userStore.user}
 		<Card class="mb-6">
 			<h2 class="text-2xl font-semibold mb-3 text-gray-900 dark:text-gray-100">
-				Welcome back, {$userStore.user.username}!
+				Welcome back, {$userStore.user.userName}!
 			</h2>
 			<p class="text-gray-600 dark:text-gray-400 mb-4">
 				Ready to manage your tasks?

@@ -1,6 +1,6 @@
 import { AuthorizedHttpClient } from './authorizedHttpClient';
 import { HttpMethod } from './httpClient';
-import type { JwtUser } from '$lib/types/user';
+import type { PersonalUserDto } from '$lib/types/user';
 
 /**
  * Client for user-related API operations
@@ -12,8 +12,8 @@ export class UserClient extends AuthorizedHttpClient {
      * Returns user data if authenticated, null if not authenticated (401)
      * Throws error for other failure cases
      */
-    async getCurrentUser(): Promise<JwtUser | null> {
-        const response = await this.request<JwtUser>(HttpMethod.GET, '/api/v1/User');
+    async getCurrentUser(): Promise<PersonalUserDto | null> {
+        const response = await this.request<PersonalUserDto>(HttpMethod.GET, '/api/v1/User');
 
         if (!response.ok) {
             console.error('Failed to get current user:', {

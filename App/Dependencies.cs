@@ -52,7 +52,9 @@ public static class Dependencies
         var corsConfig = builder
             .Configuration
             .GetSection(CorsOptions.SectionName)
-            .Get<CorsOptions>() ?? throw new NullReferenceException("Cors options not found");
+            .Get<CorsOptions>();
+        ArgumentNullException.ThrowIfNull(corsConfig);
+        
         builder.Services.AddCors(options =>
         {
             options.AddDefaultPolicy(policy =>
@@ -74,6 +76,8 @@ public static class Dependencies
         
         // Services
         builder.Services
+            .AddScoped<ICalendarService, CalendarService>()
+            .AddScoped<ICalendarLinkService, CalendarLinkService>()
             .AddScoped<IEventService, EventService>();
         
         // Add services to the container.
@@ -85,7 +89,9 @@ public static class Dependencies
     {
         var jwtOptions = builder.Configuration
             .GetSection(JwtOptions.SectionName)
-            .Get<JwtOptions>() ?? throw new NullReferenceException($"Failed to get {nameof(JwtOptions)} during startup");
+            .Get<JwtOptions>();
+        
+        ArgumentNullException.ThrowIfNull(jwtOptions);
         
         builder.Services
             .AddAuthentication()
@@ -93,23 +99,23 @@ public static class Dependencies
             {
                 var timeProvider = builder.Services.BuildServiceProvider()
                     .GetService<TimeProvider>();
-            
-            // Configure JWT settings
-            options.TokenValidationParameters = TokenValidationParametersFactory
-                .AccessValidationParameters(jwtOptions, timeProvider);
-            
-            options.MapInboundClaims = false; // Important!
+                
+                // Configure JWT settings
+                options.TokenValidationParameters = TokenValidationParametersFactory
+                    .AccessValidationParameters(jwtOptions, timeProvider);
+                
+                options.MapInboundClaims = false; // Important!
 
-            // Get token from cookie
-            options.Events = new JwtBearerEvents
-            {
-                OnMessageReceived = context =>
+                // Get token from cookie
+                options.Events = new JwtBearerEvents
                 {
-                    context.Token = context.Request.Cookies[ApplicationConstants.AccessCookieName];
-                    return Task.CompletedTask;
-                },
-            };
-        });
+                    OnMessageReceived = context =>
+                    {
+                        context.Token = context.Request.Cookies[ApplicationConstants.AccessCookieName];
+                        return Task.CompletedTask;
+                    },
+                };
+            });
         
         builder.Services
             .AddAuthorization();
