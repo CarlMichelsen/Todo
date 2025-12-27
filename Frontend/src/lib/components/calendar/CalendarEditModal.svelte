@@ -3,6 +3,7 @@
 	import ConfirmModal from '$lib/components/modals/ConfirmModal.svelte';
 	import { calendarsStore } from '$lib/stores/calendars';
 	import { toastStore } from '$lib/stores/toast';
+	import { CalendarLinkClient } from '$lib/utils/calendarLinkClient';
 	import type { CalendarDto } from '$lib/types/api/calendar';
 
 	interface Props {
@@ -23,6 +24,14 @@
 	let showDeleteConfirm = $state(false);
 	let isDeleting = $state(false);
 
+	// Calendar links state
+	let calendarLinks = $state<CalendarDto[]>([]);
+	let isLoadingLinks = $state(false);
+	let linkError = $state<string | null>(null);
+	let showAddLinkForm = $state(false);
+	let newLinkTitle = $state('');
+	let newLinkUrl = $state('');
+
 	// Same color options as CalendarModal
 	const colorOptions = [
 		{ name: 'Orange', value: '#ea580c' },
@@ -40,6 +49,73 @@
 		if (calendar) {
 			title = calendar.title;
 			color = calendar.color;
+		}
+	});
+
+	// Load calendar links when modal opens
+	async function loadCalendarLinks() {
+		if (!calendar) return;
+
+		isLoadingLinks = true;
+		linkError = null;
+
+		try {
+			const client = new CalendarLinkClient();
+			const links = await client.getCalendarLinks();
+			// Filter links that are associated with this calendar
+			// Note: Backend should handle filtering, but we can do it client-side too
+			calendarLinks = links;
+		} catch (error) {
+			linkError = error instanceof Error ? error.message : 'Failed to load links';
+		} finally {
+			isLoadingLinks = false;
+		}
+	}
+
+	// Add new calendar link
+	async function handleAddLink() {
+		if (!calendar || !newLinkTitle.trim() || !newLinkUrl.trim()) return;
+
+		try {
+			const client = new CalendarLinkClient();
+			await client.createCalendarLink(calendar.id, {
+				title: newLinkTitle.trim(),
+				calendarLink: newLinkUrl.trim()
+			});
+
+			// Reload links
+			await loadCalendarLinks();
+
+			// Reset form
+			newLinkTitle = '';
+			newLinkUrl = '';
+			showAddLinkForm = false;
+
+			toastStore.success('Calendar link added successfully', 3000);
+		} catch (error) {
+			const errorMessage = error instanceof Error ? error.message : 'Failed to add calendar link';
+			toastStore.error(errorMessage, 5000);
+		}
+	}
+
+	// Delete calendar link
+	async function handleDeleteLink(linkId: string) {
+		try {
+			const client = new CalendarLinkClient();
+			await client.deleteCalendarLink(linkId);
+			await loadCalendarLinks();
+			toastStore.success('Calendar link removed successfully', 3000);
+		} catch (error) {
+			const errorMessage =
+				error instanceof Error ? error.message : 'Failed to remove calendar link';
+			toastStore.error(errorMessage, 5000);
+		}
+	}
+
+	// Load calendar links when modal opens
+	$effect(() => {
+		if (isOpen && calendar) {
+			loadCalendarLinks();
 		}
 	});
 
@@ -184,6 +260,78 @@
 						></button>
 					{/each}
 				</div>
+			</div>
+
+			<!-- Calendar Links Section -->
+			<div class="pt-4 border-t border-gray-200 dark:border-gray-700">
+				<div class="flex items-center justify-between mb-4">
+					<h3 class="text-lg font-semibold text-gray-900 dark:text-gray-100">
+						Linked Calendars
+					</h3>
+					<button
+						type="button"
+						onclick={() => (showAddLinkForm = !showAddLinkForm)}
+						class="text-sm text-orange-600 dark:text-orange-400 hover:underline"
+					>
+						{showAddLinkForm ? 'Cancel' : '+ Add Link'}
+					</button>
+				</div>
+
+				<!-- Add Link Form -->
+				{#if showAddLinkForm}
+					<div class="mb-4 p-4 bg-gray-50 dark:bg-gray-800 rounded-lg">
+						<input
+							type="text"
+							bind:value={newLinkTitle}
+							placeholder="Link Title (e.g., Work Outlook)"
+							class="w-full mb-2 px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 focus:ring-2 focus:ring-orange-500 focus:border-transparent"
+						/>
+						<input
+							type="url"
+							bind:value={newLinkUrl}
+							placeholder="Calendar URL (ICS format)"
+							class="w-full mb-2 px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 focus:ring-2 focus:ring-orange-500 focus:border-transparent"
+						/>
+						<button
+							type="button"
+							onclick={handleAddLink}
+							class="w-full bg-orange-600 hover:bg-orange-700 dark:bg-orange-500 dark:hover:bg-orange-600 text-white py-2 rounded-lg font-medium transition-colors"
+						>
+							Add Link
+						</button>
+					</div>
+				{/if}
+
+				<!-- Links List -->
+				{#if isLoadingLinks}
+					<p class="text-gray-500 dark:text-gray-400 text-sm">Loading links...</p>
+				{:else if linkError}
+					<p class="text-red-500 dark:text-red-400 text-sm">{linkError}</p>
+				{:else if calendarLinks.length === 0}
+					<p class="text-gray-500 dark:text-gray-400 text-sm">No linked calendars</p>
+				{:else}
+					<div class="space-y-2">
+						{#each calendarLinks as link}
+							<div
+								class="flex items-center justify-between p-3 bg-gray-50 dark:bg-gray-800 rounded-lg"
+							>
+								<div>
+									<p class="font-medium text-gray-900 dark:text-gray-100">{link.title}</p>
+									<p class="text-sm text-gray-500 dark:text-gray-400 truncate">
+										External Calendar
+									</p>
+								</div>
+								<button
+									type="button"
+									onclick={() => handleDeleteLink(link.id)}
+									class="text-red-600 hover:text-red-700 dark:text-red-400 dark:hover:text-red-500"
+								>
+									Remove
+								</button>
+							</div>
+						{/each}
+					</div>
+				{/if}
 			</div>
 
 			<!-- Delete Button -->
