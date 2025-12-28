@@ -9,6 +9,7 @@ public static class CalendarLinkMapper
         Id:  calendarLinkEntity.Id,
         Title:  calendarLinkEntity.Title,
         CalendarLink: calendarLinkEntity.CalendarLink,
+        Color: calendarLinkEntity.Color,
         ParentCalendars: calendarLinkEntity.Calendars.Select(c => c.Id.Value),
         User: calendarLinkEntity.User!.ToDto(),
         CreatedAt:  calendarLinkEntity.CreatedAt);

@@ -38,7 +38,8 @@
 		const totalMinutes = hours * 60 + minutes + duration;
 		const endHours = Math.floor(totalMinutes / 60);
 		const endMinutes = totalMinutes % 60;
-		return `${String(endHours).padStart(2, '0')}:${String(endMinutes).padStart(2, '0')}`;
+		const val = `${String(endHours).padStart(2, '0')}:${String(endMinutes).padStart(2, '0')}`;
+		return val === "24:00" ? "23:59" : val;
 	});
 
 	// Calculate position and height
@@ -49,7 +50,7 @@
 
 <!-- Visible ghost event with clickable area -->
 <div
-	class="absolute left-1 right-1 px-2 py-1 overflow-hidden rounded border-2 border-dashed border-orange-400 dark:border-orange-500 bg-orange-200/30 dark:bg-orange-500/20 hover:bg-orange-200/50 dark:hover:bg-orange-500/30 transition-colors cursor-pointer pointer-events-auto z-0"
+	class="absolute left-1 right-1 px-2 py-0 overflow-hidden rounded border-2 border-dashed border-orange-400 dark:border-orange-500 bg-orange-200/30 dark:bg-orange-500/20 hover:bg-orange-200/50 dark:hover:bg-orange-500/30 transition-colors cursor-pointer pointer-events-auto z-0"
 	style="top: {topPosition}px; height: {height}px;"
 	onclick={onclick}
 	role="button"

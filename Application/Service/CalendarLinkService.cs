@@ -6,6 +6,7 @@ using Database.Entity.Id;
 using Microsoft.AspNetCore.Http;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
+using Presentation.Client;
 using Presentation.Dto.CalendarLink;
 using Presentation.Service;
 
@@ -15,6 +16,7 @@ public class CalendarLinkService(
     ILogger<CalendarLinkService> logger,
     TimeProvider timeProvider,
     DatabaseContext databaseContext,
+    ICalendarClient calendarClient,
     IHttpContextAccessor httpContextAccessor) : ICalendarLinkService
 {
     private const int MaxResults = 200;
@@ -68,11 +70,16 @@ public class CalendarLinkService(
         {
             Id = new CalendarLinkEntityId(Guid.CreateVersion7()),
             Title = createCalendar.Title,
+            ProductId = string.Empty,
             CalendarLink = createCalendar.CalendarLink,
+            Color = createCalendar.Color,
             Calendars = [initialParentCalendarEntity],
             UserId = new UserEntityId(user.UserId, true),
             CreatedAt = timeProvider.GetUtcNow().UtcDateTime,
         };
+
+        var calendar = await calendarClient.GetCalendar(calendarLinkEntity);
+        calendarLinkEntity.ProductId = calendar.ProductId;
         
         databaseContext.CalendarLink.Add(calendarLinkEntity);
         await databaseContext.SaveChangesAsync(cancellationToken);
@@ -116,6 +123,11 @@ public class CalendarLinkService(
         if (editCalendar.CalendarLink is not null)
         {
             calendarLinkEntity.CalendarLink = editCalendar.CalendarLink;
+        }
+        
+        if (editCalendar.Color is not null)
+        {
+            calendarLinkEntity.Color = editCalendar.Color;
         }
         
         var existing = calendarLinkEntity

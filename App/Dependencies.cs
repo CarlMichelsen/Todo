@@ -1,11 +1,13 @@
 ﻿using System.Text.Json.Serialization;
 using App.Extensions;
+using Application.Client;
 using Application.Configuration;
 using Application.Service;
 using Database;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.Extensions.Diagnostics.HealthChecks;
 using Presentation;
+using Presentation.Client;
 using Presentation.Service;
 
 namespace App;
@@ -33,7 +35,8 @@ public static class Dependencies
             .ApplicationUseSerilog()
             .Services
             .AddSingleton(TimeProvider.System)
-            .AddHttpContextAccessor();
+            .AddHttpContextAccessor()
+            .AddMemoryCache();
         
         // Healthcheck
         builder.Services
@@ -79,6 +82,11 @@ public static class Dependencies
             .AddScoped<ICalendarService, CalendarService>()
             .AddScoped<ICalendarLinkService, CalendarLinkService>()
             .AddScoped<IEventService, EventService>();
+        
+        // Client
+        builder.Services
+            .AddHttpClient<ICalendarClient, CalendarClient>()
+            .AddStandardResilienceHandler();
         
         // Add services to the container.
         // Learn more about configuring OpenAPI at https://aka.ms/aspnet/openapi

@@ -104,7 +104,7 @@
 </script>
 
 <div
-	class="absolute px-2 py-1 overflow-hidden transition-transform hover:scale-x-[1.02] hover:z-20 cursor-pointer shadow-sm z-10"
+	class="absolute px-2 pt-0.5 overflow-hidden transition-transform hover:scale-x-[1.02] hover:z-20 cursor-pointer shadow-sm z-10"
 	class:rounded={!isMultiDay}
 	class:rounded-t={isMultiDay && !startsBeforeToday}
 	class:rounded-b={isMultiDay && !endsAfterToday}

@@ -13,6 +13,12 @@ public class CalendarLinkEntity : IEntity
     [MaxLength(100)]
     public required string Title { get; set; }
     
+    [MaxLength(100)]
+    public required string? ProductId { get; set; }
+    
+    [MaxLength(7)]
+    public required string Color { get; set; }
+    
     public required Uri CalendarLink { get; set; }
     
     public required Collection<CalendarEntity> Calendars { get; init; }

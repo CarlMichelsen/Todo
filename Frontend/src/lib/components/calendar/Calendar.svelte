@@ -15,13 +15,13 @@
 		hourHeight?: number;
 	}
 
-	let { initialWeekStart, onWeekChange, hourHeight = 40 }: Props = $props();
+	let { initialWeekStart, onWeekChange, hourHeight = 36 }: Props = $props();
 
 	// Set calendar configuration for all children components
 	setCalendarConfig({
 		hourHeight,
 		ghostEventDuration: 60,
-		ghostEventSnapInterval: 30
+		ghostEventSnapInterval: 15
 	});
 
 	// State management

@@ -32,7 +32,7 @@ public class EventService(
             .Include(e => e.Calendar)
             .Include(e => e.CreatedBy)
             .Where(e => e.CalendarId == calendarId
-                        && e.Calendar!.OwnerId! == user.UserId // Uses index scan, not full join
+                        && e.Calendar!.OwnerId! == user.UserId
                         && e.StartsAt < eventTo
                         && e.EndsAt > eventFrom) // Events overlapping the range
             .OrderBy(e => e.StartsAt)

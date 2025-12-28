@@ -40,6 +40,9 @@
 	const ghostDuration = $derived(config.ghostEventDuration);
 	const snapInterval = $derived(config.ghostEventSnapInterval);
 
+	// Calculate total timeline height (24 hours)
+	const timelineHeight = $derived(hourHeight * 24);
+
 	// Ghost event state
 	let isHovering = $state(false);
 	let mouseY = $state(0);
@@ -56,7 +59,7 @@
 		if (!isHovering || isMobile) return null;
 
 		// Convert pixels to time
-		const rawTime = pixelsToTime(Math.max(mouseY-mouseYOffset, 0), hourHeight);
+		const rawTime = pixelsToTime(Math.min(Math.max(mouseY-mouseYOffset, 0), hourHeight*23), hourHeight);
 
 		// Snap to interval
 		const snappedTime = roundTimeToInterval(rawTime, snapInterval);
@@ -87,7 +90,7 @@
 		const dateStr = extractDateString(date);
 
 		// Call parent callback
-		onGhostEventClick?.(dateStr, ghostStartTime, endTime);
+		onGhostEventClick?.(dateStr, ghostStartTime, endTime === "24:00" ? "23:59" : endTime);
 	}
 
 	// Event hover change handler
@@ -143,7 +146,7 @@
 	});
 </script>
 
-<div class="relative h-full flex text-xs">
+<div class="relative flex text-xs" style="height: {timelineHeight}px;">
 	<!-- Left: Time labels (40px wide) -->
 	<div class="w-[22px] flex-shrink-0">
 		{#each hours as hour}

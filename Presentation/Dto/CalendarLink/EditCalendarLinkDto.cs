@@ -1,10 +1,12 @@
 ﻿using System.ComponentModel.DataAnnotations;
+using Presentation.Attribute;
 
 namespace Presentation.Dto.CalendarLink;
 
 public record EditCalendarLinkDto(
     [MinLength(2), MaxLength(100)] string? Title,
     Uri? CalendarLink,
+    [HexColor] string? Color,
     IEnumerable<Guid>? DeleteParentCalendarAssociation,
     IEnumerable<Guid>? AddParentCalendarAssociation) : IValidatableObject
 {
