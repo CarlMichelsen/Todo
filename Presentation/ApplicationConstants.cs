@@ -3,6 +3,8 @@
 public static class ApplicationConstants
 {
     public const string Name = "Todo";
+    
+    public const string IcsProductId = "todo";
 
     public const string Version = "0.2.0";
     

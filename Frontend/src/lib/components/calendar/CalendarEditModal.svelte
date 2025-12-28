@@ -31,6 +31,7 @@
 	let showAddLinkForm = $state(false);
 	let newLinkTitle = $state('');
 	let newLinkUrl = $state('');
+	let newLinkColor = $state('#ea580c'); // Default orange
 
 	// Same color options as CalendarModal
 	const colorOptions = [
@@ -80,7 +81,8 @@
 			const client = new CalendarLinkClient();
 			await client.createCalendarLink(calendar.id, {
 				title: newLinkTitle.trim(),
-				calendarLink: newLinkUrl.trim()
+				calendarLink: newLinkUrl.trim(),
+				color: newLinkColor
 			});
 
 			// Reload links
@@ -89,6 +91,7 @@
 			// Reset form
 			newLinkTitle = '';
 			newLinkUrl = '';
+			newLinkColor = '#ea580c';
 			showAddLinkForm = false;
 
 			toastStore.success('Calendar link added successfully', 3000);
@@ -279,19 +282,50 @@
 
 				<!-- Add Link Form -->
 				{#if showAddLinkForm}
-					<div class="mb-4 p-4 bg-gray-50 dark:bg-gray-800 rounded-lg">
+					<div class="mb-4 p-4 bg-gray-50 dark:bg-gray-800 rounded-lg space-y-3">
+						<!-- Title Input -->
 						<input
 							type="text"
 							bind:value={newLinkTitle}
 							placeholder="Link Title (e.g., Work Outlook)"
-							class="w-full mb-2 px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 focus:ring-2 focus:ring-orange-500 focus:border-transparent"
+							class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 focus:ring-2 focus:ring-orange-500 focus:border-transparent"
 						/>
+
+						<!-- URL Input -->
 						<input
 							type="url"
 							bind:value={newLinkUrl}
 							placeholder="Calendar URL (ICS format)"
-							class="w-full mb-2 px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 focus:ring-2 focus:ring-orange-500 focus:border-transparent"
+							class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 focus:ring-2 focus:ring-orange-500 focus:border-transparent"
 						/>
+
+						<!-- Color Picker -->
+						<div>
+							<label
+								for="link-color-picker"
+								class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2"
+							>
+								Color
+							</label>
+							<div id="link-color-picker" class="flex flex-wrap gap-2" role="radiogroup">
+								{#each colorOptions as colorOption}
+									<button
+										type="button"
+										onclick={() => (newLinkColor = colorOption.value)}
+										class="w-10 h-10 rounded-lg border-2 transition-all hover:scale-110"
+										class:border-gray-900={newLinkColor === colorOption.value}
+										class:dark:border-white={newLinkColor === colorOption.value}
+										class:border-gray-300={newLinkColor !== colorOption.value}
+										class:dark:border-gray-600={newLinkColor !== colorOption.value}
+										style="background-color: {colorOption.value}"
+										title={colorOption.name}
+										aria-label={`Select ${colorOption.name} color`}
+									></button>
+								{/each}
+							</div>
+						</div>
+
+						<!-- Submit Button -->
 						<button
 							type="button"
 							onclick={handleAddLink}
@@ -315,11 +349,19 @@
 							<div
 								class="flex items-center justify-between p-3 bg-gray-50 dark:bg-gray-800 rounded-lg"
 							>
-								<div>
-									<p class="font-medium text-gray-900 dark:text-gray-100">{link.title}</p>
-									<p class="text-sm text-gray-500 dark:text-gray-400 truncate">
-										External Calendar
-									</p>
+								<div class="flex items-center gap-3">
+									<!-- Color indicator -->
+									<div
+										class="w-4 h-4 rounded-full flex-shrink-0"
+										style="background-color: {link.color}"
+										title="Calendar link color"
+									></div>
+									<div>
+										<p class="font-medium text-gray-900 dark:text-gray-100">{link.title}</p>
+										<p class="text-sm text-gray-500 dark:text-gray-400 truncate">
+											External Calendar
+										</p>
+									</div>
 								</div>
 								<button
 									type="button"

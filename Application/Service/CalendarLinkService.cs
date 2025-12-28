@@ -66,20 +66,19 @@ public class CalendarLinkService(
             .Calendar
             .FirstAsync(c => c.OwnerId! == user.UserId && c.Id == initialParentCalendarId, cancellationToken);
 
+        var calendarLinkEntityId = new CalendarLinkEntityId(Guid.CreateVersion7());
+        var productId = await calendarClient.GetCalendarProductId(calendarLinkEntityId, createCalendar.CalendarLink);
         var calendarLinkEntity = new CalendarLinkEntity
         {
-            Id = new CalendarLinkEntityId(Guid.CreateVersion7()),
+            Id = calendarLinkEntityId,
             Title = createCalendar.Title,
-            ProductId = string.Empty,
+            ProductId = productId,
             CalendarLink = createCalendar.CalendarLink,
             Color = createCalendar.Color,
             Calendars = [initialParentCalendarEntity],
             UserId = new UserEntityId(user.UserId, true),
             CreatedAt = timeProvider.GetUtcNow().UtcDateTime,
         };
-
-        var calendar = await calendarClient.GetCalendar(calendarLinkEntity);
-        calendarLinkEntity.ProductId = calendar.ProductId;
         
         databaseContext.CalendarLink.Add(calendarLinkEntity);
         await databaseContext.SaveChangesAsync(cancellationToken);

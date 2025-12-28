@@ -20,7 +20,7 @@ namespace App.Migrations
                 columns: table => new
                 {
                     id = table.Column<Guid>(type: "uuid", nullable: false),
-                    title = table.Column<string>(type: "character varying(1028)", maxLength: 1028, nullable: false),
+                    title = table.Column<string>(type: "character varying(100)", maxLength: 100, nullable: false),
                     color = table.Column<string>(type: "character varying(7)", maxLength: 7, nullable: false),
                     owner_id = table.Column<Guid>(type: "uuid", nullable: true),
                     last_selected_at = table.Column<DateTime>(type: "timestamp with time zone", nullable: true),
@@ -63,7 +63,9 @@ namespace App.Migrations
                 columns: table => new
                 {
                     id = table.Column<Guid>(type: "uuid", nullable: false),
-                    title = table.Column<string>(type: "character varying(1028)", maxLength: 1028, nullable: false),
+                    title = table.Column<string>(type: "character varying(100)", maxLength: 100, nullable: false),
+                    product_id = table.Column<string>(type: "character varying(100)", maxLength: 100, nullable: true),
+                    color = table.Column<string>(type: "character varying(7)", maxLength: 7, nullable: false),
                     calendar_link = table.Column<string>(type: "text", nullable: false),
                     user_id = table.Column<Guid>(type: "uuid", nullable: false),
                     created_at = table.Column<DateTime>(type: "timestamp with time zone", nullable: false)
@@ -86,7 +88,7 @@ namespace App.Migrations
                 columns: table => new
                 {
                     id = table.Column<Guid>(type: "uuid", nullable: false),
-                    title = table.Column<string>(type: "character varying(1028)", maxLength: 1028, nullable: false),
+                    title = table.Column<string>(type: "character varying(100)", maxLength: 100, nullable: false),
                     description = table.Column<string>(type: "character varying(32896)", maxLength: 32896, nullable: false),
                     color = table.Column<string>(type: "character varying(7)", maxLength: 7, nullable: false),
                     starts_at = table.Column<DateTime>(type: "timestamp with time zone", nullable: false),

@@ -1,5 +1,6 @@
 ﻿using Application.Mapper.ToDomain.ICalendar;
 using Database.Entity;
+using Database.Entity.Id;
 using Presentation.Client;
 using Domain;
 using Microsoft.Extensions.Caching.Memory;
@@ -14,8 +15,25 @@ public partial class CalendarClient(
 {
     public async Task<Calendar> GetCalendar(CalendarLinkEntity calendarLinkEntity)
     {
-        var cacheKey = $"calendar-link:{calendarLinkEntity.Id}";
-        var cachedValue = await cache.GetOrCreateAsync(cacheKey, async entry =>
+        var calendar = await GetIcalCalendar(calendarLinkEntity.Id, calendarLinkEntity.CalendarLink);
+        ArgumentNullException.ThrowIfNull(calendar);
+        return calendar.ToDomain(calendarLinkEntity);
+    }
+
+    public async Task<string?> GetCalendarProductId(
+        CalendarLinkEntityId calendarLinkEntityId,
+        Uri calendarLinkUri)
+    {
+        var icalCalendar = await GetIcalCalendar(calendarLinkEntityId, calendarLinkUri);
+        ArgumentNullException.ThrowIfNull(icalCalendar);
+
+        return icalCalendar.ProductId;
+    }
+
+    private async Task<Ical.Net.Calendar?> GetIcalCalendar(CalendarLinkEntityId calendarLinkEntityId, Uri calendarLinkUri)
+    {
+        var cacheKey = $"calendar-link:{calendarLinkEntityId}";
+        return await cache.GetOrCreateAsync(cacheKey, async entry =>
         {
             // Configure cache entry
             entry.AbsoluteExpirationRelativeToNow = TimeSpan.FromMinutes(5);
@@ -28,20 +46,12 @@ public partial class CalendarClient(
                 LogCacheEvicted(callbackLogger, key.ToString() ?? "unknown", reason);
             });
 
-            return await DirectGetCalendar(calendarLinkEntity);
-        });
-        
-        ArgumentNullException.ThrowIfNull(cachedValue);
+            var icsContent = await httpClient.GetStringAsync(calendarLinkUri);
+            var calendar = Ical.Net.Calendar.Load(icsContent);
+            ArgumentNullException.ThrowIfNull(calendar);
 
-        return cachedValue;
-    }
-    
-    private async Task<Calendar> DirectGetCalendar(CalendarLinkEntity calendarLinkEntity)
-    {
-        var icsContent = await httpClient.GetStringAsync(calendarLinkEntity.CalendarLink);
-        var calendar = Ical.Net.Calendar.Load(icsContent);
-        ArgumentNullException.ThrowIfNull(calendar);
-        return calendar.ToDomain(calendarLinkEntity);
+            return calendar;
+        });
     }
 
     [LoggerMessage(LogLevel.Information, "Cache evicted: {key}, Reason: {reason}")]

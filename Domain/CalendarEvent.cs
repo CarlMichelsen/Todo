@@ -31,7 +31,7 @@ public class CalendarEvent
     public EventStatus Status { get; init; } = EventStatus.Confirmed;
     
     // ICS-specific (optional)
-    public EventAttendeeInfo? AttendeeInfo { get; init; }
+    public required EventAttendeeInfo AttendeeInfo { get; init; }
     
     // Source information
     public EventSource Source { get; init; } = EventSource.Internal;

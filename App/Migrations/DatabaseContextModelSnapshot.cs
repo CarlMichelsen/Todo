@@ -68,8 +68,8 @@ namespace App.Migrations
 
                     b.Property<string>("Title")
                         .IsRequired()
-                        .HasMaxLength(1028)
-                        .HasColumnType("character varying(1028)")
+                        .HasMaxLength(100)
+                        .HasColumnType("character varying(100)")
                         .HasColumnName("title");
 
                     b.HasKey("Id")
@@ -95,14 +95,25 @@ namespace App.Migrations
                         .HasColumnType("text")
                         .HasColumnName("calendar_link");
 
+                    b.Property<string>("Color")
+                        .IsRequired()
+                        .HasMaxLength(7)
+                        .HasColumnType("character varying(7)")
+                        .HasColumnName("color");
+
                     b.Property<DateTime>("CreatedAt")
                         .HasColumnType("timestamp with time zone")
                         .HasColumnName("created_at");
 
+                    b.Property<string>("ProductId")
+                        .HasMaxLength(100)
+                        .HasColumnType("character varying(100)")
+                        .HasColumnName("product_id");
+
                     b.Property<string>("Title")
                         .IsRequired()
-                        .HasMaxLength(1028)
-                        .HasColumnType("character varying(1028)")
+                        .HasMaxLength(100)
+                        .HasColumnType("character varying(100)")
                         .HasColumnName("title");
 
                     b.Property<Guid>("UserId")
@@ -158,8 +169,8 @@ namespace App.Migrations
 
                     b.Property<string>("Title")
                         .IsRequired()
-                        .HasMaxLength(1028)
-                        .HasColumnType("character varying(1028)")
+                        .HasMaxLength(100)
+                        .HasColumnType("character varying(100)")
                         .HasColumnName("title");
 
                     b.HasKey("Id")

@@ -5,15 +5,9 @@ namespace Application.Mapper.ToDomain.ICalendar;
 
 public static class IcsAttendeeMapper
 {
-    public static EventAttendeeInfo? ToDomainAttendeeInfo(
+    public static EventAttendeeInfo ToDomainAttendeeInfo(
         this Ical.Net.CalendarComponents.CalendarEvent calendarEvent)
     {
-        if (!calendarEvent.Attendees.Any())
-        {
-            // No attendees so no EventAttendeeInfo
-            return null;
-        }
-        
         var organizerEmail = ExtractEmailFromUri(calendarEvent.Organizer?.Value);
         var organizer = string.IsNullOrWhiteSpace(organizerEmail)
             ? null

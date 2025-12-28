@@ -8,9 +8,5 @@
         <PackageReference Include="Ical.Net" />
         <PackageReference Include="Microsoft.AspNetCore.Authentication.JwtBearer" />
     </ItemGroup>
-    
-    <ItemGroup>
-      <Folder Include="Mapper\ToDomain\Database\" />
-    </ItemGroup>
 
 </Project>
