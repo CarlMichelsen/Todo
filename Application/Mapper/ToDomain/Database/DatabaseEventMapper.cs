@@ -15,6 +15,7 @@ public static class DatabaseEventMapper
             [],
             (Organizer)eventEntity.CreatedBy.ToPerson());
         
+#pragma warning disable S1135 // TODO: Fix these issues
         var calendarEvent = new CalendarEvent
         {
             Id = eventEntity.Id.ToString(),
@@ -34,6 +35,7 @@ public static class DatabaseEventMapper
             AttendeeInfo = attendeeInfo, // TODO: Add attendees in the database-model (giant task)
             Source = EventSource.Internal,
         };
+#pragma warning restore S1135
 
         return calendarEvent;
     }

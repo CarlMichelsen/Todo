@@ -30,13 +30,20 @@ public static class Dependencies
             .AddJsonOptions(o => o.JsonSerializerOptions.Converters.Add(new JsonStringEnumConverter()));
         builder.Environment.ApplicationName = ApplicationConstants.Name;
 
-        // Utility 
+        // Utility
         builder
             .ApplicationUseSerilog()
             .Services
             .AddSingleton(TimeProvider.System)
             .AddHttpContextAccessor()
-            .AddMemoryCache();
+            .AddMemoryCache()
+            .AddCQRS();
+        
+        // Commands
+        // TODO: Test me :)
+        
+        // Queries
+        // TODO: Test me :)
         
         // Healthcheck
         builder.Services
