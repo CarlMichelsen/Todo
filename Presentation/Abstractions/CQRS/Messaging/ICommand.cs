@@ -3,4 +3,6 @@
 public interface ICommand
 {
     string Type { get; }
+    
+    Guid UserId { get; }
 }

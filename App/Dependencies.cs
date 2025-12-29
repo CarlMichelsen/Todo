@@ -39,11 +39,8 @@ public static class Dependencies
             .AddMemoryCache()
             .AddCQRS();
         
-        // Commands
-        // TODO: Test me :)
-        
-        // Queries
-        // TODO: Test me :)
+        // Commands and queries
+        builder.RegisterCommandQueryDependencies();
         
         // Healthcheck
         builder.Services

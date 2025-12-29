@@ -20,17 +20,17 @@ public static class CommandQueryResponsibilitySegregationRegistrationExtensions
             .AddSingleton<ISender, BasicSender>();
     }
 
-    public static IServiceCollection AddCommandHandler<TCommand, TCommandHandler>(this IServiceCollection services)
-        where TCommand : ICommand
+    public static IServiceCollection AddCommandHandler<TCommandHandler, TCommand>(this IServiceCollection services)
         where TCommandHandler : class, ICommandHandler<TCommand>
+        where TCommand : ICommand
     {
         return services.AddScoped<ICommandHandler<TCommand>, TCommandHandler>();
     }
     
-    public static IServiceCollection AddQueryHandler<TQuery, TResponse, TQueryHandler>(this IServiceCollection services)
-        where TQuery : IQuery<TResponse>
-        where TResponse : class
+    public static IServiceCollection AddQueryHandler<TQueryHandler, TQuery, TResponse>(this IServiceCollection services)
         where TQueryHandler : class, IQueryHandler<TQuery, TResponse>
+        where TQuery : IQuery<TResponse>
+        where TResponse : class?
     {
         return services.AddScoped<IQueryHandler<TQuery, TResponse>, TQueryHandler>();
     }

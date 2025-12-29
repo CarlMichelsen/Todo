@@ -6,6 +6,8 @@ using Database.Entity.Id;
 using Microsoft.AspNetCore.Http;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
+using Presentation.Abstractions.CQRS.Messaging;
+using Presentation.CQRS.Query.Calendar;
 using Presentation.Dto.Calendar;
 using Presentation.Service;
 
@@ -13,26 +15,17 @@ namespace Application.Service;
 
 public class CalendarService(
     ILogger<CalendarService> logger,
+    ISender sender,
     TimeProvider timeProvider,
     DatabaseContext databaseContext,
     IHttpContextAccessor httpContextAccessor) : ICalendarService
 {
-    private const int MaxResults = 200;
-    
     public async Task<IEnumerable<CalendarDto>> GetCalendars(
         CancellationToken cancellationToken)
     {
         var user = httpContextAccessor.GetJwtUser();
-
-        var calendars = await databaseContext
-            .Calendar
-            .Include(c => c.Owner)
-            .Where(c => c.OwnerId! == user.UserId)
-            .OrderByDescending(c => c.LastSelectedAt)
-            .Take(MaxResults)
-            .ToListAsync(cancellationToken);
-
-        return calendars.Select(CalendarMapper.ToDto);
+        var query = new GetCalendarsQuery(user.UserId);
+        return await sender.Send(query, cancellationToken);
     }
 
     public async Task<CalendarDto?> GetCalendar(
@@ -40,14 +33,10 @@ public class CalendarService(
         CancellationToken cancellationToken)
     {
         var user = httpContextAccessor.GetJwtUser();
-        
-        var calendar = await databaseContext
-            .Calendar
-            .Include(c => c.Owner)
-            .Where(c => c.OwnerId! == user.UserId && c.Id == calendarId)
-            .FirstOrDefaultAsync(cancellationToken);
-        
-        return calendar?.ToDto();
+        var query = new GetSingleCalendarQuery(
+            UserId: user.UserId,
+            CalendarId: calendarId);
+        return await sender.Send(query, cancellationToken);
     }
 
     public async Task<CalendarDto?> SelectCalendar(
