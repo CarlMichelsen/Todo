@@ -8,5 +8,5 @@ public record DeleteCalendarCommand(
     Guid CalendarId)
     : ICommand
 {
-    public string Type { get; } = nameof(CreateCalendarCommand);
+    public string Type { get; } = nameof(DeleteCalendarCommand);
 }

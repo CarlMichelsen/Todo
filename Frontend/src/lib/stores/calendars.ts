@@ -101,24 +101,61 @@ function createCalendarsStore() {
 
 		/**
 		 * Create a new calendar
+		 * CQRS: Uses optimistic updates with temp ID, returns constructed CalendarDto
 		 * @param calendar - CreateCalendarDto with title and color
 		 */
 		async createCalendar(calendar: CreateCalendarDto): Promise<CalendarDto> {
 			const client = new CalendarClient();
-			const createdCalendar = await client.createCalendar(calendar);
 
+			// Generate temp ID for optimistic update
+			const tempId = crypto.randomUUID();
+			const user = get(userStore).user;
+			if (!user) {
+				throw new Error('User not authenticated');
+			}
+
+			const optimisticCalendar: CalendarDto = {
+				id: tempId,
+				title: calendar.title,
+				color: calendar.color,
+				owner: {
+					userId: user.userId,
+					userName: user.userName,
+					profile: user.profile
+				}
+			};
+
+			// Optimistic update - add to state immediately
 			update((state) => ({
 				...state,
-				calendars: [...state.calendars, createdCalendar],
+				calendars: [...state.calendars, optimisticCalendar],
 				// Always set as active - backend automatically selects newly created calendars
-				activeCalendarId: createdCalendar.id
+				activeCalendarId: tempId
 			}));
 
-			return createdCalendar;
+			try {
+				// Send command (returns void in CQRS)
+				await client.createCalendar(calendar);
+
+				// Return optimistic calendar for toast display
+				return optimisticCalendar;
+			} catch (error) {
+				// Rollback optimistic update on error
+				update((state) => {
+					const filteredCalendars = state.calendars.filter((c) => c.id !== tempId);
+					return {
+						...state,
+						calendars: filteredCalendars,
+						activeCalendarId: filteredCalendars[0]?.id || null
+					};
+				});
+				throw error;
+			}
 		},
 
 		/**
 		 * Update an existing calendar
+		 * CQRS: Uses optimistic updates, returns constructed CalendarDto
 		 * @param calendarId - ID of the calendar to update
 		 * @param updates - EditCalendarDto with partial updates
 		 */
@@ -127,14 +164,41 @@ function createCalendarsStore() {
 			updates: { title?: string | null; color?: string | null }
 		): Promise<CalendarDto> {
 			const client = new CalendarClient();
-			const updatedCalendar = await client.updateCalendar(calendarId, updates);
 
+			// Get current calendar for rollback
+			const currentState = get({ subscribe });
+			const existingCalendar = currentState.calendars.find((c) => c.id === calendarId);
+			if (!existingCalendar) {
+				throw new Error('Calendar not found');
+			}
+
+			// Construct updated calendar
+			const updatedCalendar: CalendarDto = {
+				...existingCalendar,
+				...(updates.title !== undefined && updates.title !== null && { title: updates.title }),
+				...(updates.color !== undefined && updates.color !== null && { color: updates.color })
+			};
+
+			// Optimistic update
 			update((state) => ({
 				...state,
 				calendars: state.calendars.map((c) => (c.id === calendarId ? updatedCalendar : c))
 			}));
 
-			return updatedCalendar;
+			try {
+				// Send command (returns void in CQRS)
+				await client.updateCalendar(calendarId, updates);
+
+				// Return updated calendar for toast display
+				return updatedCalendar;
+			} catch (error) {
+				// Rollback on error
+				update((state) => ({
+					...state,
+					calendars: state.calendars.map((c) => (c.id === calendarId ? existingCalendar : c))
+				}));
+				throw error;
+			}
 		},
 
 		/**

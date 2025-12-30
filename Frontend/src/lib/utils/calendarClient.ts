@@ -71,51 +71,38 @@ export class CalendarClient extends AuthorizedHttpClient {
 	 * Select a calendar as the active calendar for the current user
 	 * Uses POST /api/v1/Calendar/{calendarId} endpoint
 	 * This persists the selection to the server so it's restored on next login
+	 * CQRS: Returns void (command accepted), frontend uses optimistic updates
 	 *
 	 * @param calendarId - UUID of the calendar to select
-	 * @returns The selected CalendarDto
 	 */
-	async selectCalendar(calendarId: string): Promise<CalendarDto> {
-		const response = await this.request<CalendarDto>(
+	async selectCalendar(calendarId: string): Promise<void> {
+		const response = await this.request<void>(
 			HttpMethod.POST,
 			`/api/v1/Calendar/${calendarId}`
 		);
 
 		if (!response.ok) {
 			if (response.status === 404) {
-				console.warn(`Calendar not found for selection: ${calendarId}`);
 				throw new Error('Calendar not found');
 			}
 
 			if (response.status === 400) {
-				const badRequest = response as BadRequestResponse;
-				console.error('Invalid calendar ID for selection:', {
-					calendarId,
-					errors: badRequest.data.errors
-				});
 				throw new Error('Invalid calendar ID format');
 			}
 
-			console.error('Failed to select calendar:', response.data);
-			throw new Error(`Failed to select calendar: ${response.data.title || 'Unknown error'}`);
+			throw new Error('Failed to select calendar');
 		}
-
-		if (!response.data) {
-			throw new Error('Calendar selection returned no data');
-		}
-
-		return response.data;
 	}
 
 	/**
 	 * Create a new calendar
 	 * Uses POST /api/v1/Calendar endpoint
+	 * CQRS: Returns void (command accepted), frontend uses optimistic updates
 	 *
 	 * @param calendar - CreateCalendarDto with all required fields
-	 * @returns Created CalendarDto with generated ID
 	 */
-	async createCalendar(calendar: CreateCalendarDto): Promise<CalendarDto> {
-		const response = await this.request<CalendarDto>(
+	async createCalendar(calendar: CreateCalendarDto): Promise<void> {
+		const response = await this.request<void>(
 			HttpMethod.POST,
 			'/api/v1/Calendar',
 			calendar
@@ -140,27 +127,20 @@ export class CalendarClient extends AuthorizedHttpClient {
 				throw new Error(`Invalid calendar data: ${errorMessages}`);
 			}
 
-			console.error('Failed to create calendar:', response.data);
-			throw new Error(`Failed to create calendar: ${response.data.title || 'Unknown error'}`);
+			throw new Error('Failed to create calendar');
 		}
-
-		if (!response.data) {
-			throw new Error('Failed to create calendar: No data returned');
-		}
-
-		return response.data;
 	}
 
 	/**
 	 * Update an existing calendar
 	 * Uses PUT /api/v1/Calendar/{calendarId} endpoint
+	 * CQRS: Returns void (command accepted), frontend uses optimistic updates
 	 *
 	 * @param calendarId - UUID of the calendar to update
 	 * @param updates - EditCalendarDto with partial/nullable fields
-	 * @returns Updated CalendarDto
 	 */
-	async updateCalendar(calendarId: string, updates: EditCalendarDto): Promise<CalendarDto> {
-		const response = await this.request<CalendarDto>(
+	async updateCalendar(calendarId: string, updates: EditCalendarDto): Promise<void> {
+		const response = await this.request<void>(
 			HttpMethod.PUT,
 			`/api/v1/Calendar/${calendarId}`,
 			updates
@@ -168,7 +148,6 @@ export class CalendarClient extends AuthorizedHttpClient {
 
 		if (!response.ok) {
 			if (response.status === 404) {
-				console.warn(`Calendar not found for update: ${calendarId}`);
 				throw new Error('Calendar not found');
 			}
 
@@ -191,15 +170,8 @@ export class CalendarClient extends AuthorizedHttpClient {
 				throw new Error(`Invalid calendar data: ${errorMessages}`);
 			}
 
-			console.error('Failed to update calendar:', response.data);
-			throw new Error(`Failed to update calendar: ${response.data.title || 'Unknown error'}`);
+			throw new Error('Failed to update calendar');
 		}
-
-		if (!response.data) {
-			throw new Error('Failed to update calendar: No data returned');
-		}
-
-		return response.data;
 	}
 
 	/**

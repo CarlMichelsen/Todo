@@ -48,8 +48,7 @@
 				title: title.trim(),
 				color: color
 			};
-			const created = await calendarsStore.createCalendar(createDto);
-			toastStore.success(`Calendar "${created.title}" created successfully`, 3000);
+			await calendarsStore.createCalendar(createDto);
 			resetForm();
 			return true; // Close modal
 		} catch (error) {

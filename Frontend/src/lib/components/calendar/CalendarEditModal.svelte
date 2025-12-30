@@ -93,8 +93,6 @@
 			newLinkUrl = '';
 			newLinkColor = '#ea580c';
 			showAddLinkForm = false;
-
-			toastStore.success('Calendar link added successfully', 3000);
 		} catch (error) {
 			const errorMessage = error instanceof Error ? error.message : 'Failed to add calendar link';
 			toastStore.error(errorMessage, 5000);
@@ -107,7 +105,6 @@
 			const client = new CalendarLinkClient();
 			await client.deleteCalendarLink(linkId);
 			await loadCalendarLinks();
-			toastStore.success('Calendar link removed successfully', 3000);
 		} catch (error) {
 			const errorMessage =
 				error instanceof Error ? error.message : 'Failed to remove calendar link';
@@ -143,8 +140,7 @@
 				title: title.trim(),
 				color: color
 			};
-			const updated = await calendarsStore.updateCalendar(calendar.id, updates);
-			toastStore.success(`Calendar "${updated.title}" updated successfully`, 3000);
+			await calendarsStore.updateCalendar(calendar.id, updates);
 			return true; // Close modal
 		} catch (error) {
 			const errorMessage = error instanceof Error ? error.message : 'Failed to update calendar';
@@ -166,7 +162,6 @@
 		isDeleting = true;
 		try {
 			await calendarsStore.deleteCalendar(calendar.id);
-			toastStore.success(`Calendar "${calendar.title}" deleted successfully`, 3000);
 			showDeleteConfirm = false;
 			isOpen = false;
 		} catch (error) {
