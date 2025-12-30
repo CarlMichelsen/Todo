@@ -17,7 +17,8 @@ public class GetSingleCalendarQueryHandler(DatabaseContext databaseContext)
         var calendar = await databaseContext
             .Calendar
             .Include(c => c.Owner)
-            .Where(c => c.OwnerId! == query.UserId && c.Id == query.CalendarId)
+            .Where(c => c.OwnerId! == query.User.UserId && c.Id == query.CalendarId)
+            .AsNoTracking()
             .FirstOrDefaultAsync(cancellationToken);
         
         return calendar?.ToDto();

@@ -1,18 +1,15 @@
 ﻿using Application;
-using Application.Extensions;
-using Application.Mapper;
-using Database;
 using Microsoft.AspNetCore.Mvc;
+using Presentation.Abstractions.CQRS.Messaging;
+using Presentation.CQRS.Query.User;
 using Presentation.Dto.User;
 
 namespace App.Controllers;
 
 [ApiController]
 [Route("api/v1/[controller]")]
-public partial class UserController(
-    ILogger<UserController> logger,
-    TimeProvider timeProvider,
-    DatabaseContext dbContext,
+public class UserController(
+    ISender sender,
     IHttpContextAccessor httpContextAccessor) : ControllerBase
 {
     [HttpGet]
@@ -24,20 +21,8 @@ public partial class UserController(
             return this.Unauthorized();
         }
 
-        // Creates the user in the database if it is not there already.
-        var userEntity = await dbContext.EnsureUserInDatabase(
-            jwtUser,
-            timeProvider.GetUtcNow().UtcDateTime,
-            ct);
-        
-        LogUsernameUseridMethodName(logger, jwtUser.Username, jwtUser.UserId, nameof(GetUserData));
-        return this.Ok(userEntity.ToPersonalUserDto(jwtUser));
+        var userQuery = new GetUserQuery(jwtUser);
+        var personalUserDto = await sender.Send(userQuery, ct);
+        return this.Ok(personalUserDto);
     }
-
-    [LoggerMessage(LogLevel.Information, "{username}<{userId}> {methodName}")]
-    static partial void LogUsernameUseridMethodName(
-        ILogger<UserController> logger,
-        string username,
-        Guid userId,
-        string methodName);
 }

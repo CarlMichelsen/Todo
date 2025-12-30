@@ -17,9 +17,10 @@ public class GetCalendarsQueryHandler(DatabaseContext databaseContext)
         var calendars = await databaseContext
             .Calendar
             .Include(c => c.Owner)
-            .Where(c => c.OwnerId! == query.UserId)
+            .Where(c => c.OwnerId! == query.User.UserId)
             .OrderByDescending(c => c.LastSelectedAt)
             .Take(MaxResults)
+            .AsNoTracking()
             .ToListAsync(cancellationToken);
 
         return [ ..calendars.Select(CalendarMapper.ToDto) ];

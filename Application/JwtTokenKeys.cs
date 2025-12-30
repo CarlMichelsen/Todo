@@ -2,6 +2,7 @@
 using System.Globalization;
 using System.Security.Claims;
 using Microsoft.AspNetCore.Http;
+using Presentation;
 
 namespace Application;
 
@@ -90,19 +91,3 @@ public static class JwtTokenKeys
         return DateTimeOffset.FromUnixTimeSeconds(epochSeconds).UtcDateTime;
     }
 }
-
-public record JwtUser(
-    Guid UserId,
-    string Username,
-    string Email,
-    Guid AccessTokenId,
-    DateTime TokenIssuedAt,
-    DateTime TokenExpiresAt,
-    string Issuer,
-    string Audience,
-    string AuthenticationProvider,
-    string AuthenticationProviderId,
-    Collection<string> Roles,
-    Uri Profile,
-    Uri? ProfileMedium = null,
-    Uri? ProfileLarge = null);

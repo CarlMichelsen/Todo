@@ -2,7 +2,7 @@
 
 public interface ICommand
 {
-    string Type { get; }
-    
-    Guid UserId { get; }
+    public string Type { get; }
+
+    public JwtUser User { get; }
 }

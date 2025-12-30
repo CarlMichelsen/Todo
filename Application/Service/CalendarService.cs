@@ -24,7 +24,7 @@ public class CalendarService(
         CancellationToken cancellationToken)
     {
         var user = httpContextAccessor.GetJwtUser();
-        var query = new GetCalendarsQuery(user.UserId);
+        var query = new GetCalendarsQuery(user);
         return await sender.Send(query, cancellationToken);
     }
 
@@ -34,7 +34,7 @@ public class CalendarService(
     {
         var user = httpContextAccessor.GetJwtUser();
         var query = new GetSingleCalendarQuery(
-            UserId: user.UserId,
+            User: user,
             CalendarId: calendarId);
         return await sender.Send(query, cancellationToken);
     }

@@ -5,7 +5,7 @@
 public interface IQuery<out TResponse>
     where TResponse : class?
 {
-    Guid UserId { get; }
+    public JwtUser User { get; }
 }
 #pragma warning restore CA1040
 #pragma warning restore S2326

@@ -3,5 +3,5 @@ using Presentation.Dto.Calendar;
 
 namespace Presentation.CQRS.Query.Calendar;
 
-public record GetCalendarsQuery(Guid UserId)
+public record GetCalendarsQuery(JwtUser User)
     : IQuery<List<CalendarDto>>;

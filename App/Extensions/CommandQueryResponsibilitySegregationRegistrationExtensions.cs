@@ -24,6 +24,8 @@ public static class CommandQueryResponsibilitySegregationRegistrationExtensions
         where TCommandHandler : class, ICommandHandler<TCommand>
         where TCommand : ICommand
     {
+        // This is to keep me sane
+        BasicSender.RegisteredCommands.TryAdd(typeof(TCommand), typeof(TCommandHandler));
         return services.AddScoped<ICommandHandler<TCommand>, TCommandHandler>();
     }
     
