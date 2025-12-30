@@ -31,8 +31,4 @@ app.UseAuthorization();
 
 app.MapControllers();
 
-await using var scope = app.Services.CreateAsyncScope();
-var calendar = await scope.TestIcsClient();
-
-Console.WriteLine(calendar?.Id);
 await app.RunAsync();

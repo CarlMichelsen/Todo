@@ -30,34 +30,31 @@ public class CalendarController(
     }
     
     [HttpPost("{calendarId:guid}")]
-    public async Task<ActionResult<CalendarDto>> SelectCalender(
+    public async Task<ActionResult> SelectCalender(
         [FromRoute] Guid calendarId,
         CancellationToken cancellationToken)
     {
-        var selectedCalendar = await calendarService.SelectCalendar(calendarId, cancellationToken);
-        return selectedCalendar is null
-            ? this.NotFound()
-            : this.Ok(selectedCalendar);
+        await calendarService.SelectCalendar(calendarId, cancellationToken);
+        return this.Accepted();
     }
     
     [HttpPost]
-    public async Task<ActionResult<CalendarDto>> CreateCalender(
+    public async Task<ActionResult> CreateCalender(
         [FromBody] CreateCalendarDto createCalendarDto,
         CancellationToken cancellationToken)
     {
-        return this.Ok(await calendarService.CreateCalendar(createCalendarDto, cancellationToken));
+        await calendarService.CreateCalendar(createCalendarDto, cancellationToken);
+        return this.Accepted();
     }
     
     [HttpPut("{calendarId:guid}")]
-    public async Task<ActionResult<CalendarDto>> EditCalendar(
+    public async Task<ActionResult> EditCalendar(
         [FromRoute] Guid calendarId,
         [FromBody] EditCalendarDto editCalendarDto,
         CancellationToken cancellationToken)
     {
-        var calendar = await calendarService.EditCalendar(calendarId, editCalendarDto, cancellationToken);
-        return calendar is null
-            ? this.NotFound()
-            : this.Ok(calendar);
+        await calendarService.EditCalendar(calendarId, editCalendarDto, cancellationToken);
+        return this.Accepted();
     }
     
     [HttpDelete("{calendarId:guid}")]
@@ -65,9 +62,7 @@ public class CalendarController(
         [FromRoute] Guid calendarId,
         CancellationToken cancellationToken)
     {
-        var deleted = await calendarService.DeleteCalendar(calendarId, cancellationToken);
-        return deleted
-            ? this.Ok()
-            : this.NotFound();
+        await calendarService.DeleteCalendar(calendarId, cancellationToken);
+        return this.Accepted();
     }
 }

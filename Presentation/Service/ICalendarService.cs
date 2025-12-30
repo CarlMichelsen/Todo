@@ -11,20 +11,20 @@ public interface ICalendarService
         Guid calendarId,
         CancellationToken cancellationToken);
     
-    Task<CalendarDto?> SelectCalendar(
+    Task SelectCalendar(
         Guid calendarId,
         CancellationToken cancellationToken);
     
-    Task<CalendarDto> CreateCalendar(
+    Task CreateCalendar(
         CreateCalendarDto createCalendar,
         CancellationToken cancellationToken);
     
-    Task<CalendarDto?> EditCalendar(
+    Task EditCalendar(
         Guid calendarId,
         EditCalendarDto editCalendar,
         CancellationToken cancellationToken);
     
-    Task<bool> DeleteCalendar(
+    Task DeleteCalendar(
         Guid calendarId,
         CancellationToken cancellationToken);
 }

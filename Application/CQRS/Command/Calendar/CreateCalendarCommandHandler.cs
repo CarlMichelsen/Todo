@@ -44,7 +44,7 @@ public class CreateCalendarCommandHandler(
         logger.LogUsernameUserIdMethodNameEventId(
             command.User.Username,
             command.User.UserId,
-            nameof(CreateCalendarCommand),
+            command.Type,
             calendarEntity.Id.ToString());
     }
 }

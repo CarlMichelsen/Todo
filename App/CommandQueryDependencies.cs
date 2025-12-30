@@ -17,7 +17,10 @@ public static class CommandQueryDependencies
     {
         // Commands
         builder.Services
-            .AddCommandHandler<CreateCalendarCommandHandler, CreateCalendarCommand>();
+            .AddCommandHandler<CreateCalendarCommandHandler, CreateCalendarCommand>()
+            .AddCommandHandler<EditCalendarCommandHandler, EditCalendarCommand>()
+            .AddCommandHandler<DeleteCalendarCommandHandler, DeleteCalendarCommand>()
+            .AddCommandHandler<SelectCalendarCommandHandler, SelectCalendarCommand>();
         
         // Queries
         builder.Services

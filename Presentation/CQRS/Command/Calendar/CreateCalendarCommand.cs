@@ -6,6 +6,7 @@ using Presentation.Attribute;
 namespace Presentation.CQRS.Command.Calendar;
 
 public record CreateCalendarCommand(
+    Guid TransactionId,
     JwtUser User,
     [MaxLength(100), Required] string Title,
     [MaxLength(7), HexColor, Required] string Color)
