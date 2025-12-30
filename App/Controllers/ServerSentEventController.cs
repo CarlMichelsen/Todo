@@ -1,38 +1,46 @@
-﻿using System.Runtime.CompilerServices;
+﻿using System.Net.ServerSentEvents;
+using Application.Extensions;
+using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Http.HttpResults;
 using Microsoft.AspNetCore.Mvc;
+using Presentation.SSE;
 
 namespace App.Controllers;
 
+[Authorize]
 [ApiController]
 [Route("api/v1/[controller]")]
-public class ServerSentEventController
+public class ServerSentEventController(
+    IHttpContextAccessor httpContextAccessor,
+    IServerEventBuffer serverEventBuffer)
 {
-    private static long Beats { get; set; }
-    
     [HttpGet]
     [Produces("text/event-stream")]
-    [ProducesResponseType<IAsyncEnumerable<HeartBeat>>(StatusCodes.Status200OK)]
-    public IResult Events(
+    [ProducesResponseType<IAsyncEnumerable<BaseServerEvent>>(StatusCodes.Status200OK)]
+    public ServerSentEventsResult<BaseServerEvent> Events(
         [FromHeader(Name = "Last-Event-ID")] string? lastEventId,
         CancellationToken cancellationToken)
     {
-        return TypedResults.ServerSentEvents(
-            HeartBeats(cancellationToken),
-            "heartbeat");
-    }
+        var user = httpContextAccessor.GetJwtUser();
 
-    private static async IAsyncEnumerable<HeartBeat> HeartBeats(
-        [EnumeratorCancellation] CancellationToken cancellationToken)
-    {
-        while (!cancellationToken.IsCancellationRequested)
+        async IAsyncEnumerable<SseItem<BaseServerEvent>> StreamEvents()
         {
-            Beats++;
-            yield return new HeartBeat(
-                Beats: Beats);
-            await Task.Delay(TimeSpan.FromMilliseconds(250), cancellationToken);
+            if (Guid.TryParse(lastEventId, out var lastEventGuid))
+            {
+                var missingEvents = serverEventBuffer.GetUserEventsAfter(user.UserId, lastEventGuid, cancellationToken);
+                foreach (var serverEvent in missingEvents)
+                {
+                    yield return serverEvent;
+                }
+            }
+
+            var realTimeEvents = serverEventBuffer.GetUserEventStream(user.UserId, cancellationToken);
+            await foreach (var serverEvent in realTimeEvents)
+            {
+                yield return serverEvent;
+            }
         }
+        
+        return TypedResults.ServerSentEvents(StreamEvents());
     }
 }
-
-public record HeartBeat(
-    long Beats);

@@ -6,11 +6,11 @@ using Presentation.Attribute;
 namespace Presentation.CQRS.Command.Calendar;
 
 public record CreateCalendarCommand(
-    Guid TransactionId,
+    Guid CommandId,
     JwtUser User,
     [MaxLength(100), Required] string Title,
     [MaxLength(7), HexColor, Required] string Color)
     : ICommand
 {
-    public string Type { get; } = nameof(CreateCalendarCommand);
+    public string Type => GetType().Name;
 }

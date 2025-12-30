@@ -1,6 +1,7 @@
 import { writable } from 'svelte/store';
 import type { PersonalUserDto } from '$lib/types/user';
 import { UserClient } from '$lib/utils/userClient';
+import { sseStore } from './sse';
 
 /**
  * User store state type
@@ -47,6 +48,8 @@ function createUserStore() {
 
                 if (user) {
                     set({ user, state: 'authenticated', error: null });
+                    // Connect to SSE when authenticated
+                    sseStore.connect();
                 } else {
                     // 401 - not authenticated, which is normal
                     set({ user: null, state: 'unauthenticated', error: null });
@@ -61,6 +64,8 @@ function createUserStore() {
          */
         setUser(user: PersonalUserDto): void {
             set({ user, state: 'authenticated', error: null });
+            // Connect to SSE when user logs in
+            sseStore.connect();
         },
 
         /**
@@ -70,11 +75,15 @@ function createUserStore() {
             try {
                 await userClient.logout();
                 set({ user: null, state: 'unauthenticated', error: null });
+                // Disconnect SSE when user logs out
+                sseStore.disconnect();
             }
             catch(error) {
                 const errorMessage = error instanceof Error ? error.message : 'Failed to fetch user';
                 console.error('User authentication check failed:', errorMessage);
                 set({ user: null, state: 'error', error: errorMessage });
+                // Disconnect SSE even on error
+                sseStore.disconnect();
             }
         },
 

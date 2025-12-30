@@ -1,8 +1,10 @@
 ﻿using App.Extensions;
 using Application.CQRS.Command.Calendar;
+using Application.CQRS.Command.ServerSentEvent;
 using Application.CQRS.Query.Calendar;
 using Application.CQRS.Query.User;
 using Presentation.CQRS.Command.Calendar;
+using Presentation.CQRS.Command.ServerSentEvent;
 using Presentation.CQRS.Query.Calendar;
 using Presentation.CQRS.Query.User;
 using Presentation.Dto.Calendar;
@@ -15,16 +17,28 @@ public static class CommandQueryDependencies
     public static WebApplicationBuilder RegisterCommandQueryDependencies(
         this WebApplicationBuilder builder)
     {
-        // Commands
+        // Commands --------------------------------------------------------------------------------------
+        
+        // ServerSentEvent
+        builder.Services
+            .AddCommandHandler<DispatchEventCommandHandler, DispatchEventCommand>();
+        
+        // Calendar
         builder.Services
             .AddCommandHandler<CreateCalendarCommandHandler, CreateCalendarCommand>()
             .AddCommandHandler<EditCalendarCommandHandler, EditCalendarCommand>()
             .AddCommandHandler<DeleteCalendarCommandHandler, DeleteCalendarCommand>()
             .AddCommandHandler<SelectCalendarCommandHandler, SelectCalendarCommand>();
         
-        // Queries
+
+        // Queries --------------------------------------------------------------------------------------
+        
+        // User
         builder.Services
-            .AddQueryHandler<GetUserQueryHandler, GetUserQuery, PersonalUserDto>()
+            .AddQueryHandler<GetUserQueryHandler, GetUserQuery, PersonalUserDto>();
+        
+        // Calendar
+        builder.Services
             .AddQueryHandler<GetCalendarsQueryHandler, GetCalendarsQuery, List<CalendarDto>>()
             .AddQueryHandler<GetSingleCalendarQueryHandler, GetSingleCalendarQuery, CalendarDto?>();
 

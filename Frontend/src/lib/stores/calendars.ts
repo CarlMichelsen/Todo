@@ -2,6 +2,13 @@ import { writable, get } from 'svelte/store';
 import type { CalendarDto, CreateCalendarDto } from '$lib/types/api/calendar';
 import { CalendarClient } from '$lib/utils/calendarClient';
 import { userStore } from './user';
+import { sseStore } from './sse';
+import type {
+	CreateCalendarEvent,
+	EditCalendarEvent,
+	DeleteCalendarEvent,
+	SelectCalendarEvent
+} from '$lib/types/api/sse';
 
 export interface CalendarStoreState {
 	calendars: CalendarDto[];
@@ -17,6 +24,99 @@ function createCalendarsStore() {
 		loading: false,
 		error: null
 	});
+
+	// Setup SSE event handlers
+	setupSSEHandlers();
+
+	/**
+	 * Setup Server-Sent Events handlers for calendar events
+	 */
+	function setupSSEHandlers() {
+		// Handle CreateCalendar events
+		sseStore.on('CreateCalendar', (event) => {
+			const createEvent = event as CreateCalendarEvent;
+			console.log('SSE: CreateCalendar event received', createEvent);
+
+			update((state) => {
+				// Check if calendar already exists (avoid duplicates)
+				const exists = state.calendars.some((c) => c.id === createEvent.calendar.id);
+				if (exists) {
+					// Replace temporary ID calendar with real calendar
+					return {
+						...state,
+						calendars: state.calendars.map((c) =>
+							c.title === createEvent.calendar.title && c.color === createEvent.calendar.color
+								? createEvent.calendar
+								: c
+						),
+						// Update active calendar ID if it was the temp one
+						activeCalendarId:
+							state.calendars.find(
+								(c) =>
+									c.title === createEvent.calendar.title &&
+									c.color === createEvent.calendar.color
+							)?.id === state.activeCalendarId
+								? createEvent.calendar.id
+								: state.activeCalendarId
+					};
+				}
+
+				// Add new calendar
+				return {
+					...state,
+					calendars: [...state.calendars, createEvent.calendar]
+				};
+			});
+		});
+
+		// Handle EditCalendar events
+		sseStore.on('EditCalendar', (event) => {
+			const editEvent = event as EditCalendarEvent;
+			console.log('SSE: EditCalendar event received', editEvent);
+
+			update((state) => ({
+				...state,
+				calendars: state.calendars.map((c) =>
+					c.id === editEvent.calendar.id ? editEvent.calendar : c
+				)
+			}));
+		});
+
+		// Handle DeleteCalendar events
+		sseStore.on('DeleteCalendar', (event) => {
+			const deleteEvent = event as DeleteCalendarEvent;
+			console.log('SSE: DeleteCalendar event received', deleteEvent);
+
+			update((state) => {
+				const newCalendars = state.calendars.filter((c) => c.id !== deleteEvent.calendarId);
+
+				// If we deleted the active calendar, switch to first available
+				const newActiveCalendarId =
+					state.activeCalendarId === deleteEvent.calendarId
+						? newCalendars.length > 0
+							? newCalendars[0].id
+							: null
+						: state.activeCalendarId;
+
+				return {
+					...state,
+					calendars: newCalendars,
+					activeCalendarId: newActiveCalendarId
+				};
+			});
+		});
+
+		// Handle SelectCalendar events
+		sseStore.on('SelectCalendar', (event) => {
+			const selectEvent = event as SelectCalendarEvent;
+			console.log('SSE: SelectCalendar event received', selectEvent);
+
+			update((state) => ({
+				...state,
+				activeCalendarId: selectEvent.calendarId
+			}));
+		});
+	}
 
 	return {
 		subscribe,

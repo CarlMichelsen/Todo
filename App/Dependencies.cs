@@ -1,14 +1,18 @@
-﻿using System.Text.Json.Serialization;
+﻿using System.Net.ServerSentEvents;
+using System.Text.Json.Serialization;
+using System.Threading.Channels;
 using App.Extensions;
 using Application.Client;
 using Application.Configuration;
 using Application.Service;
+using Application.SSE;
 using Database;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.Extensions.Diagnostics.HealthChecks;
 using Presentation;
 using Presentation.Client;
 using Presentation.Service;
+using Presentation.SSE;
 
 namespace App;
 
@@ -86,6 +90,15 @@ public static class Dependencies
             .AddScoped<ICalendarService, CalendarService>()
             .AddScoped<ICalendarLinkService, CalendarLinkService>()
             .AddScoped<IEventService, EventService>();
+        
+        // SSE Channel
+        builder.Services
+            .AddSingleton(_ => Channel.CreateUnbounded<SseItem<BaseServerEvent>>(new UnboundedChannelOptions
+            {
+                SingleReader = true,
+                AllowSynchronousContinuations = false,
+            }))
+            .AddSingleton<IServerEventBuffer, ServerEventBuffer>();
         
         // Client
         builder.Services

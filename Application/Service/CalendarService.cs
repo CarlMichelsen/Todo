@@ -38,7 +38,7 @@ public class CalendarService(
     {
         var selectCalendarCommand = new SelectCalendarCommand(
             User: httpContextAccessor.GetJwtUser(),
-            TransactionId: Guid.CreateVersion7(),
+            CommandId: Guid.CreateVersion7(),
             CalendarId: calendarId);
         
         await sender.Send(selectCalendarCommand, cancellationToken);
@@ -49,7 +49,7 @@ public class CalendarService(
         CancellationToken cancellationToken)
     {
         var createCalendarCommand = new CreateCalendarCommand(
-            TransactionId: Guid.CreateVersion7(),
+            CommandId: Guid.CreateVersion7(),
             User: httpContextAccessor.GetJwtUser(),
             Title: createCalendar.Title,
             Color: createCalendar.Color);
@@ -63,7 +63,7 @@ public class CalendarService(
         CancellationToken cancellationToken)
     {
         var editCalendarCommand = new EditCalendarCommand(
-            TransactionId: Guid.CreateVersion7(),
+            CommandId: Guid.CreateVersion7(),
             User: httpContextAccessor.GetJwtUser(),
             CalendarId:  calendarId,
             Title: editCalendar.Title,
@@ -77,7 +77,7 @@ public class CalendarService(
         CancellationToken cancellationToken)
     {
         var deleteCalenderCommand = new DeleteCalendarCommand(
-            TransactionId: Guid.CreateVersion7(),
+            CommandId: Guid.CreateVersion7(),
             User: httpContextAccessor.GetJwtUser(),
             CalendarId: calendarId);
 

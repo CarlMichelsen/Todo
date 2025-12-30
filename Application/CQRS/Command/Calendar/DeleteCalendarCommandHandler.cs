@@ -3,11 +3,16 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
 using Presentation.Abstractions.CQRS.Messaging;
 using Presentation.CQRS.Command.Calendar;
+using Presentation.CQRS.Command.ServerSentEvent;
+using Presentation.SSE;
+using Presentation.SSE.Calendar;
 
 namespace Application.CQRS.Command.Calendar;
 
 public class DeleteCalendarCommandHandler(
+    ISender sender,
     ILogger<DeleteCalendarCommandHandler> logger,
+    TimeProvider timeProvider,
     DatabaseContext databaseContext)
     : ICommandHandler<DeleteCalendarCommand>
 {
@@ -40,5 +45,15 @@ public class DeleteCalendarCommandHandler(
             command.User.UserId,
             command.Type,
             command.CalendarId.ToString());
+        
+        var deleteCalendarEvent = new DeleteCalendarEvent(new ServerEventDestination([command.User.UserId]))
+        {
+            CalendarId = calendarToBeDeleted.Id,
+            CalendarTitle = calendarToBeDeleted.Title,
+            DispatchedAt = timeProvider.GetUtcNow().UtcDateTime,
+            EventId = command.CommandId,
+        };
+
+        await sender.SendEvent(command.User, deleteCalendarEvent, cancellationToken);
     }
 }

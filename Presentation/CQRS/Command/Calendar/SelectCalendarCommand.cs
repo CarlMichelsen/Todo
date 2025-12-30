@@ -3,9 +3,9 @@
 namespace Presentation.CQRS.Command.Calendar;
 
 public record SelectCalendarCommand(
-    Guid TransactionId,
+    Guid CommandId,
     JwtUser User,
     Guid CalendarId) : ICommand
 {
-    public string Type { get; } = nameof(SelectCalendarCommand);
+    public string Type => GetType().Name;
 }

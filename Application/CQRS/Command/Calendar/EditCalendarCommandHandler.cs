@@ -1,13 +1,19 @@
-﻿using Database;
+﻿using Application.Mapper;
+using Database;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
 using Presentation.Abstractions.CQRS.Messaging;
 using Presentation.CQRS.Command.Calendar;
+using Presentation.CQRS.Command.ServerSentEvent;
+using Presentation.SSE;
+using Presentation.SSE.Calendar;
 
 namespace Application.CQRS.Command.Calendar;
 
 public class EditCalendarCommandHandler(
+    ISender sender,
     ILogger<EditCalendarCommandHandler> logger,
+    TimeProvider timeProvider,
     DatabaseContext databaseContext) : ICommandHandler<EditCalendarCommand>
 {
     public async Task Handle(EditCalendarCommand command, CancellationToken cancellationToken)
@@ -44,5 +50,14 @@ public class EditCalendarCommandHandler(
             command.User.UserId,
             command.Type,
             calendarEntity.Id.ToString());
+        
+        var editCalendarEvent = new EditCalendarEvent(new ServerEventDestination([command.User.UserId]))
+        {
+            Calendar = calendarEntity.ToDto(),
+            DispatchedAt = timeProvider.GetUtcNow().UtcDateTime,
+            EventId = command.CommandId,
+        };
+
+        await sender.SendEvent(command.User, editCalendarEvent, cancellationToken);
     }
 }

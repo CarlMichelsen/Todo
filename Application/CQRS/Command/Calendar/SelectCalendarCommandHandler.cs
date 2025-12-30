@@ -3,10 +3,14 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
 using Presentation.Abstractions.CQRS.Messaging;
 using Presentation.CQRS.Command.Calendar;
+using Presentation.CQRS.Command.ServerSentEvent;
+using Presentation.SSE;
+using Presentation.SSE.Calendar;
 
 namespace Application.CQRS.Command.Calendar;
 
 public class SelectCalendarCommandHandler(
+    ISender sender,
     ILogger<SelectCalendarCommandHandler> logger,
     TimeProvider timeProvider,
     DatabaseContext databaseContext)
@@ -25,7 +29,12 @@ public class SelectCalendarCommandHandler(
             .Where(c => c.OwnerId == userEntity.Id && c.Id == command.CalendarId)
             .FirstOrDefaultAsync(cancellationToken);
 
-        if (calendarEntity is not null && userEntity.SelectedCalendarId != calendarEntity.Id)
+        if (calendarEntity is null)
+        {
+            return;
+        }
+
+        if (userEntity.SelectedCalendarId != calendarEntity.Id)
         {
             userEntity.SelectedCalendarId = calendarEntity.Id;
             calendarEntity.LastSelectedAt = now;
@@ -37,6 +46,15 @@ public class SelectCalendarCommandHandler(
             command.User.Username,
             command.User.UserId,
             command.Type,
-            calendarEntity?.Id.ToString() ?? "calendar not found");
+            calendarEntity.Id.ToString());
+        
+        var editCalendarEvent = new SelectCalendarEvent(new ServerEventDestination([command.User.UserId]))
+        {
+            CalendarId = userEntity.SelectedCalendarId,
+            DispatchedAt = timeProvider.GetUtcNow().UtcDateTime,
+            EventId = command.CommandId,
+        };
+
+        await sender.SendEvent(command.User, editCalendarEvent, cancellationToken);
     }
 }

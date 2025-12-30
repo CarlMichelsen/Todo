@@ -1,14 +1,19 @@
-﻿using Database;
+﻿using Application.Mapper;
+using Database;
 using Database.Entity;
 using Database.Entity.Id;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
 using Presentation.Abstractions.CQRS.Messaging;
 using Presentation.CQRS.Command.Calendar;
+using Presentation.CQRS.Command.ServerSentEvent;
+using Presentation.SSE;
+using Presentation.SSE.Calendar;
 
 namespace Application.CQRS.Command.Calendar;
 
 public class CreateCalendarCommandHandler(
+    ISender sender,
     ILogger<CreateCalendarCommandHandler> logger,
     TimeProvider timeProvider,
     DatabaseContext databaseContext)
@@ -46,5 +51,14 @@ public class CreateCalendarCommandHandler(
             command.User.UserId,
             command.Type,
             calendarEntity.Id.ToString());
+
+        var createCalendarEvent = new CreateCalendarEvent(new ServerEventDestination([command.User.UserId]))
+        {
+            Calendar = calendarEntity.ToDto(),
+            DispatchedAt = now,
+            EventId = command.CommandId,
+        };
+
+        await sender.SendEvent(command.User, createCalendarEvent, cancellationToken);
     }
 }
