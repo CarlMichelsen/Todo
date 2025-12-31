@@ -13,10 +13,18 @@ public class CalendarLinkController(
     ICalendarLinkService calendarLinkService) : ControllerBase
 {
     [HttpGet]
-    public async Task<ActionResult<IEnumerable<CalendarDto>>> GetCalenderLinks(
+    public async Task<ActionResult<IEnumerable<CalendarDto>>> GetAllCalendarLinksForUser(
         CancellationToken cancellationToken)
     {
-        return this.Ok(await calendarLinkService.GetCalendarLinks(cancellationToken));
+        return this.Ok(await calendarLinkService.GetAllCalendarLinksForUser(cancellationToken));
+    }
+    
+    [HttpGet("calendar/{calendarId:guid}")]
+    public async Task<ActionResult<IEnumerable<CalendarDto>>> GetAllCalendarLinksForUser(
+        [FromRoute] Guid calendarId,
+        CancellationToken cancellationToken)
+    {
+        return this.Ok(await calendarLinkService.GetCalendarLinksForCalendar(calendarId, cancellationToken));
     }
 
     [HttpGet("{calendarLinkId:guid}")]
@@ -36,7 +44,8 @@ public class CalendarLinkController(
         [FromBody] CreateCalendarLinkDto createCalendarLinkDto,
         CancellationToken cancellationToken)
     {
-        return this.Ok(await calendarLinkService.CreateCalendarLink(initialParentCalendarId, createCalendarLinkDto, cancellationToken));
+        await calendarLinkService.CreateCalendarLink(initialParentCalendarId, createCalendarLinkDto, cancellationToken);
+        return this.Accepted();
     }
     
     [HttpPut("{calendarLinkId:guid}")]
@@ -45,10 +54,8 @@ public class CalendarLinkController(
         [FromBody] EditCalendarLinkDto editCalendarLinkDto,
         CancellationToken cancellationToken)
     {
-        var calendar = await calendarLinkService.EditCalendarLink(calendarLinkId, editCalendarLinkDto, cancellationToken);
-        return calendar is null
-            ? this.NotFound()
-            : this.Ok(calendar);
+        await calendarLinkService.EditCalendarLink(calendarLinkId, editCalendarLinkDto, cancellationToken);
+        return this.Accepted();
     }
     
     [HttpDelete("{calendarLinkId:guid}")]
@@ -56,9 +63,7 @@ public class CalendarLinkController(
         [FromRoute] Guid calendarLinkId,
         CancellationToken cancellationToken)
     {
-        var deleted = await calendarLinkService.DeleteCalendarLink(calendarLinkId, cancellationToken);
-        return deleted
-            ? this.Ok()
-            : this.NotFound();
+        await calendarLinkService.DeleteCalendarLink(calendarLinkId, cancellationToken);
+        return this.Accepted();
     }
 }

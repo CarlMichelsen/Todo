@@ -1,13 +1,18 @@
 ﻿using App.Extensions;
 using Application.CQRS.Command.Calendar;
+using Application.CQRS.Command.CalendarLink;
 using Application.CQRS.Command.ServerSentEvent;
 using Application.CQRS.Query.Calendar;
+using Application.CQRS.Query.CalendarLink;
 using Application.CQRS.Query.User;
 using Presentation.CQRS.Command.Calendar;
+using Presentation.CQRS.Command.CalendarLink;
 using Presentation.CQRS.Command.ServerSentEvent;
 using Presentation.CQRS.Query.Calendar;
+using Presentation.CQRS.Query.CalendarLink;
 using Presentation.CQRS.Query.User;
 using Presentation.Dto.Calendar;
+using Presentation.Dto.CalendarLink;
 using Presentation.Dto.User;
 
 namespace App;
@@ -31,6 +36,12 @@ public static class CommandQueryDependencies
             .AddCommandHandler<DeleteCalendarCommandHandler, DeleteCalendarCommand>()
             .AddCommandHandler<SelectCalendarCommandHandler, SelectCalendarCommand>();
         
+        // CalendarLink
+        builder.Services
+            .AddCommandHandler<CreateCalendarLinkCommandHandler, CreateCalendarLinkCommand>()
+            .AddCommandHandler<DeleteCalendarLinkCommandHandler, DeleteCalendarLinkCommand>()
+            .AddCommandHandler<EditCalendarLinkCommandHandler, EditCalendarLinkCommand>();
+        
 
         // Queries --------------------------------------------------------------------------------------
         
@@ -42,6 +53,12 @@ public static class CommandQueryDependencies
         builder.Services
             .AddQueryHandler<GetCalendarsQueryHandler, GetCalendarsQuery, List<CalendarDto>>()
             .AddQueryHandler<GetSingleCalendarQueryHandler, GetSingleCalendarQuery, CalendarDto?>();
+        
+        // CalendarLink
+        builder.Services
+            .AddQueryHandler<GetAllCalendarLinksForUserQueryHandler, GetAllCalendarLinksForUserQuery, IEnumerable<CalendarLinkDto>>()
+            .AddQueryHandler<GetCalendarLinkQueryHandler, GetCalendarLinkQuery, CalendarLinkDto?>()
+            .AddQueryHandler<GetCalendarLinksForCalendarQueryHandler, GetCalendarLinksForCalendarQuery, IEnumerable<CalendarLinkDto>>();
 
         return builder;
     }

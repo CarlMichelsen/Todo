@@ -14,7 +14,7 @@ public class BasicSender(
     public async Task<TResponse> Send<TResponse>(
         IQuery<TResponse> query,
         CancellationToken cancellationToken)
-        where TResponse : class
+        where TResponse : class?
     {
         // Queries should be scoped
         await using var scope = serviceScopeFactory.CreateAsyncScope();

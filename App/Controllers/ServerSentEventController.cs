@@ -1,6 +1,5 @@
 ﻿using System.Net.ServerSentEvents;
 using System.Runtime.CompilerServices;
-using System.Threading.Channels;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Presentation.SSE;
@@ -11,7 +10,8 @@ namespace App.Controllers;
 [Authorize]
 [ApiController]
 [Route("api/v1/[controller]")]
-public class ServerSentEventController(IConnectionManager connectionManager) : ControllerBase
+public class ServerSentEventController(
+    IConnectionManager connectionManager) : ControllerBase
 {
     [HttpGet]
     [Produces("text/event-stream")]
@@ -38,10 +38,9 @@ public class ServerSentEventController(IConnectionManager connectionManager) : C
             try
             {
                 // Listen to events here
-                var reader = connection.ConnectionReader!;
-                while (await WaitToRead(reader, ct))
+                while (await connection.ConnectionReader!.WaitToReadAsync(ct))
                 {
-                    var serverSentEvent = await reader.ReadAsync(ct);
+                    var serverSentEvent = await connection.ConnectionReader.ReadAsync(ct);
                     yield return new SseItem<BaseServerEvent>(serverSentEvent, serverSentEvent.EventName)
                     {
                         EventId = serverSentEvent.EventId.ToString()
@@ -52,21 +51,6 @@ public class ServerSentEventController(IConnectionManager connectionManager) : C
             {
                 await connectionManager.TryDisconnect(connection, null, ct);
             }
-        }
-        
-        async ValueTask<bool> WaitToRead(ChannelReader<BaseServerEvent> channelReader, CancellationToken ct)
-        {
-            using var tokenSource = CancellationTokenSource.CreateLinkedTokenSource(ct);
-            try
-            {
-                return await channelReader.WaitToReadAsync(tokenSource.Token);
-            }
-            catch (ChannelClosedException)
-            {
-                await tokenSource.CancelAsync();
-            }
-
-            return false;
         }
     }
 }

@@ -1,42 +1,37 @@
 ﻿using Application.Extensions;
-using Application.Mapper;
-using Database;
-using Database.Entity;
-using Database.Entity.Id;
 using Microsoft.AspNetCore.Http;
-using Microsoft.EntityFrameworkCore;
-using Microsoft.Extensions.Logging;
-using Presentation.Client;
+using Presentation.Abstractions.CQRS.Messaging;
+using Presentation.CQRS.Command.CalendarLink;
+using Presentation.CQRS.Query.CalendarLink;
 using Presentation.Dto.CalendarLink;
 using Presentation.Service;
 
 namespace Application.Service;
 
 public class CalendarLinkService(
-    ILogger<CalendarLinkService> logger,
-    TimeProvider timeProvider,
-    DatabaseContext databaseContext,
-    ICalendarClient calendarClient,
+    ISender sender,
     IHttpContextAccessor httpContextAccessor) : ICalendarLinkService
 {
-    private const int MaxResults = 200;
-    
-    public async Task<IEnumerable<CalendarLinkDto>> GetCalendarLinks(
+    public async Task<IEnumerable<CalendarLinkDto>> GetCalendarLinksForCalendar(
+        Guid calendarId,
         CancellationToken cancellationToken)
     {
         var user = httpContextAccessor.GetJwtUser();
+        var query = new GetCalendarLinksForCalendarQuery(
+            User: user,
+            CalendarId: calendarId);
+        
+        return await sender.Send(query, cancellationToken);
+    }
 
-        var results = await databaseContext
-            .CalendarLink
-            .Include(cl => cl.Calendars)
-            .Include(cl => cl.User)
-            .Where(cl => cl.UserId == user.UserId)
-            .OrderByDescending(cl => cl.CreatedAt)
-            .Take(MaxResults)
-            .AsNoTracking()
-            .ToListAsync(cancellationToken);
+    public async Task<IEnumerable<CalendarLinkDto>> GetAllCalendarLinksForUser(
+        CancellationToken cancellationToken)
+    {
+        var user = httpContextAccessor.GetJwtUser();
+        var query = new GetAllCalendarLinksForUserQuery(
+            User: user);
 
-        return results.Select(CalendarLinkMapper.ToDto);
+        return await sender.Send(query, cancellationToken);
     }
 
     public async Task<CalendarLinkDto?> GetCalendarLink(
@@ -44,164 +39,59 @@ public class CalendarLinkService(
         CancellationToken cancellationToken)
     {
         var user = httpContextAccessor.GetJwtUser();
-
-        var result = await databaseContext
-            .CalendarLink
-            .Include(cl => cl.Calendars)
-            .Include(cl => cl.User)
-            .AsNoTracking()
-            .FirstOrDefaultAsync(cl => cl.UserId == user.UserId && cl.Id == calendarLinkId, cancellationToken);
-
-        return result?.ToDto();
+        var query = new GetCalendarLinkQuery(
+            User: user,
+            CalendarLinkId: calendarLinkId);
+        
+        return await sender.Send(query, cancellationToken);
     }
 
-    public async Task<CalendarLinkDto> CreateCalendarLink(
+    public async Task CreateCalendarLink(
         Guid initialParentCalendarId,
         CreateCalendarLinkDto createCalendar,
         CancellationToken cancellationToken)
     {
         var user = httpContextAccessor.GetJwtUser();
-
-        var initialParentCalendarEntity = await databaseContext
-            .Calendar
-            .FirstAsync(c => c.OwnerId! == user.UserId && c.Id == initialParentCalendarId, cancellationToken);
-
-        var calendarLinkEntityId = new CalendarLinkEntityId(Guid.CreateVersion7());
-        var productId = await calendarClient.GetCalendarProductId(calendarLinkEntityId, createCalendar.CalendarLink);
-        var calendarLinkEntity = new CalendarLinkEntity
-        {
-            Id = calendarLinkEntityId,
-            Title = createCalendar.Title,
-            ProductId = productId,
-            CalendarLink = createCalendar.CalendarLink,
-            Color = createCalendar.Color,
-            Calendars = [initialParentCalendarEntity],
-            UserId = new UserEntityId(user.UserId, true),
-            CreatedAt = timeProvider.GetUtcNow().UtcDateTime,
-        };
+        var command = new CreateCalendarLinkCommand(
+            CommandId: Guid.CreateVersion7(),
+            User: user,
+            Title: createCalendar.Title,
+            Color: createCalendar.Color,
+            CalendarLink: createCalendar.CalendarLink,
+            InitialParentCalendarId: initialParentCalendarId);
         
-        databaseContext.CalendarLink.Add(calendarLinkEntity);
-        await databaseContext.SaveChangesAsync(cancellationToken);
-        
-        await databaseContext.Entry(calendarLinkEntity)
-            .Reference(u => u.User)
-            .LoadAsync(cancellationToken);
-        
-        logger.LogUsernameUserIdMethodNameEventId(
-            user.Username,
-            user.UserId,
-            nameof(ICalendarLinkService.CreateCalendarLink),
-            calendarLinkEntity.Id.ToString());
-        
-        return calendarLinkEntity.ToDto();
+        await sender.Send(command, cancellationToken);
     }
 
-    public async Task<CalendarLinkDto?> EditCalendarLink(
+    public async Task EditCalendarLink(
         Guid calendarLinkId,
         EditCalendarLinkDto editCalendar,
         CancellationToken cancellationToken)
     {
         var user = httpContextAccessor.GetJwtUser();
-
-        var calendarLinkEntity = await databaseContext
-            .CalendarLink
-            .Include(cl => cl.Calendars)
-            .Include(cl => cl.User)
-            .FirstOrDefaultAsync(cl => cl.UserId == user.UserId && cl.Id == calendarLinkId, cancellationToken);
-
-        if (calendarLinkEntity is null)
-        {
-            return null;
-        }
-
-        if (editCalendar.Title is not null)
-        {
-            calendarLinkEntity.Title = editCalendar.Title;
-        }
+        var command = new EditCalendarLinkCommand(
+            CommandId: Guid.CreateVersion7(),
+            User: user,
+            CalendarLinkId: calendarLinkId,
+            Title: editCalendar.Title,
+            CalendarLink: editCalendar.CalendarLink,
+            Color: editCalendar.Color,
+            DeleteParentCalendarAssociation: editCalendar.DeleteParentCalendarAssociation,
+            AddParentCalendarAssociation: editCalendar.AddParentCalendarAssociation);
         
-        if (editCalendar.CalendarLink is not null)
-        {
-            calendarLinkEntity.CalendarLink = editCalendar.CalendarLink;
-        }
-        
-        if (editCalendar.Color is not null)
-        {
-            calendarLinkEntity.Color = editCalendar.Color;
-        }
-        
-        var existing = calendarLinkEntity
-            .Calendars
-            .Select(c => c.Id.Value)
-            .ToHashSet();
-        if (editCalendar.DeleteParentCalendarAssociation is not null)
-        {
-            var calendarAssociationsToDelete = editCalendar
-                .DeleteParentCalendarAssociation
-                .Where(pa => existing.Contains(pa))
-                .Select(pa => calendarLinkEntity.Calendars.First(c => c.Id == pa))
-                .ToList();
-
-            foreach (var calendarAssociation in calendarAssociationsToDelete)
-            {
-                calendarLinkEntity.Calendars.Remove(calendarAssociation);
-            }
-        }
-        
-        if (editCalendar.AddParentCalendarAssociation is not null)
-        {
-            var calendarAssociationsToAdd = editCalendar
-                .AddParentCalendarAssociation
-                .Where(pa => existing.Contains(pa))
-                .ToList();
-
-            var entitiesToAdd = await databaseContext
-                .Calendar
-                .Where(c => c.OwnerId! == user.UserId && calendarAssociationsToAdd.Contains(c.Id))
-                .ToListAsync(cancellationToken);
-            
-            foreach (var calendarAssociation in entitiesToAdd)
-            {
-                calendarLinkEntity.Calendars.Add(calendarAssociation);
-            }
-        }
-        
-        await databaseContext.SaveChangesAsync(cancellationToken);
-        
-        logger.LogUsernameUserIdMethodNameEventId(
-            user.Username,
-            user.UserId,
-            nameof(ICalendarLinkService.EditCalendarLink),
-            calendarLinkEntity.Id.ToString());
-        
-        return calendarLinkEntity.ToDto();
+        await sender.Send(command, cancellationToken);
     }
 
-    public async Task<bool> DeleteCalendarLink(
+    public async Task DeleteCalendarLink(
         Guid calendarLinkId,
         CancellationToken cancellationToken)
     {
         var user = httpContextAccessor.GetJwtUser();
-
-        var calendarLinkEntity = await databaseContext
-            .CalendarLink
-            .Include(cl => cl.Calendars)
-            .FirstOrDefaultAsync(cl => cl.UserId == user.UserId && cl.Id == calendarLinkId, cancellationToken);
-
-        if (calendarLinkEntity is null)
-        {
-            return false;
-        }
+        var command = new DeleteCalendarLinkCommand(
+            CommandId: Guid.CreateVersion7(),
+            User: user,
+            CalendarLinkId: calendarLinkId);
         
-        calendarLinkEntity.Calendars.Clear();
-        databaseContext.CalendarLink.Remove(calendarLinkEntity);
-        var success = await databaseContext.SaveChangesAsync(cancellationToken) > 0;
-        
-        logger.LogUsernameUserIdMethodNameEventId(
-            user.Username,
-            user.UserId,
-            nameof(ICalendarLinkService.DeleteCalendarLink),
-            calendarLinkEntity.Id.ToString());
-
-        return success;
+        await sender.Send(command, cancellationToken);
     }
 }
