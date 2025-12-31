@@ -1,13 +1,13 @@
 ﻿using Microsoft.Extensions.Logging;
 using Presentation.Abstractions.CQRS.Messaging;
 using Presentation.CQRS.Command.ServerSentEvent;
-using Presentation.SSE;
+using Presentation.SSE.Connection;
 
 namespace Application.CQRS.Command.ServerSentEvent;
 
 public partial class DispatchEventCommandHandler(
     ILogger<DispatchEventCommandHandler> logger,
-    IServerEventBuffer serverEventBuffer)
+    IConnectionRegistry connectionRegistry)
     : ICommandHandler<DispatchEventCommand>
 {
     public async Task Handle(
@@ -18,12 +18,24 @@ public partial class DispatchEventCommandHandler(
         {
             return;
         }
+        
+        var connectionSearchTasks = command
+            .ServerEvent
+            .Destination
+            .Recipients
+            .Select(destination => connectionRegistry.GetByUserId(destination, cancellationToken));
 
-        if (await serverEventBuffer.TryAdd(command.ServerEvent))
-        {
-            var recipients = string.Join(',', command.ServerEvent.Destination.Recipients.Select(r => $"'{r}'"));
-            LogSentEventNameToRecipients(logger, command.ServerEvent.EventName, recipients);
-        }
+        var connectionSearchResult = await Task.WhenAll(connectionSearchTasks);
+        var connections = connectionSearchResult.SelectMany(x => x);
+
+        var eventDispatchTasks = connections
+            .Select(connection => connection.DispatchEvent(command.ServerEvent));
+
+        await Task.WhenAll(eventDispatchTasks);
+        LogSentEventNameToRecipients(
+            logger,
+            command.ServerEvent.EventName,
+            string.Join(',', command.ServerEvent.Destination.Recipients));
     }
 
     [LoggerMessage(LogLevel.Information, "Sent {eventName} to [{recipients}]")]

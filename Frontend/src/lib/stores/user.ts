@@ -19,6 +19,7 @@ interface UserState {
     user: PersonalUserDto | null;
     state: UserStoreState;
     error: string | null;
+    connectionId: string | null;
 }
 
 /**
@@ -28,7 +29,8 @@ function createUserStore() {
     const { subscribe, set, update } = writable<UserState>({
         user: null,
         state: 'pending',
-        error: null
+        error: null,
+        connectionId: null
     });
 
     const userClient = new UserClient();
@@ -39,33 +41,35 @@ function createUserStore() {
         /**
          * Initialize the user store by checking authentication status
          * This should be called when the application starts
+         * @param connectionId - Optional connection ID for SSE multi-tab support
          */
-        async initialize(): Promise<void> {
-            update(state => ({ ...state, state: 'pending', error: null }));
+        async initialize(connectionId?: string): Promise<void> {
+            update(state => ({ ...state, state: 'pending', error: null, connectionId: connectionId || null }));
 
             try {
                 const user = await userClient.getCurrentUser();
 
                 if (user) {
-                    set({ user, state: 'authenticated', error: null });
-                    // Connect to SSE when authenticated
-                    sseStore.connect();
+                    set({ user, state: 'authenticated', error: null, connectionId: connectionId || null });
+                    // Connect to SSE when authenticated with connectionId
+                    sseStore.connect(connectionId);
                 } else {
                     // 401 - not authenticated, which is normal
-                    set({ user: null, state: 'unauthenticated', error: null });
+                    set({ user: null, state: 'unauthenticated', error: null, connectionId: connectionId || null });
                 }
             } catch (error) {
-                set({ user: null, state: 'unauthenticated', error: null });
+                set({ user: null, state: 'unauthenticated', error: null, connectionId: connectionId || null });
             }
         },
 
         /**
          * Set the user data (e.g., after successful login)
+         * @param connectionId - Optional connection ID for SSE multi-tab support
          */
-        setUser(user: PersonalUserDto): void {
-            set({ user, state: 'authenticated', error: null });
-            // Connect to SSE when user logs in
-            sseStore.connect();
+        setUser(user: PersonalUserDto, connectionId?: string): void {
+            set({ user, state: 'authenticated', error: null, connectionId: connectionId || null });
+            // Connect to SSE when user logs in with connectionId
+            sseStore.connect(connectionId);
         },
 
         /**
@@ -74,14 +78,14 @@ function createUserStore() {
         async logoutUser(): Promise<void> {
             try {
                 await userClient.logout();
-                set({ user: null, state: 'unauthenticated', error: null });
+                set({ user: null, state: 'unauthenticated', error: null, connectionId: null });
                 // Disconnect SSE when user logs out
                 sseStore.disconnect();
             }
             catch(error) {
                 const errorMessage = error instanceof Error ? error.message : 'Failed to fetch user';
                 console.error('User authentication check failed:', errorMessage);
-                set({ user: null, state: 'error', error: errorMessage });
+                set({ user: null, state: 'error', error: errorMessage, connectionId: null });
                 // Disconnect SSE even on error
                 sseStore.disconnect();
             }
@@ -100,7 +104,7 @@ function createUserStore() {
                     update(state => ({ ...state, user: null, state: 'unauthenticated', error: null }));
                 }
             } catch (error) {
-                set({ user: null, state: 'unauthenticated', error: null });
+                update(state => ({ ...state, user: null, state: 'unauthenticated', error: null }));
             }
         }
     };

@@ -71,14 +71,20 @@ export class CalendarClient extends AuthorizedHttpClient {
 	 * Select a calendar as the active calendar for the current user
 	 * Uses POST /api/v1/Calendar/{calendarId} endpoint
 	 * This persists the selection to the server so it's restored on next login
-	 * CQRS: Returns void (command accepted), frontend uses optimistic updates
+	 * CQRS: Returns command ID for SSE correlation
 	 *
 	 * @param calendarId - UUID of the calendar to select
+	 * @param commandId - Optional command ID (generated if not provided)
+	 * @returns Command ID for SSE event correlation
 	 */
-	async selectCalendar(calendarId: string): Promise<void> {
+	async selectCalendar(calendarId: string, commandId?: string): Promise<string> {
+		const id = commandId || crypto.randomUUID();
+
 		const response = await this.request<void>(
 			HttpMethod.POST,
-			`/api/v1/Calendar/${calendarId}`
+			`/api/v1/Calendar/${calendarId}`,
+			undefined,
+			{ headers: { 'X-Command-ID': id } }
 		);
 
 		if (!response.ok) {
@@ -92,20 +98,27 @@ export class CalendarClient extends AuthorizedHttpClient {
 
 			throw new Error('Failed to select calendar');
 		}
+
+		return id;
 	}
 
 	/**
 	 * Create a new calendar
 	 * Uses POST /api/v1/Calendar endpoint
-	 * CQRS: Returns void (command accepted), frontend uses optimistic updates
+	 * CQRS: Returns command ID for SSE correlation
 	 *
 	 * @param calendar - CreateCalendarDto with all required fields
+	 * @param commandId - Optional command ID (generated if not provided)
+	 * @returns Command ID for SSE event correlation
 	 */
-	async createCalendar(calendar: CreateCalendarDto): Promise<void> {
+	async createCalendar(calendar: CreateCalendarDto, commandId?: string): Promise<string> {
+		const id = commandId || crypto.randomUUID();
+
 		const response = await this.request<void>(
 			HttpMethod.POST,
 			'/api/v1/Calendar',
-			calendar
+			calendar,
+			{ headers: { 'X-Command-ID': id } }
 		);
 
 		if (!response.ok) {
@@ -129,21 +142,28 @@ export class CalendarClient extends AuthorizedHttpClient {
 
 			throw new Error('Failed to create calendar');
 		}
+
+		return id;
 	}
 
 	/**
 	 * Update an existing calendar
 	 * Uses PUT /api/v1/Calendar/{calendarId} endpoint
-	 * CQRS: Returns void (command accepted), frontend uses optimistic updates
+	 * CQRS: Returns command ID for SSE correlation
 	 *
 	 * @param calendarId - UUID of the calendar to update
 	 * @param updates - EditCalendarDto with partial/nullable fields
+	 * @param commandId - Optional command ID (generated if not provided)
+	 * @returns Command ID for SSE event correlation
 	 */
-	async updateCalendar(calendarId: string, updates: EditCalendarDto): Promise<void> {
+	async updateCalendar(calendarId: string, updates: EditCalendarDto, commandId?: string): Promise<string> {
+		const id = commandId || crypto.randomUUID();
+
 		const response = await this.request<void>(
 			HttpMethod.PUT,
 			`/api/v1/Calendar/${calendarId}`,
-			updates
+			updates,
+			{ headers: { 'X-Command-ID': id } }
 		);
 
 		if (!response.ok) {
@@ -172,19 +192,27 @@ export class CalendarClient extends AuthorizedHttpClient {
 
 			throw new Error('Failed to update calendar');
 		}
+
+		return id;
 	}
 
 	/**
 	 * Delete a calendar
 	 * Uses DELETE /api/v1/Calendar/{calendarId} endpoint
+	 * CQRS: Returns command ID for SSE correlation
 	 *
 	 * @param calendarId - UUID of the calendar to delete
-	 * @returns void (throws on error)
+	 * @param commandId - Optional command ID (generated if not provided)
+	 * @returns Command ID for SSE event correlation
 	 */
-	async deleteCalendar(calendarId: string): Promise<void> {
+	async deleteCalendar(calendarId: string, commandId?: string): Promise<string> {
+		const id = commandId || crypto.randomUUID();
+
 		const response = await this.request<boolean>(
 			HttpMethod.DELETE,
-			`/api/v1/Calendar/${calendarId}`
+			`/api/v1/Calendar/${calendarId}`,
+			undefined,
+			{ headers: { 'X-Command-ID': id } }
 		);
 
 		if (!response.ok) {
@@ -196,5 +224,7 @@ export class CalendarClient extends AuthorizedHttpClient {
 			console.error('Failed to delete calendar:', response.data);
 			throw new Error(`Failed to delete calendar: ${response.data.title || 'Unknown error'}`);
 		}
+
+		return id;
 	}
 }

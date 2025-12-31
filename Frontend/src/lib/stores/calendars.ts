@@ -3,6 +3,7 @@ import type { CalendarDto, CreateCalendarDto } from '$lib/types/api/calendar';
 import { CalendarClient } from '$lib/utils/calendarClient';
 import { userStore } from './user';
 import { sseStore } from './sse';
+import { toastStore } from './toast';
 import type {
 	CreateCalendarEvent,
 	EditCalendarEvent,
@@ -67,6 +68,9 @@ function createCalendarsStore() {
 					calendars: [...state.calendars, createEvent.calendar]
 				};
 			});
+
+			// Show success toast
+			toastStore.success(`Calendar "${createEvent.calendar.title}" created`, 3000);
 		});
 
 		// Handle EditCalendar events
@@ -80,6 +84,9 @@ function createCalendarsStore() {
 					c.id === editEvent.calendar.id ? editEvent.calendar : c
 				)
 			}));
+
+			// Show success toast
+			toastStore.success(`Calendar "${editEvent.calendar.title}" updated`, 3000);
 		});
 
 		// Handle DeleteCalendar events
@@ -104,6 +111,9 @@ function createCalendarsStore() {
 					activeCalendarId: newActiveCalendarId
 				};
 			});
+
+			// Show success toast
+			toastStore.success(`Calendar "${deleteEvent.calendarTitle}" deleted`, 3000);
 		});
 
 		// Handle SelectCalendar events
@@ -201,131 +211,51 @@ function createCalendarsStore() {
 
 		/**
 		 * Create a new calendar
-		 * CQRS: Uses optimistic updates with temp ID, returns constructed CalendarDto
+		 * CQRS: Fire-and-forget pattern - sends command and returns immediately
+		 * State will be updated via SSE event handler when server confirms
 		 * @param calendar - CreateCalendarDto with title and color
 		 */
-		async createCalendar(calendar: CreateCalendarDto): Promise<CalendarDto> {
+		async createCalendar(calendar: CreateCalendarDto): Promise<void> {
 			const client = new CalendarClient();
 
-			// Generate temp ID for optimistic update
-			const tempId = crypto.randomUUID();
-			const user = get(userStore).user;
-			if (!user) {
-				throw new Error('User not authenticated');
-			}
+			// Send command (fire and forget)
+			await client.createCalendar(calendar);
 
-			const optimisticCalendar: CalendarDto = {
-				id: tempId,
-				title: calendar.title,
-				color: calendar.color,
-				owner: {
-					userId: user.userId,
-					userName: user.userName,
-					profile: user.profile
-				}
-			};
-
-			// Optimistic update - add to state immediately
-			update((state) => ({
-				...state,
-				calendars: [...state.calendars, optimisticCalendar],
-				// Always set as active - backend automatically selects newly created calendars
-				activeCalendarId: tempId
-			}));
-
-			try {
-				// Send command (returns void in CQRS)
-				await client.createCalendar(calendar);
-
-				// Return optimistic calendar for toast display
-				return optimisticCalendar;
-			} catch (error) {
-				// Rollback optimistic update on error
-				update((state) => {
-					const filteredCalendars = state.calendars.filter((c) => c.id !== tempId);
-					return {
-						...state,
-						calendars: filteredCalendars,
-						activeCalendarId: filteredCalendars[0]?.id || null
-					};
-				});
-				throw error;
-			}
+			// Return immediately - SSE handler will update state when event arrives
 		},
 
 		/**
 		 * Update an existing calendar
-		 * CQRS: Uses optimistic updates, returns constructed CalendarDto
+		 * CQRS: Fire-and-forget pattern - sends command and returns immediately
+		 * State will be updated via SSE event handler when server confirms
 		 * @param calendarId - ID of the calendar to update
 		 * @param updates - EditCalendarDto with partial updates
 		 */
 		async updateCalendar(
 			calendarId: string,
 			updates: { title?: string | null; color?: string | null }
-		): Promise<CalendarDto> {
+		): Promise<void> {
 			const client = new CalendarClient();
 
-			// Get current calendar for rollback
-			const currentState = get({ subscribe });
-			const existingCalendar = currentState.calendars.find((c) => c.id === calendarId);
-			if (!existingCalendar) {
-				throw new Error('Calendar not found');
-			}
+			// Send command (fire and forget)
+			await client.updateCalendar(calendarId, updates);
 
-			// Construct updated calendar
-			const updatedCalendar: CalendarDto = {
-				...existingCalendar,
-				...(updates.title !== undefined && updates.title !== null && { title: updates.title }),
-				...(updates.color !== undefined && updates.color !== null && { color: updates.color })
-			};
-
-			// Optimistic update
-			update((state) => ({
-				...state,
-				calendars: state.calendars.map((c) => (c.id === calendarId ? updatedCalendar : c))
-			}));
-
-			try {
-				// Send command (returns void in CQRS)
-				await client.updateCalendar(calendarId, updates);
-
-				// Return updated calendar for toast display
-				return updatedCalendar;
-			} catch (error) {
-				// Rollback on error
-				update((state) => ({
-					...state,
-					calendars: state.calendars.map((c) => (c.id === calendarId ? existingCalendar : c))
-				}));
-				throw error;
-			}
+			// Return immediately - SSE handler will update state when event arrives
 		},
 
 		/**
 		 * Delete a calendar
+		 * CQRS: Fire-and-forget pattern - sends command and returns immediately
+		 * State will be updated via SSE event handler when server confirms
 		 * @param calendarId - ID of the calendar to delete
 		 */
 		async deleteCalendar(calendarId: string): Promise<void> {
 			const client = new CalendarClient();
+
+			// Send command (fire and forget)
 			await client.deleteCalendar(calendarId);
 
-			update((state) => {
-				const newCalendars = state.calendars.filter((c) => c.id !== calendarId);
-
-				// If we deleted the active calendar, switch to first available calendar
-				const newActiveCalendarId =
-					state.activeCalendarId === calendarId
-						? newCalendars.length > 0
-							? newCalendars[0].id
-							: null
-						: state.activeCalendarId;
-
-				return {
-					...state,
-					calendars: newCalendars,
-					activeCalendarId: newActiveCalendarId
-				};
-			});
+			// Return immediately - SSE handler will update state when event arrives
 		},
 
 		/**

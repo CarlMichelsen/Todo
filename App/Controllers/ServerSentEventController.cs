@@ -1,46 +1,72 @@
 ﻿using System.Net.ServerSentEvents;
-using Application.Extensions;
+using System.Runtime.CompilerServices;
+using System.Threading.Channels;
 using Microsoft.AspNetCore.Authorization;
-using Microsoft.AspNetCore.Http.HttpResults;
 using Microsoft.AspNetCore.Mvc;
 using Presentation.SSE;
+using Presentation.SSE.Connection;
 
 namespace App.Controllers;
 
 [Authorize]
 [ApiController]
 [Route("api/v1/[controller]")]
-public class ServerSentEventController(
-    IHttpContextAccessor httpContextAccessor,
-    IServerEventBuffer serverEventBuffer)
+public class ServerSentEventController(IConnectionManager connectionManager) : ControllerBase
 {
     [HttpGet]
     [Produces("text/event-stream")]
     [ProducesResponseType<IAsyncEnumerable<BaseServerEvent>>(StatusCodes.Status200OK)]
-    public ServerSentEventsResult<BaseServerEvent> Events(
+    public IResult Events(
+        [FromQuery] Guid connectionId,
         [FromHeader(Name = "Last-Event-ID")] string? lastEventId,
         CancellationToken cancellationToken)
     {
-        var user = httpContextAccessor.GetJwtUser();
-
-        async IAsyncEnumerable<SseItem<BaseServerEvent>> StreamEvents()
+        return TypedResults.ServerSentEvents(StreamEvents(cancellationToken));
+        
+        async IAsyncEnumerable<SseItem<BaseServerEvent>> StreamEvents([EnumeratorCancellation] CancellationToken ct)
         {
-            if (Guid.TryParse(lastEventId, out var lastEventGuid))
+            var connection = await connectionManager.GetOrCreateConnection(
+                connectionId,
+                ct);
+            
+            var withLastEventId = Guid.TryParse(lastEventId, out var lastEventGuid);
+            if (!await connectionManager.TryConnect(connection, withLastEventId ? lastEventGuid : null, ct))
             {
-                var missingEvents = serverEventBuffer.GetUserEventsAfter(user.UserId, lastEventGuid, cancellationToken);
-                foreach (var serverEvent in missingEvents)
-                {
-                    yield return serverEvent;
-                }
+                yield break;
             }
 
-            var realTimeEvents = serverEventBuffer.GetUserEventStream(user.UserId, cancellationToken);
-            await foreach (var serverEvent in realTimeEvents)
+            try
             {
-                yield return serverEvent;
+                // Listen to events here
+                var reader = connection.ConnectionReader!;
+                while (await WaitToRead(reader, ct))
+                {
+                    var serverSentEvent = await reader.ReadAsync(ct);
+                    yield return new SseItem<BaseServerEvent>(serverSentEvent, serverSentEvent.EventName)
+                    {
+                        EventId = serverSentEvent.EventId.ToString()
+                    };
+                }
+            }
+            finally
+            {
+                await connectionManager.TryDisconnect(connection, null, ct);
             }
         }
         
-        return TypedResults.ServerSentEvents(StreamEvents());
+        async ValueTask<bool> WaitToRead(ChannelReader<BaseServerEvent> channelReader, CancellationToken ct)
+        {
+            using var tokenSource = CancellationTokenSource.CreateLinkedTokenSource(ct);
+            try
+            {
+                return await channelReader.WaitToReadAsync(tokenSource.Token);
+            }
+            catch (ChannelClosedException)
+            {
+                await tokenSource.CancelAsync();
+            }
+
+            return false;
+        }
     }
 }

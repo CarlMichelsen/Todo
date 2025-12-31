@@ -14,9 +14,12 @@
 	import { userStore } from '$lib/stores/user';
 	import { calendarsStore } from '$lib/stores/calendars';
 
+	// Generate unique connection ID for this app session (for SSE multi-tab support)
+	const connectionId = crypto.randomUUID();
+
 	// Initialize user authentication and calendars on app startup
 	onMount(async () => {
-		await userStore.initialize();
+		await userStore.initialize(connectionId);
 
 		// Initialize calendars if user is authenticated
 		if ($userStore.state === 'authenticated') {

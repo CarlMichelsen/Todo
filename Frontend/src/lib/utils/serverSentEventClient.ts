@@ -6,6 +6,7 @@ import type { ServerEvent } from '$lib/types/api/sse';
  */
 export class ServerSentEventClient {
 	private eventSource: EventSource | null = null;
+	private connectionId: string | null = null;
 	private reconnectAttempts = 0;
 	private maxReconnectAttempts = 5;
 	private reconnectDelay = 1000; // Start with 1 second
@@ -15,7 +16,12 @@ export class ServerSentEventClient {
 	private connectionStateListeners: Set<(connected: boolean) => void> = new Set();
 	private isConnected = false;
 
-	constructor(private baseUrl: string = import.meta.env.VITE_API_URL || '') {}
+	constructor(
+		private baseUrl: string = import.meta.env.VITE_API_URL || '',
+		connectionId?: string
+	) {
+		this.connectionId = connectionId || null;
+	}
 
 	/**
 	 * Connect to the SSE endpoint
@@ -28,7 +34,14 @@ export class ServerSentEventClient {
 			this.disconnect();
 		}
 
-		const url = `${this.baseUrl}/api/v1/ServerSentEvent`;
+		// Build URL with connectionId query parameter
+		let url = `${this.baseUrl}/api/v1/ServerSentEvent`;
+
+		if (this.connectionId) {
+			url += `?connectionId=${encodeURIComponent(this.connectionId)}`;
+			console.log('SSE: Connecting with connection ID:', this.connectionId);
+		}
+
 		console.log('SSE: Connecting to', url);
 
 		try {

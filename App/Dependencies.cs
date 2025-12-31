@@ -13,6 +13,7 @@ using Presentation;
 using Presentation.Client;
 using Presentation.Service;
 using Presentation.SSE;
+using Presentation.SSE.Connection;
 
 namespace App;
 
@@ -93,12 +94,13 @@ public static class Dependencies
         
         // SSE Channel
         builder.Services
+            .AddScoped<IConnectionManager, ConnectionManager>()
             .AddSingleton(_ => Channel.CreateUnbounded<SseItem<BaseServerEvent>>(new UnboundedChannelOptions
             {
                 SingleReader = true,
                 AllowSynchronousContinuations = false,
             }))
-            .AddSingleton<IServerEventBuffer, ServerEventBuffer>();
+            .AddSingleton<IConnectionRegistry, ConnectionRegistry>();
         
         // Client
         builder.Services

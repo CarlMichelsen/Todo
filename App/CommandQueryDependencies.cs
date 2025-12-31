@@ -21,6 +21,7 @@ public static class CommandQueryDependencies
         
         // ServerSentEvent
         builder.Services
+            .AddCommandHandler<ReplayEventsForConnectionCommandHandler, ReplayEventsForConnectionCommand>()
             .AddCommandHandler<DispatchEventCommandHandler, DispatchEventCommand>();
         
         // Calendar
