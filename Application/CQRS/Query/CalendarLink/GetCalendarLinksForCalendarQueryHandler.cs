@@ -18,7 +18,7 @@ public class GetCalendarLinksForCalendarQueryHandler(
         var calendarEntity = await databaseContext
             .Calendar
             .Include(x => x.CalendarLinks)
-            .Include(x => x.Owner)
+                .ThenInclude(x => x.User)
             .AsNoTracking()
             .FirstOrDefaultAsync(c => c.OwnerId! == query.User.UserId && c.Id == query.CalendarId, cancellationToken);
 

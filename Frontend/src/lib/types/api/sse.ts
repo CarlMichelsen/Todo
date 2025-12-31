@@ -1,4 +1,5 @@
 import type { CalendarDto } from './calendar';
+import type { CalendarLinkDto } from './calendarLink';
 
 /**
  * Base interface for all server-sent events
@@ -43,10 +44,39 @@ export interface SelectCalendarEvent extends BaseServerEvent {
 }
 
 /**
+ * Event sent when a calendar link is created
+ */
+export interface CreateCalendarLinkEvent extends BaseServerEvent {
+	eventName: 'CreateCalendarLink';
+	calendarLink: CalendarLinkDto;
+}
+
+/**
+ * Event sent when a calendar link is edited
+ */
+export interface EditCalendarLinkEvent extends BaseServerEvent {
+	eventName: 'EditCalendarLink';
+	calendarLink: CalendarLinkDto;
+}
+
+/**
+ * Event sent when a calendar link is deleted
+ */
+export interface DeleteCalendarLinkEvent extends BaseServerEvent {
+	eventName: 'DeleteCalendarLink';
+	calendarLinkId: string;
+	title: string;
+	productId: string | null;
+}
+
+/**
  * Union type of all possible server events
  */
 export type ServerEvent =
 	| CreateCalendarEvent
 	| EditCalendarEvent
 	| DeleteCalendarEvent
-	| SelectCalendarEvent;
+	| SelectCalendarEvent
+	| CreateCalendarLinkEvent
+	| EditCalendarLinkEvent
+	| DeleteCalendarLinkEvent;

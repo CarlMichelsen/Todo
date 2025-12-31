@@ -3,7 +3,6 @@
 	import ConfirmModal from '$lib/components/modals/ConfirmModal.svelte';
 	import { calendarsStore } from '$lib/stores/calendars';
 	import { toastStore } from '$lib/stores/toast';
-	import { CalendarLinkClient } from '$lib/utils/calendarLinkClient';
 	import type { CalendarDto } from '$lib/types/api/calendar';
 
 	interface Props {
@@ -24,10 +23,10 @@
 	let showDeleteConfirm = $state(false);
 	let isDeleting = $state(false);
 
-	// Calendar links state
-	let calendarLinks = $state<CalendarDto[]>([]);
-	let isLoadingLinks = $state(false);
-	let linkError = $state<string | null>(null);
+	// Calendar links from store
+	const calendarLinks = $derived($calendarsStore.calendarLinks);
+
+	// Calendar link form state
 	let showAddLinkForm = $state(false);
 	let newLinkTitle = $state('');
 	let newLinkUrl = $state('');
@@ -57,20 +56,7 @@
 	async function loadCalendarLinks() {
 		if (!calendar) return;
 
-		isLoadingLinks = true;
-		linkError = null;
-
-		try {
-			const client = new CalendarLinkClient();
-			const links = await client.getCalendarLinks();
-			// Filter links that are associated with this calendar
-			// Note: Backend should handle filtering, but we can do it client-side too
-			calendarLinks = links;
-		} catch (error) {
-			linkError = error instanceof Error ? error.message : 'Failed to load links';
-		} finally {
-			isLoadingLinks = false;
-		}
+		await calendarsStore.loadCalendarLinks(calendar.id);
 	}
 
 	// Add new calendar link
@@ -78,17 +64,13 @@
 		if (!calendar || !newLinkTitle.trim() || !newLinkUrl.trim()) return;
 
 		try {
-			const client = new CalendarLinkClient();
-			await client.createCalendarLink(calendar.id, {
+			await calendarsStore.createCalendarLink(calendar.id, {
 				title: newLinkTitle.trim(),
 				calendarLink: newLinkUrl.trim(),
 				color: newLinkColor
 			});
 
-			// Reload links
-			await loadCalendarLinks();
-
-			// Reset form
+			// Reset form immediately (SSE will update state)
 			newLinkTitle = '';
 			newLinkUrl = '';
 			newLinkColor = '#ea580c';
@@ -102,9 +84,8 @@
 	// Delete calendar link
 	async function handleDeleteLink(linkId: string) {
 		try {
-			const client = new CalendarLinkClient();
-			await client.deleteCalendarLink(linkId);
-			await loadCalendarLinks();
+			await calendarsStore.deleteCalendarLink(linkId);
+			// State will update via SSE event automatically
 		} catch (error) {
 			const errorMessage =
 				error instanceof Error ? error.message : 'Failed to remove calendar link';
@@ -332,11 +313,7 @@
 				{/if}
 
 				<!-- Links List -->
-				{#if isLoadingLinks}
-					<p class="text-gray-500 dark:text-gray-400 text-sm">Loading links...</p>
-				{:else if linkError}
-					<p class="text-red-500 dark:text-red-400 text-sm">{linkError}</p>
-				{:else if calendarLinks.length === 0}
+				{#if calendarLinks.length === 0}
 					<p class="text-gray-500 dark:text-gray-400 text-sm">No linked calendars</p>
 				{:else}
 					<div class="space-y-2">

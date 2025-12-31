@@ -1,14 +1,14 @@
 import { AuthorizedHttpClient } from './authorizedHttpClient';
 import { HttpMethod } from './httpClient';
-import type { CalendarDto } from '$lib/types/api/calendar';
-import type { CreateCalendarLinkDto, EditCalendarLinkDto } from '$lib/types/api/calendarLink';
+import type { CalendarLinkDto, CreateCalendarLinkDto, EditCalendarLinkDto } from '$lib/types/api/calendarLink';
 
 export class CalendarLinkClient extends AuthorizedHttpClient {
 	/**
+	 * @deprecated Use getCalendarLinksForCalendar() instead
 	 * Get all calendar links for the current user
 	 */
-	async getCalendarLinks(): Promise<CalendarDto[]> {
-		const response = await this.request<CalendarDto[]>(
+	async getCalendarLinks(): Promise<CalendarLinkDto[]> {
+		const response = await this.request<CalendarLinkDto[]>(
 			HttpMethod.GET,
 			'/api/v1/CalendarLink'
 		);
@@ -21,10 +21,27 @@ export class CalendarLinkClient extends AuthorizedHttpClient {
 	}
 
 	/**
+	 * Get calendar links for a specific parent calendar
+	 * Uses GET /api/v1/CalendarLink/calendar/{calendarId}
+	 */
+	async getCalendarLinksForCalendar(calendarId: string): Promise<CalendarLinkDto[]> {
+		const response = await this.request<CalendarLinkDto[]>(
+			HttpMethod.GET,
+			`/api/v1/CalendarLink/calendar/${calendarId}`
+		);
+
+		if (!response.ok) {
+			throw new Error('Failed to fetch calendar links');
+		}
+
+		return response.data ?? [];
+	}
+
+	/**
 	 * Get a specific calendar link by ID
 	 */
-	async getCalendarLink(calendarLinkId: string): Promise<CalendarDto> {
-		const response = await this.request<CalendarDto>(
+	async getCalendarLink(calendarLinkId: string): Promise<CalendarLinkDto> {
+		const response = await this.request<CalendarLinkDto>(
 			HttpMethod.GET,
 			`/api/v1/CalendarLink/${calendarLinkId}`
 		);
@@ -46,15 +63,20 @@ export class CalendarLinkClient extends AuthorizedHttpClient {
 
 	/**
 	 * Create a new calendar link associated with a parent calendar
+	 * CQRS: Fire-and-forget - returns immediately, state updates via SSE
 	 */
 	async createCalendarLink(
 		initialParentCalendarId: string,
-		calendarLink: CreateCalendarLinkDto
-	): Promise<CalendarDto> {
-		const response = await this.request<CalendarDto, CreateCalendarLinkDto>(
+		calendarLink: CreateCalendarLinkDto,
+		commandId?: string
+	): Promise<string> {
+		const id = commandId || crypto.randomUUID();
+
+		const response = await this.request<void, CreateCalendarLinkDto>(
 			HttpMethod.POST,
 			`/api/v1/CalendarLink/${initialParentCalendarId}`,
-			calendarLink
+			calendarLink,
+			{ headers: { 'X-Command-ID': id } }
 		);
 
 		if (response.status === 400) {
@@ -65,24 +87,25 @@ export class CalendarLinkClient extends AuthorizedHttpClient {
 			throw new Error('Failed to create calendar link');
 		}
 
-		if (!response.data) {
-			throw new Error('Failed to create calendar link: No data returned');
-		}
-
-		return response.data;
+		return id;
 	}
 
 	/**
 	 * Update an existing calendar link
+	 * CQRS: Fire-and-forget - returns immediately, state updates via SSE
 	 */
 	async updateCalendarLink(
 		calendarLinkId: string,
-		updates: EditCalendarLinkDto
-	): Promise<CalendarDto> {
-		const response = await this.request<CalendarDto, EditCalendarLinkDto>(
+		updates: EditCalendarLinkDto,
+		commandId?: string
+	): Promise<string> {
+		const id = commandId || crypto.randomUUID();
+
+		const response = await this.request<void, EditCalendarLinkDto>(
 			HttpMethod.PUT,
 			`/api/v1/CalendarLink/${calendarLinkId}`,
-			updates
+			updates,
+			{ headers: { 'X-Command-ID': id } }
 		);
 
 		if (response.status === 404) {
@@ -97,11 +120,7 @@ export class CalendarLinkClient extends AuthorizedHttpClient {
 			throw new Error('Failed to update calendar link');
 		}
 
-		if (!response.data) {
-			throw new Error('Failed to update calendar link: No data returned');
-		}
-
-		return response.data;
+		return id;
 	}
 
 	/**

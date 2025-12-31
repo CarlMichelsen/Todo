@@ -39,7 +39,7 @@ public class CalendarLinkController(
     }
     
     [HttpPost("{initialParentCalendarId:guid}")]
-    public async Task<ActionResult<CalendarDto>> CreateCalenderLink(
+    public async Task<ActionResult> CreateCalenderLink(
         [FromRoute] Guid initialParentCalendarId,
         [FromBody] CreateCalendarLinkDto createCalendarLinkDto,
         CancellationToken cancellationToken)
@@ -49,7 +49,7 @@ public class CalendarLinkController(
     }
     
     [HttpPut("{calendarLinkId:guid}")]
-    public async Task<ActionResult<CalendarDto>> EditCalendarLink(
+    public async Task<ActionResult> EditCalendarLink(
         [FromRoute] Guid calendarLinkId,
         [FromBody] EditCalendarLinkDto editCalendarLinkDto,
         CancellationToken cancellationToken)
