@@ -27,7 +27,7 @@
 	let calendarStoreState = $state<CalendarStoreState>();
 
 	// Calendar
-	let calendar = $derived(calendarStoreState?.editingCalendarId ? calendarStoreState?.calendars.find(c => c.id == calendarStoreState!.editingCalendarId) ?? null : null)
+	let calendar = $derived(!!calendarStoreState?.editingCalendarId ? calendarStoreState?.calendars.find(c => c.id == calendarStoreState!.editingCalendarId) ?? null : null)
 
 	$effect(() => {
 		// Subscribe to store changes
@@ -153,6 +153,7 @@
 			toastStore.error(errorMessage, 5000);
 		} finally {
 			isDeleting = false;
+			calendarsStore.setEditingCalendar(null);
 		}
 	}
 
@@ -180,6 +181,7 @@
 	size="md"
 	submitText="Save Changes"
 	onSubmit={handleSubmit}
+	onCancel={() => calendarsStore.setEditingCalendar(null)}
 >
 	{#snippet formContent()}
 		<!-- Error banner -->
