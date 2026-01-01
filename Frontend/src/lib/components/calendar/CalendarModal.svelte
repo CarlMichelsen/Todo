@@ -1,8 +1,8 @@
 <script lang="ts">
 	import FormModal from '$lib/components/modals/FormModal.svelte';
-	import { calendarsStore } from '$lib/stores/calendars';
 	import { toastStore } from '$lib/stores/toast';
 	import type { CreateCalendarDto } from '$lib/types/api/calendar';
+	import { CalendarClient } from '$lib/utils/calendarClient';
 
 	interface Props {
 		isOpen?: boolean;
@@ -48,7 +48,7 @@
 				title: title.trim(),
 				color: color
 			};
-			await calendarsStore.createCalendar(createDto);
+			await new CalendarClient().createCalendar(createDto);
 			resetForm();
 			return true; // Close modal
 		} catch (error) {

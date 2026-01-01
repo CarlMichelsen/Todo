@@ -7,10 +7,10 @@
 		storeState.calendars.find((c) => c.id === storeState.activeCalendarId)
 	);
 
-	let isEditModalOpen = $state(false);
+	let isEditModalOpen = $derived(!!storeState.editingCalendarId);
 
 	function handleEditCalendar() {
-		isEditModalOpen = true;
+		calendarsStore.setEditingCalendar(storeState.activeCalendarId);
 	}
 </script>
 
@@ -44,5 +44,5 @@
 
 <!-- Edit Modal -->
 {#if activeCalendar}
-	<CalendarEditModal bind:isOpen={isEditModalOpen} calendar={activeCalendar} />
+	<CalendarEditModal bind:isOpen={isEditModalOpen} />
 {/if}

@@ -1,3 +1,5 @@
+import { CalendarLinkDto } from "./calendarLink";
+
 /**
  * Simplified user representation used in Calendar and Event DTOs
  */
@@ -20,6 +22,8 @@ export interface CalendarDto {
 	title: string;
 	/** Hex color code (e.g., "#ea580c") */
 	color: string;
+	/** CalendarLinks */
+	calendarLinks: CalendarLinkDto[];
 	/** Calendar owner information */
 	owner: UserDto;
 }

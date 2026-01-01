@@ -20,6 +20,7 @@ public class GetAllCalendarLinksForUserQueryHandler(
         var results = await databaseContext
             .CalendarLink
             .Include(cl => cl.User)
+            .Include(cl => cl.Calendars)
             .Where(cl => cl.UserId == query.User.UserId)
             .OrderByDescending(cl => cl.CreatedAt)
             .Take(MaxResults)

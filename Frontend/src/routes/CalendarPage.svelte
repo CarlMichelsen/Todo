@@ -41,9 +41,6 @@
 		url.searchParams.set('weekStart', dateStr);
 		window.history.pushState({}, '', url);
 	}
-
-	// Note: calendarsStore is initialized in App.svelte on mount
-	// No need to re-initialize here
 </script>
 
 <div class="w-full px-4 py-8 h-full">

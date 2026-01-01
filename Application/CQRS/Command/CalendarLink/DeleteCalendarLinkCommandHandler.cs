@@ -32,6 +32,7 @@ public class DeleteCalendarLinkCommandHandler(
         
         calendarLinkEntity.Calendars.Clear();
         databaseContext.CalendarLink.Remove(calendarLinkEntity);
+        await databaseContext.SaveChangesAsync(cancellationToken);
         
         logger.LogUsernameUserIdMethodNameEventId(
             command.User.Username,

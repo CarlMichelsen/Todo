@@ -2,15 +2,16 @@
 	import FormModal from '$lib/components/modals/FormModal.svelte';
 	import ConfirmModal from '$lib/components/modals/ConfirmModal.svelte';
 	import { calendarsStore } from '$lib/stores/calendars';
+	import type { CalendarStoreState } from '$lib/stores/calendars';
 	import { toastStore } from '$lib/stores/toast';
-	import type { CalendarDto } from '$lib/types/api/calendar';
+	import { CalendarLinkClient } from '$lib/utils/calendarLinkClient';
+	import { CalendarClient } from '$lib/utils/calendarClient';
 
 	interface Props {
-		isOpen?: boolean;
-		calendar?: CalendarDto;
+		isOpen: boolean;
 	}
 
-	let { isOpen = $bindable(false), calendar }: Props = $props();
+	let { isOpen = $bindable(false) }: Props = $props();
 
 	// Form state
 	let title = $state('');
@@ -23,8 +24,20 @@
 	let showDeleteConfirm = $state(false);
 	let isDeleting = $state(false);
 
-	// Calendar links from store
-	const calendarLinks = $derived($calendarsStore.calendarLinks);
+	let calendarStoreState = $state<CalendarStoreState>();
+
+	// Calendar
+	let calendar = $derived(calendarStoreState?.editingCalendarId ? calendarStoreState?.calendars.find(c => c.id == calendarStoreState!.editingCalendarId) ?? null : null)
+
+	$effect(() => {
+		// Subscribe to store changes
+		const unsubscribe = calendarsStore.subscribe((state) => {
+			calendarStoreState = state;
+		});
+		return unsubscribe;
+	});
+
+	const calendarLinks = $derived.by(() => calendar?.calendarLinks ?? []);
 
 	// Calendar link form state
 	let showAddLinkForm = $state(false);
@@ -52,23 +65,19 @@
 		}
 	});
 
-	// Load calendar links when modal opens
-	async function loadCalendarLinks() {
-		if (!calendar) return;
-
-		await calendarsStore.loadCalendarLinks(calendar.id);
-	}
 
 	// Add new calendar link
 	async function handleAddLink() {
 		if (!calendar || !newLinkTitle.trim() || !newLinkUrl.trim()) return;
 
 		try {
-			await calendarsStore.createCalendarLink(calendar.id, {
-				title: newLinkTitle.trim(),
-				calendarLink: newLinkUrl.trim(),
-				color: newLinkColor
-			});
+			await new CalendarLinkClient().createCalendarLink(
+				calendar.id,
+				{
+					title: newLinkTitle.trim(),
+					calendarLink: newLinkUrl.trim(),
+					color: newLinkColor
+				});
 
 			// Reset form immediately (SSE will update state)
 			newLinkTitle = '';
@@ -84,7 +93,7 @@
 	// Delete calendar link
 	async function handleDeleteLink(linkId: string) {
 		try {
-			await calendarsStore.deleteCalendarLink(linkId);
+			await new CalendarLinkClient().deleteCalendarLink(linkId);
 			// State will update via SSE event automatically
 		} catch (error) {
 			const errorMessage =
@@ -93,12 +102,6 @@
 		}
 	}
 
-	// Load calendar links when modal opens
-	$effect(() => {
-		if (isOpen && calendar) {
-			loadCalendarLinks();
-		}
-	});
 
 	function validateForm(): boolean {
 		const newErrors: Record<string, string> = {};
@@ -121,7 +124,7 @@
 				title: title.trim(),
 				color: color
 			};
-			await calendarsStore.updateCalendar(calendar.id, updates);
+			await new CalendarClient().updateCalendar(calendar.id, updates);
 			return true; // Close modal
 		} catch (error) {
 			const errorMessage = error instanceof Error ? error.message : 'Failed to update calendar';
@@ -142,7 +145,7 @@
 
 		isDeleting = true;
 		try {
-			await calendarsStore.deleteCalendar(calendar.id);
+			await new CalendarClient().deleteCalendar(calendar.id);
 			showDeleteConfirm = false;
 			isOpen = false;
 		} catch (error) {

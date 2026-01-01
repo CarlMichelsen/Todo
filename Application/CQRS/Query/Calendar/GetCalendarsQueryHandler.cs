@@ -14,13 +14,15 @@ public class GetCalendarsQueryHandler(DatabaseContext databaseContext)
     
     public async Task<List<CalendarDto>> Handle(GetCalendarsQuery query, CancellationToken cancellationToken)
     {
+        // Tracking is required to combat cyclic dependencies
         var calendars = await databaseContext
             .Calendar
             .Include(c => c.Owner)
+            .Include(c => c.CalendarLinks)
+                .ThenInclude(c => c.Calendars)
             .Where(c => c.OwnerId! == query.User.UserId)
             .OrderByDescending(c => c.LastSelectedAt)
             .Take(MaxResults)
-            .AsNoTracking()
             .ToListAsync(cancellationToken);
 
         return [ ..calendars.Select(CalendarMapper.ToDto) ];

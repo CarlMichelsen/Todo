@@ -80,3 +80,32 @@ export type ServerEvent =
 	| CreateCalendarLinkEvent
 	| EditCalendarLinkEvent
 	| DeleteCalendarLinkEvent;
+
+
+export const SERVER_EVENT_NAMES = [
+  "CreateCalendar",
+  "EditCalendar",
+  "DeleteCalendar",
+  "SelectCalendar",
+  "CreateCalendarLink",
+  "EditCalendarLink",
+  "DeleteCalendarLink",
+] as const satisfies readonly ServerEvent["eventName"][];
+
+
+// The following code makes typescript check that all events in ServerEvent are also present in SERVER_EVENT_NAMES.
+// This is important because the events are registered from SERVER_EVENT_NAMES in ServerSentEventClient.
+export type ServerEventName = typeof SERVER_EVENT_NAMES[number];
+
+// Ensures no missing events
+type AssertAllEventsCovered =
+  Exclude<ServerEvent["eventName"], ServerEventName> extends never
+    ? true
+    : never;
+
+// ⬇ forces the check
+const _assertAllEventsCovered: AssertAllEventsCovered = true;
+
+// Ensures no extra events
+const _assertNoExtraEvents: readonly ServerEvent["eventName"][] =
+  SERVER_EVENT_NAMES;

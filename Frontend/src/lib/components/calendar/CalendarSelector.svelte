@@ -2,6 +2,7 @@
 	import Dropdown from '$lib/components/Dropdown.svelte';
 	import CalendarModal from './CalendarModal.svelte';
 	import { calendarsStore } from '$lib/stores/calendars';
+	import { CalendarClient } from '$lib/utils/calendarClient';
 
 	// Subscribe to store
 	let storeState = $derived($calendarsStore);
@@ -12,8 +13,9 @@
 	// Modal state
 	let isCalendarModalOpen = $state(false);
 
-	function handleCalendarSelect(calendarId: string) {
+	async function handleCalendarSelect(calendarId: string) {
 		void calendarsStore.setActiveCalendar(calendarId);
+		new CalendarClient().selectCalendar(calendarId);
 	}
 
 	function handleNewCalendar() {

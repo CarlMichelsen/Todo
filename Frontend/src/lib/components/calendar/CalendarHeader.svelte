@@ -24,7 +24,6 @@
 		currentDayIndex,
 		weekDates,
 		isMobile,
-		isViewingToday,
 		shouldHighlightPrevious,
 		shouldHighlightNext,
 		onPreviousWeek,

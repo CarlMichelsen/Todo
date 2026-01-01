@@ -1,4 +1,4 @@
-import type { ServerEvent } from '$lib/types/api/sse';
+import { SERVER_EVENT_NAMES, type ServerEvent } from '$lib/types/api/sse';
 
 /**
  * Client for managing Server-Sent Events (SSE) connection
@@ -114,10 +114,7 @@ export class ServerSentEventClient {
 		};
 
 		// Listen for specific event types (calendar events)
-		this.addEventListener('CreateCalendar');
-		this.addEventListener('EditCalendar');
-		this.addEventListener('DeleteCalendar');
-		this.addEventListener('SelectCalendar');
+		SERVER_EVENT_NAMES.forEach(eventName => this.addEventListener(eventName));
 	}
 
 	/**

@@ -1,8 +1,6 @@
 import { writable, get } from 'svelte/store';
-import type { CalendarDto, CreateCalendarDto } from '$lib/types/api/calendar';
+import type { CalendarDto } from '$lib/types/api/calendar';
 import { CalendarClient } from '$lib/utils/calendarClient';
-import { CalendarLinkClient } from '$lib/utils/calendarLinkClient';
-import type { CalendarLinkDto, CreateCalendarLinkDto, EditCalendarLinkDto } from '$lib/types/api/calendarLink';
 import { userStore } from './user';
 import { sseStore } from './sse';
 import { toastStore } from './toast';
@@ -15,11 +13,12 @@ import type {
 	EditCalendarLinkEvent,
 	DeleteCalendarLinkEvent
 } from '$lib/types/api/sse';
+import { distinctBy } from '$lib/utils/distinctBy';
 
 export interface CalendarStoreState {
 	calendars: CalendarDto[];
-	calendarLinks: CalendarLinkDto[];
 	activeCalendarId: string | null;
+	editingCalendarId: string | null;
 	loading: boolean;
 	error: string | null;
 }
@@ -27,8 +26,8 @@ export interface CalendarStoreState {
 function createCalendarsStore() {
 	const { subscribe, set, update } = writable<CalendarStoreState>({
 		calendars: [],
-		calendarLinks: [],
 		activeCalendarId: null,
+		editingCalendarId: null,
 		loading: false,
 		error: null
 	});
@@ -140,17 +139,20 @@ function createCalendarsStore() {
 			console.log('SSE: CreateCalendarLink event received', createEvent);
 
 			update((state) => {
-				// Check if link already exists (avoid duplicates)
-				const exists = state.calendarLinks.some((l) => l.id === createEvent.calendarLink.id);
-				if (exists) {
-					return state; // Skip duplicate
-				}
+				const newCalendars = state.calendars.map(c => {
+					const calendarWithCreatedLink = createEvent.calendarLink.parentCalendars.find(pc => pc == c.id);
+					if (!calendarWithCreatedLink) {
+						return c;
+					}
 
-				// Add new calendar link
+					c.calendarLinks = distinctBy([createEvent.calendarLink, ...c.calendarLinks], cl => cl.id);
+					return c;
+				});
+
 				return {
 					...state,
-					calendarLinks: [...state.calendarLinks, createEvent.calendarLink]
-				};
+					calendars: [...newCalendars]
+				}
 			});
 
 			// Show success toast
@@ -162,12 +164,23 @@ function createCalendarsStore() {
 			const editEvent = event as EditCalendarLinkEvent;
 			console.log('SSE: EditCalendarLink event received', editEvent);
 
-			update((state) => ({
-				...state,
-				calendarLinks: state.calendarLinks.map((l) =>
-					l.id === editEvent.calendarLink.id ? editEvent.calendarLink : l
-				)
-			}));
+			update((state) => {
+				const newCalendars = state.calendars.map(c => {
+					const calendarWithCreatedLink = editEvent.calendarLink.parentCalendars.find(pc => pc == c.id);
+					if (!calendarWithCreatedLink) {
+						return c;
+					}
+
+					c.calendarLinks = distinctBy([editEvent.calendarLink, ...c.calendarLinks], cl => cl.id);
+					return c;
+				});
+
+
+				return {
+					...state,
+					calendars: [...newCalendars]
+				}
+			});
 
 			// Show success toast
 			toastStore.success(`Calendar link "${editEvent.calendarLink.title}" updated`, 3000);
@@ -178,10 +191,17 @@ function createCalendarsStore() {
 			const deleteEvent = event as DeleteCalendarLinkEvent;
 			console.log('SSE: DeleteCalendarLink event received', deleteEvent);
 
-			update((state) => ({
-				...state,
-				calendarLinks: state.calendarLinks.filter((l) => l.id !== deleteEvent.calendarLinkId)
-			}));
+			update((state) => {
+				const newCalendars = state.calendars.map(c => {
+					c.calendarLinks = c.calendarLinks.filter(cl => cl.id !== deleteEvent.calendarLinkId);
+					return c;
+				});
+
+				return {
+					...state,
+					calendars: [...newCalendars]
+				}
+			});
 
 			// Show success toast
 			toastStore.success(`Calendar link "${deleteEvent.title}" deleted`, 3000);
@@ -237,6 +257,15 @@ function createCalendarsStore() {
 			}
 		},
 
+		setEditingCalendar(calendarId: string|null): void  {
+			update((state) => {
+				return {
+					...state,
+					editingCalendarId: calendarId,
+				}
+			});
+		},
+
 		/**
 		 * Set the active calendar and persist to server
 		 * @param calendarId - ID of the calendar to set as active
@@ -256,66 +285,6 @@ function createCalendarsStore() {
 				...s,
 				activeCalendarId: calendarId
 			}));
-
-			// Persist to server
-			try {
-				const client = new CalendarClient();
-				await client.selectCalendar(calendarId);
-				// Server call succeeded - local state already updated
-			} catch (error) {
-				console.error('Failed to persist calendar selection to server:', error);
-				// Keep local state updated even if server call fails
-				// This allows offline usage and graceful degradation
-			}
-		},
-
-		/**
-		 * Create a new calendar
-		 * CQRS: Fire-and-forget pattern - sends command and returns immediately
-		 * State will be updated via SSE event handler when server confirms
-		 * @param calendar - CreateCalendarDto with title and color
-		 */
-		async createCalendar(calendar: CreateCalendarDto): Promise<void> {
-			const client = new CalendarClient();
-
-			// Send command (fire and forget)
-			await client.createCalendar(calendar);
-
-			// Return immediately - SSE handler will update state when event arrives
-		},
-
-		/**
-		 * Update an existing calendar
-		 * CQRS: Fire-and-forget pattern - sends command and returns immediately
-		 * State will be updated via SSE event handler when server confirms
-		 * @param calendarId - ID of the calendar to update
-		 * @param updates - EditCalendarDto with partial updates
-		 */
-		async updateCalendar(
-			calendarId: string,
-			updates: { title?: string | null; color?: string | null }
-		): Promise<void> {
-			const client = new CalendarClient();
-
-			// Send command (fire and forget)
-			await client.updateCalendar(calendarId, updates);
-
-			// Return immediately - SSE handler will update state when event arrives
-		},
-
-		/**
-		 * Delete a calendar
-		 * CQRS: Fire-and-forget pattern - sends command and returns immediately
-		 * State will be updated via SSE event handler when server confirms
-		 * @param calendarId - ID of the calendar to delete
-		 */
-		async deleteCalendar(calendarId: string): Promise<void> {
-			const client = new CalendarClient();
-
-			// Send command (fire and forget)
-			await client.deleteCalendar(calendarId);
-
-			// Return immediately - SSE handler will update state when event arrives
 		},
 
 		/**
@@ -324,78 +293,12 @@ function createCalendarsStore() {
 		clear(): void {
 			set({
 				calendars: [],
-				calendarLinks: [],
 				activeCalendarId: null,
+				editingCalendarId: null,
 				loading: false,
 				error: null
 			});
 		},
-
-		/**
-		 * Load calendar links for a specific parent calendar
-		 * @param calendarId - Parent calendar ID
-		 */
-		async loadCalendarLinks(calendarId: string): Promise<void> {
-			try {
-				const client = new CalendarLinkClient();
-				const links = await client.getCalendarLinksForCalendar(calendarId);
-
-				update((state) => ({
-					...state,
-					calendarLinks: links
-				}));
-			} catch (error) {
-				console.error('Failed to load calendar links:', error);
-				const errorMessage = error instanceof Error ? error.message : 'Failed to load calendar links';
-				toastStore.error(errorMessage, 5000);
-			}
-		},
-
-		/**
-		 * Create a new calendar link
-		 * CQRS: Fire-and-forget - sends command and returns immediately
-		 * State will be updated via SSE event handler
-		 */
-		async createCalendarLink(
-			parentCalendarId: string,
-			link: CreateCalendarLinkDto
-		): Promise<void> {
-			const client = new CalendarLinkClient();
-
-			// Send command (fire and forget)
-			await client.createCalendarLink(parentCalendarId, link);
-
-			// Return immediately - SSE handler will update state when event arrives
-		},
-
-		/**
-		 * Update an existing calendar link
-		 * CQRS: Fire-and-forget
-		 */
-		async updateCalendarLink(
-			calendarLinkId: string,
-			updates: EditCalendarLinkDto
-		): Promise<void> {
-			const client = new CalendarLinkClient();
-
-			// Send command (fire and forget)
-			await client.updateCalendarLink(calendarLinkId, updates);
-
-			// Return immediately - SSE handler will update state
-		},
-
-		/**
-		 * Delete a calendar link
-		 * CQRS: Fire-and-forget
-		 */
-		async deleteCalendarLink(calendarLinkId: string): Promise<void> {
-			const client = new CalendarLinkClient();
-
-			// Send command (fire and forget)
-			await client.deleteCalendarLink(calendarLinkId);
-
-			// Return immediately - SSE handler will update state
-		}
 	};
 }
 

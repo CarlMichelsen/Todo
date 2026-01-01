@@ -14,11 +14,13 @@ public class GetSingleCalendarQueryHandler(DatabaseContext databaseContext)
         GetSingleCalendarQuery query,
         CancellationToken cancellationToken)
     {
+        // Tracking is required to combat cyclic dependencies
         var calendar = await databaseContext
             .Calendar
             .Include(c => c.Owner)
+            .Include(c => c.CalendarLinks)
+                .ThenInclude(c => c.Calendars)
             .Where(c => c.OwnerId! == query.User.UserId && c.Id == query.CalendarId)
-            .AsNoTracking()
             .FirstOrDefaultAsync(cancellationToken);
         
         return calendar?.ToDto();
