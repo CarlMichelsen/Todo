@@ -4,6 +4,8 @@
 
 This is a Svelte 5 Single Page Application (SPA) for a calendar and event management system with user authentication. The app features a complete calendar implementation with week views, multi-day events, overlapping event detection, and full CRUD operations for both calendars and events. It connects to backend services during development and features a modern, responsive UI with dark mode support.
 
+The backend uses **CQRS (Command Query Responsibility Segregation)** architecture with Server-Sent Events (SSE) for real-time synchronization. The migration is in progress: Calendar and CalendarLink services are fully migrated to CQRS, while Event services still use traditional REST patterns.
+
 **IMPORTANT: This is intentionally a SPA using svelte-routing. Do NOT suggest migrating to SvelteKit.**
 
 ## Tech Stack
@@ -25,7 +27,7 @@ src/
    app.css             # Global styles
    lib/
       components/
-         calendar/          # Calendar system (11 components)
+         calendar/          # Calendar system (13 components)
             Calendar.svelte             # Main calendar container with week navigation
             CalendarDay.svelte          # Individual day column with timeline
             CalendarGrid.svelte         # Week grid with event rendering
@@ -36,6 +38,7 @@ src/
             CalendarEditModal.svelte    # Calendar edit/delete modal
             EventModal.svelte           # Event creation/editing modal
             TimeSpanEvent.svelte        # Event display with overlap handling
+            GhostEvent.svelte           # Placeholder event display for overlapping events
             Timeline.svelte             # Hourly timeline (6am-11pm)
          modals/            # Modal component library
             Modal.svelte         # Base modal using HTML5 dialog
@@ -63,8 +66,10 @@ src/
       stores/               # Svelte stores for state management
          user.ts            # User authentication with token management
          darkMode.ts        # Dark mode toggle with localStorage
-         calendars.ts       # Calendar CRUD with optimistic updates
-         events.ts          # Event management with date range queries
+         calendars.ts       # Calendar CRUD with optimistic updates and CQRS/SSE
+         calendarConfig.ts  # Calendar configuration and preferences
+         events.ts          # Event management with date range queries (REST)
+         sse.ts             # Server-Sent Events connection and event handling
          toast.ts           # Toast notification system
       types/                # TypeScript type definitions
          user.ts
@@ -72,20 +77,30 @@ src/
          modal.ts           # ModalSize, ModalProps
          api/
             calendar.ts     # CalendarDto, CreateCalendarDto, EditCalendarDto
+            calendarLink.ts # CalendarLinkDto, CreateCalendarLinkDto, EditCalendarLinkDto
             event.ts        # EventDto, CreateEventDto, EditEventDto, PaginationDto
             error.ts        # Error types
             response.ts     # API response types
+            sse.ts          # Server-sent event type definitions (CQRS)
       utils/                # HTTP clients and utilities
          httpClient.ts               # Base HTTP client
          authorizedHttpClient.ts     # Authenticated requests
          loginClient.ts              # Login/auth endpoints
          userClient.ts               # User data endpoints
-         calendarClient.ts           # Calendar CRUD API
-         eventClient.ts              # Event CRUD API with pagination
+         calendarClient.ts           # Calendar CRUD API (CQRS with SSE)
+         calendarLinkClient.ts       # Calendar Link CRUD API (CQRS with SSE)
+         eventClient.ts              # Event CRUD API with pagination (REST - migration pending)
+         serverSentEventClient.ts    # SSE connection management
          calendarUtils.ts            # Calendar utilities (date math, overlap detection)
          eventConverter.ts           # DTO to internal type conversion
+         distinctBy.ts               # Utility function for array deduplication
          __tests__/
             calendarUtils.test.ts    # Calendar utility tests
+      index.ts                 # Library exports
+   tests/
+      setup.ts               # Test configuration and setup
+   vite-env.d.ts            # Vite environment type definitions
+   main.ts                   # Application entry point
    routes/                  # Page components
       Home.svelte
       ProfilePage.svelte
@@ -168,13 +183,23 @@ The modal system provides:
 
 - **Calendars**: `$lib/stores/calendars.ts`
   - Calendar list and active calendar selection
-  - Full CRUD operations (create, update, delete)
-  - Optimistic updates for instant UI feedback
-  - Server-side calendar selection persistence
+  - Full CRUD operations (create, update, delete) via CQRS commands
+  - SSE event listeners for real-time state synchronization
+  - Optimistic updates for calendar selection (fire-and-forget pattern)
+  - Calendar links embedded in calendar structure
+  - Server-side calendar and calendar link selection persistence
+
+- **Server-Sent Events (SSE)**: `$lib/stores/sse.ts`
+  - EventSource-based real-time connection to `/api/v1/ServerSentEvent`
+  - Automatic reconnection with exponential backoff
+  - Multi-tab support via connection ID
+  - Event listener pattern with specific event names
+  - Pending command tracking with timeout-based promise resolution
 
 - **Events**: `$lib/stores/events.ts`
-  - Event management for date range queries
+  - Event management for date range queries (REST - CQRS migration pending)
   - Automatic reload when calendar or date range changes
+  - Optimistic updates for event operations
   - Loading and error states
   - Empty array initialization (no mock data)
 
@@ -198,12 +223,29 @@ The modal system provides:
   - `authorizedHttpClient.ts` - Adds authentication token to requests
   - `loginClient.ts` - Identity service endpoints (port 5220 in dev)
   - `userClient.ts` - User data endpoints
-  - `calendarClient.ts` - Calendar CRUD operations
-    - GET/POST/PUT/DELETE `/api/v1/Calendar`
-    - POST `/api/v1/Calendar/{calendarId}` - Select calendar (persists selection)
-  - `eventClient.ts` - Event CRUD and queries
-    - GET/POST/PUT/DELETE `/api/v1/Event/{calendarId}/{eventId}`
+  - `serverSentEventClient.ts` - SSE connection and event handling
+    - EventSource connection to `/api/v1/ServerSentEvent`
+    - Event listener registration and wildcard support
+    - Automatic reconnection and error handling
+  - `calendarClient.ts` - **Calendar CRUD (CQRS)**
+    - GET `/api/v1/Calendar` - Query all calendars
+    - GET `/api/v1/Calendar/{id}` - Query single calendar
+    - POST `/api/v1/Calendar` - Command: create calendar (returns command ID)
+    - PUT `/api/v1/Calendar/{id}` - Command: update calendar (returns command ID)
+    - DELETE `/api/v1/Calendar/{id}` - Command: delete calendar (returns command ID)
+    - POST `/api/v1/Calendar/{calendarId}` - Command: select calendar (returns command ID)
+    - All commands send `X-Command-ID` header for SSE correlation
+  - `calendarLinkClient.ts` - **Calendar Link CRUD (CQRS)**
+    - GET `/api/v1/CalendarLink/calendar/{calendarId}` - Query calendar links
+    - GET `/api/v1/CalendarLink/{id}` - Query single link
+    - POST `/api/v1/CalendarLink` - Command: create calendar link (returns command ID)
+    - PUT `/api/v1/CalendarLink/{id}` - Command: update calendar link (returns command ID)
+    - DELETE `/api/v1/CalendarLink/{id}` - Command: delete calendar link
+    - All commands send `X-Command-ID` header for SSE correlation
+  - `eventClient.ts` - **Event CRUD (REST - migration to CQRS pending)**
+    - GET `/api/v1/Event/{calendarId}` - Paginated event list
     - GET `/api/v1/Event/span/{calendarId}` - Date range query
+    - GET/POST/PUT/DELETE `/api/v1/Event/{calendarId}/{eventId}` - Traditional REST
     - Pagination support for event lists
 
 ### Routing
@@ -277,6 +319,85 @@ Located in `src/lib/components/ui/`:
 
 ### Form Components
 - **FormField.svelte** - Combines Label, Input/control, and ErrorText in consistent layout
+
+## CQRS Architecture
+
+The backend is migrating from traditional REST to CQRS (Command Query Responsibility Segregation) with Server-Sent Events (SSE) for real-time synchronization.
+
+### Migration Status
+
+| Service | CREATE | READ | UPDATE | DELETE | Status |
+|---------|--------|------|--------|--------|--------|
+| **Calendar** | CQRS | REST | CQRS | CQRS | ✅ Fully Migrated |
+| **CalendarLink** | CQRS | REST | CQRS | CQRS | ✅ Fully Migrated |
+| **Event** | REST | REST | REST | REST | ⏳ Pending Migration |
+
+### CQRS Pattern Overview
+
+**Commands** (state-changing operations):
+- Send request with `X-Command-ID` header containing unique UUID
+- Server returns command ID immediately (202 Accepted pattern)
+- Server processes command asynchronously
+- Server broadcasts SSE event when command completes
+- Frontend listens for event via `serverSentEventClient` and updates state
+
+**Queries** (read-only operations):
+- Traditional REST GET requests
+- Return complete data synchronously
+- No command ID needed
+
+### SSE Event Types
+
+SSE event types are defined in `src/lib/types/api/sse.ts`. Supported events:
+- **CreateCalendar**, **EditCalendar**, **DeleteCalendar** - Calendar operations
+- **SelectCalendar** - Calendar selection persistence
+- **CreateCalendarLink**, **EditCalendarLink**, **DeleteCalendarLink** - Calendar link operations
+
+All events include: `eventName`, `eventId` (unique identifier for correlation), and `dispatchedAt` (ISO timestamp).
+
+### Implementation Patterns
+
+#### CQRS Command Pattern
+
+Commands return a command ID for SSE correlation. Example from `calendarClient.ts`:
+```typescript
+async createCalendar(dto: CreateCalendarDto, commandId?: string): Promise<string> {
+    const id = commandId || crypto.randomUUID();
+    await this.request<void>(HttpMethod.POST, `/api/v1/Calendar`, dto, {
+        headers: { 'X-Command-ID': id }
+    });
+    return id; // Return command ID for SSE correlation
+}
+```
+
+#### SSE Event Handling
+
+Stores listen for SSE events and update state. See event listeners in `calendars.ts` for Calendar and CalendarLink event examples.
+
+#### Fire-and-Forget Pattern
+
+Calendar selection uses optimistic updates for instant UI feedback:
+1. Update local state immediately
+2. Send command to backend (non-blocking)
+3. SSE event confirms on server-side success
+4. Backend errors are logged but don't revert local state
+
+### SSE Connection Lifecycle
+
+1. User authenticates → `userStore` initializes SSE connection via `serverSentEventClient`
+2. Connection ID generated per app session for multi-tab support
+3. EventSource connects to `/api/v1/ServerSentEvent?connectionId={id}`
+4. Automatic reconnection on failure with exponential backoff
+5. User logs out → SSE connection closed
+
+### Important CQRS Notes
+
+- **Command IDs**: All commands must include unique `X-Command-ID` header for idempotency
+- **Idempotency**: Sending same command ID twice produces same result
+- **Async Processing**: Commands are processed asynchronously; listen for SSE event confirmation
+- **Event Correlation**: SSE events include `eventId` for correlation with command ID
+- **Calendar Links**: Embedded in `CalendarDto`, updates reflected in calendar events
+- **Multi-Tab Sync**: Connection ID ensures each browser tab receives own SSE events
 
 ## Important Implementation Patterns
 
@@ -385,9 +506,32 @@ This project has access to the Svelte MCP server. When working with Svelte code:
 13. **Event Overlap**: Calendar layout algorithm in `calendarUtils.ts` handles complex overlapping events
 14. **Optimistic Updates**: Calendar selection updates UI immediately, then syncs to server in background
 15. **No Mock Data**: Events store initializes with empty array. Real data loads when calendar is selected
+16. **CQRS Architecture**: Calendar and CalendarLink use CQRS with SSE; Events still use traditional REST. See SSE event definitions in `src/lib/types/api/sse.ts`
+17. **Command IDs**: CQRS commands include optional `X-Command-ID` header (generated if not provided) for idempotency and SSE correlation
+18. **SSE Events**: Listen for SSE events in stores (see `calendars.ts` for examples). All events include `eventId` for correlation
+19. **Fire-and-Forget Pattern**: Calendar selection is optimistic; command failures are logged but don't revert UI state
+20. **Event Migration**: When migrating Event service to CQRS, follow patterns in `calendarClient.ts` (commands) and `calendars.ts` (SSE handlers)
+
+## CQRS Migration Roadmap
+
+The following endpoints are pending migration to CQRS architecture:
+
+### Event Service Migration (In Progress)
+
+**Current State**: Event CRUD operations use traditional REST patterns with direct response-based updates
+
+**Migration Steps**:
+1. Add SSE event types for Event operations (`CreateEvent`, `EditEvent`, `DeleteEvent`) in `src/lib/types/api/sse.ts`
+2. Update `eventClient.ts` to send `X-Command-ID` header with commands and return command ID
+3. Add SSE event listeners to `events.ts` store following the pattern used in `calendars.ts`
+4. Update components (`EventModal.svelte`) to listen for SSE confirmation instead of direct response
+5. Add integration tests for Event CQRS flow
+
+**Reference**: See `calendarClient.ts` and `calendars.ts` for complete CQRS implementation patterns
 
 ## Future Considerations
 
+- Migrate Event service to CQRS (in progress)
 - Implement event reminders and notifications
 - Add calendar sharing and permissions system
 - Implement recurring events (daily, weekly, monthly patterns)
