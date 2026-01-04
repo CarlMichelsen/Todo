@@ -1,6 +1,10 @@
 import { AuthorizedHttpClient } from './authorizedHttpClient';
 import { HttpMethod } from './httpClient';
-import type { CalendarLinkDto, CreateCalendarLinkDto, EditCalendarLinkDto } from '$lib/types/api/calendarLink';
+import type {
+	CalendarLinkDto,
+	CreateCalendarLinkDto,
+	EditCalendarLinkDto
+} from '$lib/types/api/calendarLink';
 
 export class CalendarLinkClient extends AuthorizedHttpClient {
 	/**
@@ -8,10 +12,7 @@ export class CalendarLinkClient extends AuthorizedHttpClient {
 	 * Get all calendar links for the current user
 	 */
 	async getCalendarLinks(): Promise<CalendarLinkDto[]> {
-		const response = await this.request<CalendarLinkDto[]>(
-			HttpMethod.GET,
-			'/api/v1/CalendarLink'
-		);
+		const response = await this.request<CalendarLinkDto[]>(HttpMethod.GET, '/api/v1/CalendarLink');
 
 		if (!response.ok) {
 			throw new Error('Failed to fetch calendar links');

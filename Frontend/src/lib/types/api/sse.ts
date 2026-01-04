@@ -1,5 +1,5 @@
 import type { CalendarDto } from './calendar';
-import type { CalendarLinkDto } from './calendarLink';
+import type { CalendarLinkDto, EditCalendarLinkDto } from './calendarLink';
 
 /**
  * Base interface for all server-sent events
@@ -56,7 +56,9 @@ export interface CreateCalendarLinkEvent extends BaseServerEvent {
  */
 export interface EditCalendarLinkEvent extends BaseServerEvent {
 	eventName: 'EditCalendarLink';
-	calendarLink: CalendarLinkDto;
+	deleteParentCalendarAssociation: string[]; // null if calendar link edit has no deleted associations
+	addParentCalendarAssociation: string[]; // null if calendar link edit has no added associations
+	calendarLink: CalendarLinkDto; // contains identifier and source of current truth for the edited calendarLink
 }
 
 /**
@@ -81,31 +83,40 @@ export type ServerEvent =
 	| EditCalendarLinkEvent
 	| DeleteCalendarLinkEvent;
 
-
 export const SERVER_EVENT_NAMES = [
-  "CreateCalendar",
-  "EditCalendar",
-  "DeleteCalendar",
-  "SelectCalendar",
-  "CreateCalendarLink",
-  "EditCalendarLink",
-  "DeleteCalendarLink",
-] as const satisfies readonly ServerEvent["eventName"][];
-
+	'CreateCalendar',
+	'EditCalendar',
+	'DeleteCalendar',
+	'SelectCalendar',
+	'CreateCalendarLink',
+	'EditCalendarLink',
+	'DeleteCalendarLink'
+] as const satisfies readonly ServerEvent['eventName'][];
 
 // The following code makes typescript check that all events in ServerEvent are also present in SERVER_EVENT_NAMES.
 // This is important because the events are registered from SERVER_EVENT_NAMES in ServerSentEventClient.
-export type ServerEventName = typeof SERVER_EVENT_NAMES[number];
+export type ServerEventName = (typeof SERVER_EVENT_NAMES)[number];
 
 // Ensures no missing events
 type AssertAllEventsCovered =
-  Exclude<ServerEvent["eventName"], ServerEventName> extends never
-    ? true
-    : never;
+	Exclude<ServerEvent['eventName'], ServerEventName> extends never ? true : never;
+
+// Ensures no duplicate events
+type HasDuplicates<T extends readonly string[]> = T extends readonly [
+	infer First,
+	...infer Rest extends readonly string[]
+]
+	? First extends Rest[number]
+		? true
+		: HasDuplicates<Rest>
+	: false;
+
+type AssertNoDuplicates = HasDuplicates<typeof SERVER_EVENT_NAMES> extends false ? true : never;
 
 // ⬇ forces the check
 const _assertAllEventsCovered: AssertAllEventsCovered = true;
 
 // Ensures no extra events
-const _assertNoExtraEvents: readonly ServerEvent["eventName"][] =
-  SERVER_EVENT_NAMES;
+const _assertNoExtraEvents: readonly ServerEvent['eventName'][] = SERVER_EVENT_NAMES;
+
+const _assertNoDuplicates: AssertNoDuplicates = true;

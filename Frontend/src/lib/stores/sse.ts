@@ -103,10 +103,7 @@ function createSSEStore() {
 						try {
 							callback(event);
 						} catch (error) {
-							console.error(
-								`SSE Store: Error in ${event.eventName} listener`,
-								error
-							);
+							console.error(`SSE Store: Error in ${event.eventName} listener`, error);
 						}
 					});
 				}

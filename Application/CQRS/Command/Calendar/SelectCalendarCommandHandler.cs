@@ -26,6 +26,7 @@ public class SelectCalendarCommandHandler(
         var calendarEntity = await databaseContext
             .Calendar
             .Include(c => c.Owner)
+            .AsSplitQuery()
             .Where(c => c.OwnerId == userEntity.Id && c.Id == command.CalendarId)
             .FirstOrDefaultAsync(cancellationToken);
 
@@ -48,13 +49,13 @@ public class SelectCalendarCommandHandler(
             command.Type,
             calendarEntity.Id.ToString());
         
-        var editCalendarEvent = new SelectCalendarEvent(new ServerEventDestination([command.User.UserId]))
+        var selectCalendarEvent = new SelectCalendarEvent(new ServerEventDestination([command.User.UserId]))
         {
             CalendarId = userEntity.SelectedCalendarId,
             DispatchedAt = timeProvider.GetUtcNow().UtcDateTime,
             EventId = command.CommandId,
         };
 
-        await sender.SendEvent(command.User, editCalendarEvent, cancellationToken);
+        await sender.SendEvent(command.User, selectCalendarEvent, cancellationToken);
     }
 }

@@ -55,5 +55,14 @@ public class DeleteCalendarCommandHandler(
         };
 
         await sender.SendEvent(command.User, deleteCalendarEvent, cancellationToken);
+        
+        var selectCalendarEvent = new SelectCalendarEvent(new ServerEventDestination([command.User.UserId]))
+        {
+            CalendarId = userEntity.SelectedCalendarId,
+            DispatchedAt = timeProvider.GetUtcNow().UtcDateTime,
+            EventId = command.CommandId,
+        };
+
+        await sender.SendEvent(command.User, selectCalendarEvent, cancellationToken);
     }
 }

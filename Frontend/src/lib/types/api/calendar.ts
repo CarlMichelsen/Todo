@@ -1,4 +1,4 @@
-import { CalendarLinkDto } from "./calendarLink";
+import { CalendarLinkDto } from './calendarLink';
 
 /**
  * Simplified user representation used in Calendar and Event DTOs

@@ -51,7 +51,7 @@ public class EditCalendarLinkCommandHandler(
             .Calendars
             .Select(c => c.Id.Value)
             .ToHashSet();
-        if (command.DeleteParentCalendarAssociation is not null)
+        if (command.DeleteParentCalendarAssociation.Any())
         {
             var calendarAssociationsToDelete = command
                 .DeleteParentCalendarAssociation
@@ -65,7 +65,7 @@ public class EditCalendarLinkCommandHandler(
             }
         }
         
-        if (command.AddParentCalendarAssociation is not null)
+        if (command.AddParentCalendarAssociation.Any())
         {
             var calendarAssociationsToAdd = command
                 .AddParentCalendarAssociation
@@ -95,6 +95,8 @@ public class EditCalendarLinkCommandHandler(
         
         var serverEvent = new EditCalendarLinkEvent(new ServerEventDestination([command.User.UserId]))
         {
+            DeleteParentCalendarAssociation = command.DeleteParentCalendarAssociation.ToCollection(),
+            AddParentCalendarAssociation = command.AddParentCalendarAssociation.ToCollection(),
             CalendarLink = calendarLinkEntity.ToDto(),
             DispatchedAt = timeProvider.GetUtcNow().UtcDateTime,
             EventId = command.CommandId,

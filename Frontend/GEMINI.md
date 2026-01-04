@@ -100,6 +100,7 @@ src/
 ## Feature Overview
 
 ### Calendar System
+
 - **Week-based calendar view** with responsive mobile/desktop layouts
 - **Multi-day event support** with sophisticated overlap detection
 - **Side-by-side event layout** algorithm for overlapping events
@@ -111,10 +112,12 @@ src/
 - **Mobile responsive** with day-by-day navigation on small screens
 
 ### Modal Component Library
+
 For comprehensive modal documentation and usage patterns, see:
 **`src/lib/components/modals/README.md`**
 
 The modal system provides:
+
 - Base Modal component using HTML5 `<dialog>` element
 - Specialized modal types: FormModal, AlertModal, ConfirmModal
 - Complete usage examples and patterns
@@ -124,6 +127,7 @@ The modal system provides:
 - Dark mode support
 
 ### Toast Notification System
+
 - **Auto-dismissing notifications** with configurable duration
 - **Four types**: error, success, info, warning
 - **Maximum 5 concurrent toasts** with automatic queuing
@@ -131,6 +135,7 @@ The modal system provides:
 - **Smooth fade animations** for enter/exit
 
 ### Form Component Library
+
 - **Button** - Multiple variants (primary, secondary, danger, ghost) with loading states
 - **IconButton** - Icon-only buttons with accessibility labels
 - **Input** - Text input with dark mode support
@@ -139,6 +144,7 @@ The modal system provides:
 - **FormField** - Wrapper combining label, input, and error display
 
 ### Authentication & Route Guards
+
 - **ProtectedRoute component** guards authenticated pages
 - **User session management** with automatic token refresh
 - **Automatic redirect** to login for unauthorized access
@@ -209,6 +215,7 @@ The modal system provides:
 ### Routing
 
 Routes defined in App.svelte with Router/Route components:
+
 - `/` - Home page
 - `/calendar` - Calendar page with current week view
 - `/calendar?week=YYYY-MM-DD` - Calendar with specific week
@@ -221,6 +228,7 @@ Routes defined in App.svelte with Router/Route components:
 
 **Protected Routes:**
 Use ProtectedRoute component to guard authenticated pages:
+
 ```svelte
 <Route path="/profile">
   <ProtectedRoute>
@@ -232,10 +240,12 @@ Use ProtectedRoute component to guard authenticated pages:
 ## Component Libraries
 
 ### Modal System
+
 For comprehensive modal documentation and usage patterns, see:
 **`src/lib/components/modals/README.md`**
 
 The README contains:
+
 - Complete usage examples for all modal types
 - Pattern for creating custom modal types
 - Props documentation
@@ -243,6 +253,7 @@ The README contains:
 - Styling customization tips
 
 Quick example:
+
 ```svelte
 <ConfirmModal
   bind:isOpen={showConfirm}
@@ -254,7 +265,9 @@ Quick example:
 ```
 
 ### Calendar Components
+
 Located in `src/lib/components/calendar/`:
+
 - **Calendar.svelte** - Main container, manages week state and navigation
 - **CalendarGrid.svelte** - Renders week grid with 7 day columns
 - **CalendarDay.svelte** - Individual day column with timeline and events
@@ -268,7 +281,9 @@ Located in `src/lib/components/calendar/`:
 - **EventModal.svelte** - Modal for creating/editing events with date-time pickers
 
 ### UI Components
+
 Located in `src/lib/components/ui/`:
+
 - **Button.svelte** - Variants: primary, secondary, danger, ghost, with loading states
 - **IconButton.svelte** - Icon-only buttons with aria-labels
 - **Input.svelte** - Text input with dark mode styling
@@ -276,11 +291,13 @@ Located in `src/lib/components/ui/`:
 - **ErrorText.svelte** - Error message display with red styling
 
 ### Form Components
+
 - **FormField.svelte** - Combines Label, Input/control, and ErrorText in consistent layout
 
 ## Important Implementation Patterns
 
 ### Svelte 5 Runes
+
 - **`$state`** - Reactive state variables
 - **`$derived`** - Computed values that update automatically
 - **`$derived.by`** - Computed values with complex logic
@@ -289,14 +306,18 @@ Located in `src/lib/components/ui/`:
 - **Snippets** - Flexible component composition (replace slots)
 
 ### Optimistic Updates
+
 Calendar selection uses optimistic updates for instant UI feedback:
+
 1. Update local state immediately
 2. Persist to server in background
 3. Log errors but don't revert on failure
 4. Provides graceful degradation for offline scenarios
 
 ### Event Overlap Detection
+
 The `calendarUtils.ts` file (520 lines) provides sophisticated calendar utilities:
+
 - **Overlap detection**: Identifies overlapping events within a day
 - **Layout calculation**: Assigns width and offset percentages for side-by-side display
 - **Multi-day event handling**: Calculates display start/end times for events spanning days
@@ -304,12 +325,14 @@ The `calendarUtils.ts` file (520 lines) provides sophisticated calendar utilitie
 - **Formatting functions**: Display formats for dates, times, and durations
 
 Algorithm summary:
+
 1. Group events by overlapping time windows
 2. Within each group, calculate columns needed
 3. Assign each event a column index and width
 4. Convert to CSS percentages for positioning
 
 ### Error Handling Patterns
+
 - **API clients** throw typed errors with descriptive messages
 - **Stores** catch errors and update error state
 - **Toast notifications** display user-friendly error messages
@@ -317,6 +340,7 @@ Algorithm summary:
 - **Loading states** prevent duplicate requests
 
 ### Dark Mode
+
 - All components must support dark mode
 - Use Tailwind's `dark:` prefix for dark mode variants
 - State managed in `darkMode.ts` store

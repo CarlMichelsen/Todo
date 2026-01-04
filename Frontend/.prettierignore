@@ -5,5 +5,31 @@ yarn.lock
 bun.lock
 bun.lockb
 
+# Build outputs
+/dist/
+/build/
+.svelte-kit/
+
+# Dependencies
+/node_modules/
+
+# IDE and editor
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# Testing
+coverage/
+
+# Environment
+.env
+.env.local
+
+# Svelte files (use ESLint for formatting instead due to plugin conflicts)
+**/*.svelte
+
 # Miscellaneous
 /static/
+obj/
+**/*.csproj

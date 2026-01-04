@@ -60,8 +60,7 @@ function createCalendarsStore() {
 						activeCalendarId:
 							state.calendars.find(
 								(c) =>
-									c.title === createEvent.calendar.title &&
-									c.color === createEvent.calendar.color
+									c.title === createEvent.calendar.title && c.color === createEvent.calendar.color
 							)?.id === state.activeCalendarId
 								? createEvent.calendar.id
 								: state.activeCalendarId
@@ -139,20 +138,25 @@ function createCalendarsStore() {
 			console.log('SSE: CreateCalendarLink event received', createEvent);
 
 			update((state) => {
-				const newCalendars = state.calendars.map(c => {
-					const calendarWithCreatedLink = createEvent.calendarLink.parentCalendars.find(pc => pc == c.id);
+				const newCalendars = state.calendars.map((c) => {
+					const calendarWithCreatedLink = createEvent.calendarLink.parentCalendars.find(
+						(pc) => pc == c.id
+					);
 					if (!calendarWithCreatedLink) {
 						return c;
 					}
 
-					c.calendarLinks = distinctBy([createEvent.calendarLink, ...c.calendarLinks], cl => cl.id);
+					c.calendarLinks = distinctBy(
+						[createEvent.calendarLink, ...c.calendarLinks],
+						(cl) => cl.id
+					);
 					return c;
 				});
 
 				return {
 					...state,
 					calendars: [...newCalendars]
-				}
+				};
 			});
 
 			// Show success toast
@@ -164,26 +168,44 @@ function createCalendarsStore() {
 			const editEvent = event as EditCalendarLinkEvent;
 			console.log('SSE: EditCalendarLink event received', editEvent);
 
+			const linkId = editEvent.calendarLink.id;
+			const deleteAssociations = editEvent.deleteParentCalendarAssociation;
+			const addAssociations = editEvent.addParentCalendarAssociation;
+
 			update((state) => {
-				const newCalendars = state.calendars.map(c => {
-					const calendarWithCreatedLink = editEvent.calendarLink.parentCalendars.find(pc => pc == c.id);
-					if (!calendarWithCreatedLink) {
+				const newCalendars = state.calendars.map((c) => {
+					// Find if this calendar has the link being edited
+					const existingLinkIndex = c.calendarLinks.findIndex((cl) => cl.id === linkId);
+
+					if (existingLinkIndex === -1) {
+						// Check if we need to add this link to this calendar
+						if (addAssociations?.includes(c.id)) {
+							c.calendarLinks = [...c.calendarLinks, editEvent.calendarLink];
+						}
 						return c;
 					}
 
-					c.calendarLinks = distinctBy([editEvent.calendarLink, ...c.calendarLinks], cl => cl.id);
+					// Check if this link should be removed from this calendar
+					if (deleteAssociations?.includes(c.id)) {
+						c.calendarLinks = c.calendarLinks.filter((cl) => cl.id !== linkId);
+						return c;
+					}
+
+					// Replace with the updated link from the event
+					c.calendarLinks = [...c.calendarLinks];
+					c.calendarLinks[existingLinkIndex] = editEvent.calendarLink;
+
 					return c;
 				});
-
 
 				return {
 					...state,
 					calendars: [...newCalendars]
-				}
+				};
 			});
 
 			// Show success toast
-			toastStore.success(`Calendar link "${editEvent.calendarLink.title}" updated`, 3000);
+			toastStore.success(`Calendar link updated`, 3000);
 		});
 
 		// Handle DeleteCalendarLink events
@@ -192,15 +214,15 @@ function createCalendarsStore() {
 			console.log('SSE: DeleteCalendarLink event received', deleteEvent);
 
 			update((state) => {
-				const newCalendars = state.calendars.map(c => {
-					c.calendarLinks = c.calendarLinks.filter(cl => cl.id !== deleteEvent.calendarLinkId);
+				const newCalendars = state.calendars.map((c) => {
+					c.calendarLinks = c.calendarLinks.filter((cl) => cl.id !== deleteEvent.calendarLinkId);
 					return c;
 				});
 
 				return {
 					...state,
 					calendars: [...newCalendars]
-				}
+				};
 			});
 
 			// Show success toast
@@ -257,12 +279,12 @@ function createCalendarsStore() {
 			}
 		},
 
-		setEditingCalendar(calendarId: string|null): void  {
+		setEditingCalendar(calendarId: string | null): void {
 			update((state) => {
 				return {
 					...state,
-					editingCalendarId: calendarId,
-				}
+					editingCalendarId: calendarId
+				};
 			});
 		},
 
@@ -298,7 +320,7 @@ function createCalendarsStore() {
 				loading: false,
 				error: null
 			});
-		},
+		}
 	};
 }
 

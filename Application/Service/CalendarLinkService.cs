@@ -1,4 +1,5 @@
 ﻿using Application.Extensions;
+using Application.Mapper;
 using Microsoft.AspNetCore.Http;
 using Presentation.Abstractions.CQRS.Messaging;
 using Presentation.CQRS.Command.CalendarLink;
@@ -76,8 +77,8 @@ public class CalendarLinkService(
             Title: editCalendar.Title,
             CalendarLink: editCalendar.CalendarLink,
             Color: editCalendar.Color,
-            DeleteParentCalendarAssociation: editCalendar.DeleteParentCalendarAssociation,
-            AddParentCalendarAssociation: editCalendar.AddParentCalendarAssociation);
+            DeleteParentCalendarAssociation: editCalendar.DeleteParentCalendarAssociation.ToCollection(),
+            AddParentCalendarAssociation: editCalendar.AddParentCalendarAssociation.ToCollection());
         
         await sender.Send(command, cancellationToken);
     }

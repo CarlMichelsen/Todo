@@ -302,10 +302,7 @@ describe('calendarUtils', () => {
 		});
 
 		it('should assign two columns for two overlapping events', () => {
-			const events = [
-				createEvent('1', '09:00', '11:00'),
-				createEvent('2', '10:00', '12:00')
-			];
+			const events = [createEvent('1', '09:00', '11:00'), createEvent('2', '10:00', '12:00')];
 			const layout = calculateEventLayout(events, testDate);
 			expect(layout.get('1')?.totalColumns).toBe(2);
 			expect(layout.get('2')?.totalColumns).toBe(2);

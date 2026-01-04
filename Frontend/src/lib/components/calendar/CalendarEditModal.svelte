@@ -90,11 +90,24 @@
 		}
 	}
 
-	// Delete calendar link
+	// Remove calendar link from current calendar
 	async function handleDeleteLink(linkId: string) {
 		try {
-			await new CalendarLinkClient().deleteCalendarLink(linkId);
-			// State will update via SSE event automatically
+			if (!calendar) {
+				toastStore.error('Calendar not found', 5000);
+				return;
+			}
+
+			const calendarLinkClient = new CalendarLinkClient();
+
+			// Use edit method to remove association with current calendar
+			// The link will only be fully deleted if it becomes orphaned (no parent calendars)
+			// Backend worker will clean up orphaned links periodically
+			await calendarLinkClient.updateCalendarLink(linkId, {
+				deleteParentCalendarAssociation: [calendar.id]
+			});
+
+			// State will update via SSE EditCalendarLink event automatically
 		} catch (error) {
 			const errorMessage =
 				error instanceof Error ? error.message : 'Failed to remove calendar link';

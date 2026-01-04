@@ -77,7 +77,20 @@ export function isWeekend(date: Date): boolean {
  */
 export function formatDayHeader(date: Date): string {
 	const dayNames = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
-	const monthNames = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+	const monthNames = [
+		'Jan',
+		'Feb',
+		'Mar',
+		'Apr',
+		'May',
+		'Jun',
+		'Jul',
+		'Aug',
+		'Sep',
+		'Oct',
+		'Nov',
+		'Dec'
+	];
 
 	const dayName = dayNames[date.getDay()];
 	const monthName = monthNames[date.getMonth()];
@@ -294,7 +307,9 @@ export function getDisplayEndTime(eventEnd: Date, targetDate: Date): Date {
  */
 export function eventsOverlap(event1: CalendarEvent, event2: CalendarEvent): boolean {
 	// Use absolute timestamps instead of time-of-day to handle multi-day events correctly
-	return event1.start.getTime() < event2.end.getTime() && event2.start.getTime() < event1.end.getTime();
+	return (
+		event1.start.getTime() < event2.end.getTime() && event2.start.getTime() < event1.end.getTime()
+	);
 }
 
 /**

@@ -7,8 +7,8 @@ public record EditCalendarLinkDto(
     [MinLength(2), MaxLength(100)] string? Title,
     Uri? CalendarLink,
     [HexColor] string? Color,
-    IEnumerable<Guid>? DeleteParentCalendarAssociation,
-    IEnumerable<Guid>? AddParentCalendarAssociation) : IValidatableObject
+    IEnumerable<Guid> DeleteParentCalendarAssociation,
+    IEnumerable<Guid> AddParentCalendarAssociation) : IValidatableObject
 {
     public IEnumerable<ValidationResult> Validate(ValidationContext validationContext)
     {

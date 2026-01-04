@@ -114,7 +114,7 @@ export class ServerSentEventClient {
 		};
 
 		// Listen for specific event types (calendar events)
-		SERVER_EVENT_NAMES.forEach(eventName => this.addEventListener(eventName));
+		SERVER_EVENT_NAMES.forEach((eventName) => this.addEventListener(eventName));
 	}
 
 	/**

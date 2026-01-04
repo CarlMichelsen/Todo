@@ -1,7 +1,3 @@
-<script lang="ts">
-	import { darkMode } from '$lib/stores/darkMode';
-</script>
-
 <div class="min-h-screen flex items-center justify-center bg-white dark:bg-gray-900 transition-colors">
 	<div class="text-center">
 		<!-- Spinner -->

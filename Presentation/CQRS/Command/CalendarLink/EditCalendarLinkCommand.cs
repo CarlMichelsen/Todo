@@ -12,8 +12,8 @@ public record EditCalendarLinkCommand(
     [MinLength(2), MaxLength(100)] string? Title,
     Uri? CalendarLink,
     [HexColor] string? Color,
-    IEnumerable<Guid>? DeleteParentCalendarAssociation,
-    IEnumerable<Guid>? AddParentCalendarAssociation)
+    IEnumerable<Guid> DeleteParentCalendarAssociation,
+    IEnumerable<Guid> AddParentCalendarAssociation)
     : ICommand, IValidatableObject
 {
     public string Type => GetType().Name;

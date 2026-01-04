@@ -29,6 +29,33 @@ public class CreateCalendarLinkCommandHandler(
         var initialParentCalendarEntity = await databaseContext
             .Calendar
             .FirstAsync(c => c.OwnerId! == command.User.UserId && c.Id == command.InitialParentCalendarId, cancellationToken);
+        
+        var existingCalendarLink = await databaseContext
+            .CalendarLink
+            .Include(cl => cl.User)
+            .FirstOrDefaultAsync(cl => cl.UserId == command.User.UserId && cl.CalendarLink == command.CalendarLink, cancellationToken);
+        if (existingCalendarLink is not null)
+        {
+            initialParentCalendarEntity.CalendarLinks.Add(existingCalendarLink);
+            
+            await databaseContext.SaveChangesAsync(cancellationToken);
+            logger.LogUsernameUserIdMethodNameEventId(
+                command.User.Username,
+                command.User.UserId,
+                $"{command.Type} - Added existing calendar link to calendar <{initialParentCalendarEntity.Id}>",
+                existingCalendarLink.Id.ToString());
+
+            var editCalendarLinkEvent = new EditCalendarLinkEvent(new ServerEventDestination([command.User.UserId]))
+            {
+                CalendarLink = existingCalendarLink.ToDto(),
+                DeleteParentCalendarAssociation = [],
+                AddParentCalendarAssociation = [initialParentCalendarEntity.Id],
+                DispatchedAt = now,
+                EventId = command.CommandId,
+            };
+            await sender.SendEvent(command.User, editCalendarLinkEvent, cancellationToken);
+            return;
+        }
 
         var calendarLinkEntityId = new CalendarLinkEntityId(Guid.CreateVersion7());
         var productId = await calendarClient.GetCalendarProductId(calendarLinkEntityId, command.CalendarLink);

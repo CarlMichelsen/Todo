@@ -114,12 +114,9 @@ export class CalendarClient extends AuthorizedHttpClient {
 	async createCalendar(calendar: CreateCalendarDto, commandId?: string): Promise<string> {
 		const id = commandId || crypto.randomUUID();
 
-		const response = await this.request<void>(
-			HttpMethod.POST,
-			'/api/v1/Calendar',
-			calendar,
-			{ headers: { 'X-Command-ID': id } }
-		);
+		const response = await this.request<void>(HttpMethod.POST, '/api/v1/Calendar', calendar, {
+			headers: { 'X-Command-ID': id }
+		});
 
 		if (!response.ok) {
 			if (response.status === 400) {
@@ -156,7 +153,11 @@ export class CalendarClient extends AuthorizedHttpClient {
 	 * @param commandId - Optional command ID (generated if not provided)
 	 * @returns Command ID for SSE event correlation
 	 */
-	async updateCalendar(calendarId: string, updates: EditCalendarDto, commandId?: string): Promise<string> {
+	async updateCalendar(
+		calendarId: string,
+		updates: EditCalendarDto,
+		commandId?: string
+	): Promise<string> {
 		const id = commandId || crypto.randomUUID();
 
 		const response = await this.request<void>(

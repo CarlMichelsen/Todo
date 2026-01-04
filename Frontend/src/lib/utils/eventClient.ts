@@ -73,7 +73,9 @@ export class EventClient extends AuthorizedHttpClient {
 					errors: badRequest.data.errors,
 					detail: badRequest.data.detail
 				});
-				throw new Error(`Invalid pagination parameters: ${badRequest.data.detail || 'Validation failed'}`);
+				throw new Error(
+					`Invalid pagination parameters: ${badRequest.data.detail || 'Validation failed'}`
+				);
 			}
 
 			console.error('Failed to fetch events:', response.data);
@@ -96,7 +98,10 @@ export class EventClient extends AuthorizedHttpClient {
 	 * @returns EventDto with ISO date-time strings
 	 */
 	async getEvent(calendarId: string, eventId: string): Promise<EventDto> {
-		const response = await this.request<EventDto>(HttpMethod.GET, `/api/v1/Event/${calendarId}/${eventId}`);
+		const response = await this.request<EventDto>(
+			HttpMethod.GET,
+			`/api/v1/Event/${calendarId}/${eventId}`
+		);
 
 		if (!response.ok) {
 			if (response.status === 404) {
@@ -133,7 +138,11 @@ export class EventClient extends AuthorizedHttpClient {
 	 * @returns Created EventDto with generated ID
 	 */
 	async createEvent(calendarId: string, event: CreateEventDto): Promise<EventDto> {
-		const response = await this.request<EventDto>(HttpMethod.POST, `/api/v1/Event/${calendarId}`, event);
+		const response = await this.request<EventDto>(
+			HttpMethod.POST,
+			`/api/v1/Event/${calendarId}`,
+			event
+		);
 
 		if (!response.ok) {
 			if (response.status === 400) {
@@ -226,7 +235,10 @@ export class EventClient extends AuthorizedHttpClient {
 	 * @returns void (throws on error)
 	 */
 	async deleteEvent(calendarId: string, eventId: string): Promise<void> {
-		const response = await this.request<boolean>(HttpMethod.DELETE, `/api/v1/Event/${calendarId}/${eventId}`);
+		const response = await this.request<boolean>(
+			HttpMethod.DELETE,
+			`/api/v1/Event/${calendarId}/${eventId}`
+		);
 
 		if (!response.ok) {
 			if (response.status === 404) {
