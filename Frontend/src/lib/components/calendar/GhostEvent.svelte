@@ -11,16 +11,12 @@
 		 */
 		duration: number;
 		/**
-		 * Current mouse Y position in pixels
-		 */
-		mouseY: number;
-		/**
 		 * Callback when ghost event is clicked
 		 */
 		onclick?: () => void;
 	}
 
-	let { startTime, duration, mouseY, onclick }: Props = $props();
+	let { startTime, duration, onclick }: Props = $props();
 
 	const config = getCalendarConfig();
 	const hourHeight = $derived(config.hourHeight);

@@ -1,5 +1,5 @@
 import type { CalendarDto } from './calendar';
-import type { CalendarLinkDto, EditCalendarLinkDto } from './calendarLink';
+import type { CalendarLinkDto } from './calendarLink';
 
 /**
  * Base interface for all server-sent events
@@ -114,9 +114,12 @@ type HasDuplicates<T extends readonly string[]> = T extends readonly [
 type AssertNoDuplicates = HasDuplicates<typeof SERVER_EVENT_NAMES> extends false ? true : never;
 
 // ⬇ forces the check
+/* eslint-disable @typescript-eslint/no-unused-vars */
 const _assertAllEventsCovered: AssertAllEventsCovered = true;
 
 // Ensures no extra events
+/* eslint-disable @typescript-eslint/no-unused-vars */
 const _assertNoExtraEvents: readonly ServerEvent['eventName'][] = SERVER_EVENT_NAMES;
 
+/* eslint-disable @typescript-eslint/no-unused-vars */
 const _assertNoDuplicates: AssertNoDuplicates = true;

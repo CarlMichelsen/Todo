@@ -465,7 +465,7 @@
 
 				<!-- Color swatches -->
 				<div class="flex flex-wrap gap-2" id="color-selector">
-					{#each colorOptions as colorOption}
+					{#each colorOptions as colorOption (colorOption.name)}
 						<button
 							type="button"
 							onclick={() => (color = colorOption.value)}

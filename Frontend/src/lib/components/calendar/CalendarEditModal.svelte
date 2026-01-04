@@ -22,12 +22,11 @@
 
 	// Delete confirmation
 	let showDeleteConfirm = $state(false);
-	let isDeleting = $state(false);
 
 	let calendarStoreState = $state<CalendarStoreState>();
 
 	// Calendar
-	let calendar = $derived(!!calendarStoreState?.editingCalendarId ? calendarStoreState?.calendars.find(c => c.id == calendarStoreState!.editingCalendarId) ?? null : null)
+	let calendar = $derived(calendarStoreState?.editingCalendarId ? calendarStoreState?.calendars.find(c => c.id == calendarStoreState!.editingCalendarId) ?? null : null)
 
 	$effect(() => {
 		// Subscribe to store changes
@@ -104,6 +103,7 @@
 			// The link will only be fully deleted if it becomes orphaned (no parent calendars)
 			// Backend worker will clean up orphaned links periodically
 			await calendarLinkClient.updateCalendarLink(linkId, {
+				addParentCalendarAssociation: [],
 				deleteParentCalendarAssociation: [calendar.id]
 			});
 
@@ -156,7 +156,6 @@
 	async function handleConfirmDelete() {
 		if (!calendar) return;
 
-		isDeleting = true;
 		try {
 			await new CalendarClient().deleteCalendar(calendar.id);
 			showDeleteConfirm = false;
@@ -165,7 +164,6 @@
 			const errorMessage = error instanceof Error ? error.message : 'Failed to delete calendar';
 			toastStore.error(errorMessage, 5000);
 		} finally {
-			isDeleting = false;
 			calendarsStore.setEditingCalendar(null);
 		}
 	}
@@ -239,7 +237,7 @@
 					Color *
 				</label>
 				<div id="edit-calendar-color" class="flex flex-wrap gap-2" role="radiogroup">
-					{#each colorOptions as colorOption}
+					{#each colorOptions as colorOption (colorOption.name)}
 						<button
 							type="button"
 							onclick={() => (color = colorOption.value)}
@@ -302,7 +300,7 @@
 								Color
 							</label>
 							<div id="link-color-picker" class="flex flex-wrap gap-2" role="radiogroup">
-								{#each colorOptions as colorOption}
+								{#each colorOptions as colorOption (colorOption.name)}
 									<button
 										type="button"
 										onclick={() => (newLinkColor = colorOption.value)}
@@ -335,7 +333,7 @@
 					<p class="text-gray-500 dark:text-gray-400 text-sm">No linked calendars</p>
 				{:else}
 					<div class="space-y-2">
-						{#each calendarLinks as link}
+						{#each calendarLinks as link (link.id)}
 							<div
 								class="flex items-center justify-between p-3 bg-gray-50 dark:bg-gray-800 rounded-lg"
 							>

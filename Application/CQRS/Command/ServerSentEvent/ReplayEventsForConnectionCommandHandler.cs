@@ -9,10 +9,13 @@ public partial class ReplayEventsForConnectionCommandHandler(
 {
     public Task Handle(ReplayEventsForConnectionCommand command, CancellationToken cancellationToken)
     {
-        LogImplementMe(logger);
+        LogImplementMe(logger, command.User.Username, command.LastKnownEventId);
         return Task.CompletedTask;
     }
 
-    [LoggerMessage(LogLevel.Information, "ReplayEventsForConnectionCommandHandler.Handle - IMPLEMENT ME")]
-    static partial void LogImplementMe(ILogger<ReplayEventsForConnectionCommandHandler> logger);
+    [LoggerMessage(LogLevel.Information, "ReplayEventsForConnectionCommandHandler.Handle {username}: last known eventId:{lastKnownEventId} - IMPLEMENT ME")]
+    static partial void LogImplementMe(
+        ILogger<ReplayEventsForConnectionCommandHandler> logger,
+        string username,
+        Guid lastKnownEventId);
 }

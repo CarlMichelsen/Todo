@@ -136,7 +136,7 @@
 					Color *
 				</label>
 				<div id="calendar-color" class="flex flex-wrap gap-2" role="radiogroup">
-					{#each colorOptions as colorOption}
+					{#each colorOptions as colorOption (colorOption.name)}
 						<button
 							type="button"
 							onclick={() => (color = colorOption.value)}

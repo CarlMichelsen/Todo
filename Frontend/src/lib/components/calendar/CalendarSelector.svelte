@@ -14,7 +14,6 @@
 	let isCalendarModalOpen = $state(false);
 
 	async function handleCalendarSelect(calendarId: string) {
-		void calendarsStore.setActiveCalendar(calendarId);
 		new CalendarClient().selectCalendar(calendarId);
 	}
 
@@ -60,7 +59,7 @@
 		{#snippet content()}
 			<div class="py-1">
 				<!-- Calendar list -->
-				{#each storeState.calendars as calendar}
+				{#each storeState.calendars as calendar (calendar.id)}
 					<button
 						onclick={() => handleCalendarSelect(calendar.id)}
 						class="w-full px-4 py-2 text-left hover:bg-gray-100 dark:hover:bg-gray-700 flex items-center gap-2 transition-colors"

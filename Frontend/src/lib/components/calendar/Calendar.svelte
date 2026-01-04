@@ -7,6 +7,7 @@
 	import { calendarsStore } from '$lib/stores/calendars';
 	import { setCalendarConfig } from '$lib/stores/calendarConfig';
 	import type { CalendarEvent } from '$lib/types/calendar';
+	import { SvelteDate } from 'svelte/reactivity';
 
 	// Props
 	interface Props {
@@ -26,7 +27,7 @@
 
 	// State management
 	let currentWeekStart = $state(
-		initialWeekStart ? initialWeekStart : getWeekStart(new Date())
+		initialWeekStart ? initialWeekStart : getWeekStart(new SvelteDate())
 	);
 
 	// Mobile: viewport detection (768px = Tailwind md breakpoint)
@@ -51,12 +52,12 @@
 	let currentRangeStart = $derived.by(() => {
 		if (isMobile) {
 			// Mobile: start of current day
-			const start = new Date(weekDates[currentDayIndex]);
+			const start = new SvelteDate(weekDates[currentDayIndex]);
 			start.setHours(0, 0, 0, 0);
 			return start.getTime();
 		} else {
 			// Desktop: start of week (Monday 00:00)
-			const start = new Date(currentWeekStart);
+			const start = new SvelteDate(currentWeekStart);
 			start.setHours(0, 0, 0, 0);
 			return start.getTime();
 		}
@@ -65,12 +66,12 @@
 	let currentRangeEnd = $derived.by(() => {
 		if (isMobile) {
 			// Mobile: end of current day
-			const end = new Date(weekDates[currentDayIndex]);
+			const end = new SvelteDate(weekDates[currentDayIndex]);
 			end.setHours(23, 59, 59, 999);
 			return end.getTime();
 		} else {
 			// Desktop: end of week (Sunday 23:59)
-			const end = new Date(currentWeekStart);
+			const end = new SvelteDate(currentWeekStart);
 			end.setDate(currentWeekStart.getDate() + 6);
 			end.setHours(23, 59, 59, 999);
 			return end.getTime();
@@ -79,19 +80,16 @@
 
 	// Today's date range
 	let todayStart = $derived.by(() => {
-		const start = new Date();
+		const start = new SvelteDate();
 		start.setHours(0, 0, 0, 0);
 		return start.getTime();
 	});
 
 	let todayEnd = $derived.by(() => {
-		const end = new Date();
+		const end = new SvelteDate();
 		end.setHours(23, 59, 59, 999);
 		return end.getTime();
 	});
-
-	// Check if current range contains today
-	let isViewingToday = $derived(currentRangeStart <= todayStart && currentRangeEnd >= todayEnd);
 
 	// Highlight previous if current range is entirely AFTER today
 	let shouldHighlightPrevious = $derived(currentRangeStart > todayEnd);
@@ -105,7 +103,7 @@
 		isMobile = window.innerWidth < 768;
 
 		// Set currentDayIndex to today's position in week
-		const today = new Date();
+		const today = new SvelteDate();
 		const dayOfWeek = today.getDay();
 		// Convert Sunday(0) to 6, Mon(1) to 0, Tue(2) to 1, etc.
 		currentDayIndex = dayOfWeek === 0 ? 6 : dayOfWeek - 1;
@@ -169,7 +167,7 @@
 	}
 
 	function handleToday() {
-		const today = new Date();
+		const today = new SvelteDate();
 		currentWeekStart = getWeekStart(today);
 
 		// Set currentDayIndex to today's position in week
@@ -209,7 +207,7 @@
 		if (isMobile) {
 			return weekDates[currentDayIndex].toISOString().split('T')[0];
 		}
-		return new Date().toISOString().split('T')[0];
+		return new SvelteDate().toISOString().split('T')[0];
 	});
 </script>
 
@@ -219,7 +217,6 @@
 		currentDayIndex={currentDayIndex}
 		weekDates={weekDates}
 		isMobile={isMobile}
-		isViewingToday={isViewingToday}
 		shouldHighlightPrevious={shouldHighlightPrevious}
 		shouldHighlightNext={shouldHighlightNext}
 		onPreviousWeek={handlePreviousWeek}

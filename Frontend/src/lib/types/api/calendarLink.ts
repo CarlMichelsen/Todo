@@ -20,6 +20,6 @@ export interface EditCalendarLinkDto {
 	title?: string | null;
 	calendarLink?: string | null; // URI format
 	color?: string | null; // Hex color code (nullable)
-	deleteParentCalendarAssociation?: string[] | null; // UUID array
-	addParentCalendarAssociation?: string[] | null; // UUID array
+	deleteParentCalendarAssociation: string[]; // UUID array - empty means no change in association
+	addParentCalendarAssociation: string[]; // UUID array - empty means no change in association
 }

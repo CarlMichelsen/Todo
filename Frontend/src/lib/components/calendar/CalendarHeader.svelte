@@ -8,7 +8,6 @@
 		currentDayIndex: number;
 		weekDates: Date[];
 		isMobile: boolean;
-		isViewingToday: boolean;
 		shouldHighlightPrevious: boolean;
 		shouldHighlightNext: boolean;
 		onPreviousWeek: () => void;

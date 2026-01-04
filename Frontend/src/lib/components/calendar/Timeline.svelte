@@ -46,13 +46,10 @@
 	// Ghost event state
 	let isHovering = $state(false);
 	let mouseY = $state(0);
-	let isMobile = $state(false);
-	let hoveredEventId = $state<string | null>(null);
 
-	// Detect mobile on mount
-	$effect(() => {
-		isMobile = window.matchMedia('(max-width: 767px)').matches;
-	});
+	const matchMedia = window.matchMedia('(max-width: 767px)');
+	let isMobile = $derived(matchMedia.matches);
+	let hoveredEventId = $state<string | null>(null);
 
 	// Calculate ghost event time from mouse position
 	const ghostStartTime = $derived.by(() => {
@@ -149,7 +146,7 @@
 <div class="relative flex text-xs" style="height: {timelineHeight}px;">
 	<!-- Left: Time labels (40px wide) -->
 	<div class="w-[22px] flex-shrink-0">
-		{#each hours as hour}
+		{#each hours as hour (hour)}
 			<div class="flex items-start justify-end pr-2 text-gray-500 dark:text-gray-500" style="height: {hourHeight}px;">
 				{formatHour(hour)}
 			</div>
@@ -175,7 +172,7 @@
 	>
 		<!-- Background grid lines -->
 		<div class="absolute inset-0">
-			{#each hours as hour}
+			{#each hours as hour (hour)}
 				<!-- Full hour line -->
 				<div
 					class="absolute w-full border-t border-gray-300 dark:border-gray-700"
@@ -210,7 +207,6 @@
 				<GhostEvent
 					startTime={ghostStartTime}
 					duration={ghostDuration}
-					mouseY={mouseY}
 					onclick={handleGhostEventClick}
 				/>
 			</div>

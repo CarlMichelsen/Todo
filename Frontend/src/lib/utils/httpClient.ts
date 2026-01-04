@@ -155,9 +155,8 @@ export abstract class HttpClient {
 					};
 
 				case 401:
-					const errorText = await response.text();
 					throw new UnauthorizedError(
-						`HTTP ${response.status}: ${errorText || response.statusText}`
+						`HTTP ${response.status}: ${(await response.text()) || response.statusText}`
 					);
 
 				default:

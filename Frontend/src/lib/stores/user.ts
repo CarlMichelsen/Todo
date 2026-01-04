@@ -67,7 +67,7 @@ function createUserStore() {
 						connectionId: connectionId || null
 					});
 				}
-			} catch (_) {
+			} catch {
 				set({
 					user: null,
 					state: 'unauthenticated',
@@ -117,7 +117,7 @@ function createUserStore() {
 				} else {
 					update((state) => ({ ...state, user: null, state: 'unauthenticated', error: null }));
 				}
-			} catch (_) {
+			} catch {
 				update((state) => ({ ...state, user: null, state: 'unauthenticated', error: null }));
 			}
 		}
