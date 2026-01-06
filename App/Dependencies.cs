@@ -6,6 +6,7 @@ using Application.Client;
 using Application.Configuration;
 using Application.Service;
 using Application.SSE;
+using Application.Worker;
 using Database;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.Extensions.Diagnostics.HealthChecks;
@@ -76,6 +77,9 @@ public static class Dependencies
 
         // Database
         builder.AddDatabase<DatabaseContext>();
+
+        // Workers
+        builder.Services.AddHostedService<ConnectionRegistryWorker>();
 
         // Services
         builder

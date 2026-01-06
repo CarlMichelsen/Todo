@@ -109,7 +109,7 @@ public partial class ConnectionRegistry(
     {
         var now = timeProvider.GetUtcNow().UtcDateTime;
 
-        var staleConnectionIds = connectionsByConnectionId
+        var staleConnectionIds = connectionHistory
             .Where(kvp =>
                 kvp.Value.ConnectionReader == null
                 && // Connection is inactive
@@ -121,7 +121,7 @@ public partial class ConnectionRegistry(
 
         foreach (var connectionId in staleConnectionIds)
         {
-            if (!connectionsByConnectionId.TryGetValue(connectionId, out var connection))
+            if (!connectionHistory.TryRemove(connectionId, out var connection))
             {
                 continue;
             }
@@ -137,7 +137,7 @@ public partial class ConnectionRegistry(
         }
 
         // Also check for improperly disconnected connections
-        foreach (var conn in connectionsByConnectionId.Values)
+        foreach (var conn in connectionHistory.Values)
         {
             if (conn.ConnectionReader == null && conn.LastDisconnected == null)
             {
