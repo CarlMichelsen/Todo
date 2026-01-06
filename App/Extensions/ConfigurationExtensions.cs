@@ -15,16 +15,18 @@ public static class ConfigurationExtensions
     /// </summary>
     public static IServiceCollection AddConfigurationOptions<TOptions>(
         this IServiceCollection services,
-        IConfiguration configuration)
+        IConfiguration configuration
+    )
         where TOptions : class, IConfigurationOptions
     {
-        ArgumentNullException.ThrowIfNull( configuration);
+        ArgumentNullException.ThrowIfNull(configuration);
 
         var section = configuration.GetSection(TOptions.SectionName);
         if (!section.Exists())
         {
             throw new InvalidOperationException(
-                $"Configuration section '{TOptions.SectionName}' is missing for options type '{typeof(TOptions).Name}'.");
+                $"Configuration section '{TOptions.SectionName}' is missing for options type '{typeof(TOptions).Name}'."
+            );
         }
 
         services
@@ -32,7 +34,7 @@ public static class ConfigurationExtensions
             .Bind(section, options => options.ErrorOnUnknownConfiguration = true)
             .ValidateDataAnnotations() // runs [Required], [Range], etc.
             .ValidateOnStart();
-        
+
         // IOptions can change during the scope execution and that makes me uneasy - removing it from DI
         services.RemoveAll<IOptions<TOptions>>();
 

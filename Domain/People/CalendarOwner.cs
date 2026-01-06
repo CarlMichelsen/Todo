@@ -1,3 +1,3 @@
 ﻿namespace Domain.People;
 
-public class CalendarOwner: Person;
+public class CalendarOwner : Person;

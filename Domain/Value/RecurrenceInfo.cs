@@ -8,4 +8,5 @@ public record RecurrenceInfo(
     DateTime? Until,
     int? Count,
     Collection<DayOfWeek>? ByDay,
-    Collection<int>? ByMonthDay);
+    Collection<int>? ByMonthDay
+);

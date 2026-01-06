@@ -13,19 +13,19 @@ public class SelectCalendarCommandHandler(
     ISender sender,
     ILogger<SelectCalendarCommandHandler> logger,
     TimeProvider timeProvider,
-    DatabaseContext databaseContext)
-    : ICommandHandler<SelectCalendarCommand>
+    DatabaseContext databaseContext
+) : ICommandHandler<SelectCalendarCommand>
 {
     public async Task Handle(SelectCalendarCommand command, CancellationToken cancellationToken)
     {
         var now = timeProvider.GetUtcNow().UtcDateTime;
-        var userEntity = await databaseContext
-            .User
-            .FirstAsync(u => u.Id == command.User.UserId, cancellationToken);
-        
+        var userEntity = await databaseContext.User.FirstAsync(
+            u => u.Id == command.User.UserId,
+            cancellationToken
+        );
+
         var calendarEntity = await databaseContext
-            .Calendar
-            .Include(c => c.Owner)
+            .Calendar.Include(c => c.Owner)
             .AsSplitQuery()
             .Where(c => c.OwnerId == userEntity.Id && c.Id == command.CalendarId)
             .FirstOrDefaultAsync(cancellationToken);
@@ -40,16 +40,19 @@ public class SelectCalendarCommandHandler(
             userEntity.SelectedCalendarId = calendarEntity.Id;
             calendarEntity.LastSelectedAt = now;
         }
-        
+
         await databaseContext.SaveChangesAsync(cancellationToken);
-        
+
         logger.LogUsernameUserIdMethodNameEventId(
             command.User.Username,
             command.User.UserId,
             command.Type,
-            calendarEntity.Id.ToString());
-        
-        var selectCalendarEvent = new SelectCalendarEvent(new ServerEventDestination([command.User.UserId]))
+            calendarEntity.Id.ToString()
+        );
+
+        var selectCalendarEvent = new SelectCalendarEvent(
+            new ServerEventDestination([command.User.UserId])
+        )
         {
             CalendarId = userEntity.SelectedCalendarId,
             DispatchedAt = timeProvider.GetUtcNow().UtcDateTime,

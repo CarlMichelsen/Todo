@@ -16,11 +16,8 @@ public static class DatabaseCalendarMapper
     public static TodoCalendar ToDomain(this CalendarEntity calendarEntity)
     {
         ArgumentNullException.ThrowIfNull(calendarEntity.Owner);
-        
-        var events = calendarEntity
-            .Events
-            .Select(e => e.ToDomain())
-            .ToCollection();
+
+        var events = calendarEntity.Events.Select(e => e.ToDomain()).ToCollection();
 
         var calendar = new TodoCalendar
         {

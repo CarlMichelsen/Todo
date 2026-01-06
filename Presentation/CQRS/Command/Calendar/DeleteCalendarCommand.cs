@@ -2,11 +2,7 @@
 
 namespace Presentation.CQRS.Command.Calendar;
 
-public record DeleteCalendarCommand(
-    Guid CommandId,
-    JwtUser User,
-    Guid CalendarId)
-    : ICommand
+public record DeleteCalendarCommand(Guid CommandId, JwtUser User, Guid CalendarId) : ICommand
 {
     public string Type => GetType().Name;
 }

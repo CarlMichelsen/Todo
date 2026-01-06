@@ -23,12 +23,8 @@ public class EventCreationTest(IntegrationTestFactory factory)
     {
         // Arrange
         var client = factory.GetAuthorizedClient(ConfiguredTestUsers.Steve);
-        await using var scope = factory
-            .Services
-            .CreateAsyncScope();
-        var dbContext = scope
-            .ServiceProvider
-            .GetRequiredService<DatabaseContext>();
+        await using var scope = factory.Services.CreateAsyncScope();
+        var dbContext = scope.ServiceProvider.GetRequiredService<DatabaseContext>();
 
         var now = scope.ServiceProvider.GetRequiredService<TimeProvider>().GetUtcNow().UtcDateTime;
         var calendarId = new CalendarEntityId(Guid.CreateVersion7());
@@ -36,41 +32,46 @@ public class EventCreationTest(IntegrationTestFactory factory)
         await dbContext.EnsureUserInDatabase(
             ConfiguredTestUsers.Steve.ToJwtUser(now, TimeSpan.FromHours(2)),
             now,
-            CancellationToken.None);
+            CancellationToken.None
+        );
         await dbContext.SaveChangesAsync();
-        
+
         var createEventDto = new CreateEventDto(
             Title: "TestEvent",
             Description: "This is amazing!",
             Start: DateTime.UtcNow,
             End: DateTime.UtcNow.AddHours(2),
-            Color: "#FF00FF");
+            Color: "#FF00FF"
+        );
         using var httpContent = new StringContent(
             JsonSerializer.Serialize(createEventDto, TestJsonOptions.Default),
             Encoding.UTF8,
-            "application/json");
+            "application/json"
+        );
 
         // Act
         var response = await client.PostAsync(
             new Uri($"api/v1/event/{calendarId}", UriKind.Relative),
             httpContent,
-            CancellationToken.None);
-        
+            CancellationToken.None
+        );
+
         var responseBody = await response.Content.ReadAsStringAsync();
 
         // Assert
         response.StatusCode.ShouldBe(HttpStatusCode.OK);
 
-        var deserialized = JsonSerializer.Deserialize<EventDto>(responseBody, TestJsonOptions.Default);
+        var deserialized = JsonSerializer.Deserialize<EventDto>(
+            responseBody,
+            TestJsonOptions.Default
+        );
         deserialized.ShouldNotBeNull();
         deserialized.Title.ShouldBe(createEventDto.Title);
         deserialized.Description.ShouldBe(createEventDto.Description);
         deserialized.Start.ShouldBe(createEventDto.Start);
         deserialized.End.ShouldBe(createEventDto.End);
-        
-        var dbEvent = await dbContext
-            .Event
-            .FirstAsync(e => e.Id == deserialized.Id);
+
+        var dbEvent = await dbContext.Event.FirstAsync(e => e.Id == deserialized.Id);
         dbEvent.Title.ShouldBe(createEventDto.Title);
         dbEvent.Description.ShouldBe(createEventDto.Description);
     }

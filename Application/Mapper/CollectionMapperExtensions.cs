@@ -6,6 +6,6 @@ public static class CollectionMapperExtensions
 {
     public static Collection<T> ToCollection<T>(this IEnumerable<T> enumerable)
     {
-        return new Collection<T>([ ..enumerable ]);
+        return new Collection<T>([.. enumerable]);
     }
 }

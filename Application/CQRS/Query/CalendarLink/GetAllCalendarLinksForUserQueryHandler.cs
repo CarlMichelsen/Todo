@@ -7,19 +7,18 @@ using Presentation.Dto.CalendarLink;
 
 namespace Application.CQRS.Query.CalendarLink;
 
-public class GetAllCalendarLinksForUserQueryHandler(
-    DatabaseContext databaseContext)
+public class GetAllCalendarLinksForUserQueryHandler(DatabaseContext databaseContext)
     : IQueryHandler<GetAllCalendarLinksForUserQuery, IEnumerable<CalendarLinkDto>>
 {
     private const int MaxResults = 200;
-    
+
     public async Task<IEnumerable<CalendarLinkDto>> Handle(
         GetAllCalendarLinksForUserQuery query,
-        CancellationToken cancellationToken)
+        CancellationToken cancellationToken
+    )
     {
         var results = await databaseContext
-            .CalendarLink
-            .Include(cl => cl.User)
+            .CalendarLink.Include(cl => cl.User)
             .Include(cl => cl.Calendars)
             .Where(cl => cl.UserId == query.User.UserId)
             .OrderByDescending(cl => cl.CreatedAt)

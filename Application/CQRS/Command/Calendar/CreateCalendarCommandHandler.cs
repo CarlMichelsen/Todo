@@ -16,18 +16,17 @@ public class CreateCalendarCommandHandler(
     ISender sender,
     ILogger<CreateCalendarCommandHandler> logger,
     TimeProvider timeProvider,
-    DatabaseContext databaseContext)
-    : ICommandHandler<CreateCalendarCommand>
+    DatabaseContext databaseContext
+) : ICommandHandler<CreateCalendarCommand>
 {
-    public async Task Handle(
-        CreateCalendarCommand command,
-        CancellationToken cancellationToken)
+    public async Task Handle(CreateCalendarCommand command, CancellationToken cancellationToken)
     {
         var now = timeProvider.GetUtcNow().UtcDateTime;
-        var userEntity = await databaseContext
-            .User
-            .FirstAsync(u => u.Id == command.User.UserId, cancellationToken);
-        
+        var userEntity = await databaseContext.User.FirstAsync(
+            u => u.Id == command.User.UserId,
+            cancellationToken
+        );
+
         var calendarEntity = new CalendarEntity
         {
             Id = new CalendarEntityId(Guid.CreateVersion7()),
@@ -40,19 +39,22 @@ public class CreateCalendarCommandHandler(
             LastSelectedAt = now,
             CreatedAt = now,
         };
-        
+
         userEntity.SelectedCalendarId = calendarEntity.Id;
-        
+
         databaseContext.Calendar.Add(calendarEntity);
         await databaseContext.SaveChangesAsync(cancellationToken);
-        
+
         logger.LogUsernameUserIdMethodNameEventId(
             command.User.Username,
             command.User.UserId,
             command.Type,
-            calendarEntity.Id.ToString());
+            calendarEntity.Id.ToString()
+        );
 
-        var createCalendarEvent = new CreateCalendarEvent(new ServerEventDestination([command.User.UserId]))
+        var createCalendarEvent = new CreateCalendarEvent(
+            new ServerEventDestination([command.User.UserId])
+        )
         {
             Calendar = calendarEntity.ToDto(),
             DispatchedAt = now,
@@ -60,8 +62,10 @@ public class CreateCalendarCommandHandler(
         };
 
         await sender.SendEvent(command.User, createCalendarEvent, cancellationToken);
-        
-        var selectCalendarEvent = new SelectCalendarEvent(new ServerEventDestination([command.User.UserId]))
+
+        var selectCalendarEvent = new SelectCalendarEvent(
+            new ServerEventDestination([command.User.UserId])
+        )
         {
             CalendarId = userEntity.SelectedCalendarId,
             DispatchedAt = timeProvider.GetUtcNow().UtcDateTime,

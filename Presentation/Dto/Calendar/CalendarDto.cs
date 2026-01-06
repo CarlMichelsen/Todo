@@ -9,4 +9,5 @@ public record CalendarDto(
     string Title,
     string Color,
     Collection<CalendarLinkDto> CalendarLinks,
-    UserDto Owner);
+    UserDto Owner
+);

@@ -16,4 +16,5 @@ public record JwtUser(
     Collection<string> Roles,
     Uri Profile,
     Uri? ProfileMedium = null,
-    Uri? ProfileLarge = null);
+    Uri? ProfileLarge = null
+);

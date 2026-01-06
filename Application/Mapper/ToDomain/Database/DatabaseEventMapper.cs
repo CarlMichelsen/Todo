@@ -11,10 +11,8 @@ public static class DatabaseEventMapper
     {
         ArgumentNullException.ThrowIfNull(eventEntity.CreatedBy);
 
-        var attendeeInfo = new EventAttendeeInfo(
-            [],
-            (Organizer)eventEntity.CreatedBy.ToPerson());
-        
+        var attendeeInfo = new EventAttendeeInfo([], (Organizer)eventEntity.CreatedBy.ToPerson());
+
 #pragma warning disable S1135 // TODO: Fix these issues
         var calendarEvent = new CalendarEvent
         {

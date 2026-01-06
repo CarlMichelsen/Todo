@@ -9,11 +9,16 @@ public static class SenderEventDispatchExtensions
         this ISender sender,
         JwtUser user,
         BaseServerEvent serverEvent,
-        CancellationToken cancellationToken)
+        CancellationToken cancellationToken
+    )
     {
-        await sender.Send(new DispatchEventCommand(
-            CommandId: serverEvent.EventId,
-            User: user,
-            ServerEvent: serverEvent), cancellationToken);
+        await sender.Send(
+            new DispatchEventCommand(
+                CommandId: serverEvent.EventId,
+                User: user,
+                ServerEvent: serverEvent
+            ),
+            cancellationToken
+        );
     }
 }

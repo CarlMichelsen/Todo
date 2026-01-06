@@ -8,78 +8,79 @@ using Presentation.Service;
 
 namespace Application.Service;
 
-public class CalendarService(
-    ISender sender,
-    IHttpContextAccessor httpContextAccessor) : ICalendarService
+public class CalendarService(ISender sender, IHttpContextAccessor httpContextAccessor)
+    : ICalendarService
 {
-    public async Task<IEnumerable<CalendarDto>> GetCalendars(
-        CancellationToken cancellationToken)
+    public async Task<IEnumerable<CalendarDto>> GetCalendars(CancellationToken cancellationToken)
     {
-        var query = new GetCalendarsQuery(
-            User: httpContextAccessor.GetJwtUser());
+        var query = new GetCalendarsQuery(User: httpContextAccessor.GetJwtUser());
 
         return await sender.Send(query, cancellationToken);
     }
 
     public async Task<CalendarDto?> GetCalendar(
         Guid calendarId,
-        CancellationToken cancellationToken)
+        CancellationToken cancellationToken
+    )
     {
         var query = new GetSingleCalendarQuery(
             User: httpContextAccessor.GetJwtUser(),
-            CalendarId: calendarId);
+            CalendarId: calendarId
+        );
 
         return await sender.Send(query, cancellationToken);
     }
 
-    public async Task SelectCalendar(
-        Guid calendarId,
-        CancellationToken cancellationToken)
+    public async Task SelectCalendar(Guid calendarId, CancellationToken cancellationToken)
     {
         var selectCalendarCommand = new SelectCalendarCommand(
             User: httpContextAccessor.GetJwtUser(),
             CommandId: Guid.CreateVersion7(),
-            CalendarId: calendarId);
-        
+            CalendarId: calendarId
+        );
+
         await sender.Send(selectCalendarCommand, cancellationToken);
     }
 
     public async Task CreateCalendar(
         CreateCalendarDto createCalendar,
-        CancellationToken cancellationToken)
+        CancellationToken cancellationToken
+    )
     {
         var createCalendarCommand = new CreateCalendarCommand(
             CommandId: Guid.CreateVersion7(),
             User: httpContextAccessor.GetJwtUser(),
             Title: createCalendar.Title,
-            Color: createCalendar.Color);
-        
+            Color: createCalendar.Color
+        );
+
         await sender.Send(createCalendarCommand, cancellationToken);
     }
 
     public async Task EditCalendar(
         Guid calendarId,
         EditCalendarDto editCalendar,
-        CancellationToken cancellationToken)
+        CancellationToken cancellationToken
+    )
     {
         var editCalendarCommand = new EditCalendarCommand(
             CommandId: Guid.CreateVersion7(),
             User: httpContextAccessor.GetJwtUser(),
-            CalendarId:  calendarId,
+            CalendarId: calendarId,
             Title: editCalendar.Title,
-            Color: editCalendar.Color);
-        
+            Color: editCalendar.Color
+        );
+
         await sender.Send(editCalendarCommand, cancellationToken);
     }
 
-    public async Task DeleteCalendar(
-        Guid calendarId,
-        CancellationToken cancellationToken)
+    public async Task DeleteCalendar(Guid calendarId, CancellationToken cancellationToken)
     {
         var deleteCalenderCommand = new DeleteCalendarCommand(
             CommandId: Guid.CreateVersion7(),
             User: httpContextAccessor.GetJwtUser(),
-            CalendarId: calendarId);
+            CalendarId: calendarId
+        );
 
         await sender.Send(deleteCalenderCommand, cancellationToken);
     }

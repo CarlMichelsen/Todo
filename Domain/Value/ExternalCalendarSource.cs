@@ -1,5 +1,3 @@
 ﻿namespace Domain.Value;
 
-public record ExternalCalendarSource(
-    Guid LinkId,
-    Uri OriginalUrl);
+public record ExternalCalendarSource(Guid LinkId, Uri OriginalUrl);

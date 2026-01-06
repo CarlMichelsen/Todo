@@ -9,48 +9,46 @@ using Presentation.Service;
 
 namespace Application.Service;
 
-public class CalendarLinkService(
-    ISender sender,
-    IHttpContextAccessor httpContextAccessor) : ICalendarLinkService
+public class CalendarLinkService(ISender sender, IHttpContextAccessor httpContextAccessor)
+    : ICalendarLinkService
 {
     public async Task<IEnumerable<CalendarLinkDto>> GetCalendarLinksForCalendar(
         Guid calendarId,
-        CancellationToken cancellationToken)
+        CancellationToken cancellationToken
+    )
     {
         var user = httpContextAccessor.GetJwtUser();
-        var query = new GetCalendarLinksForCalendarQuery(
-            User: user,
-            CalendarId: calendarId);
-        
+        var query = new GetCalendarLinksForCalendarQuery(User: user, CalendarId: calendarId);
+
         return await sender.Send(query, cancellationToken);
     }
 
     public async Task<IEnumerable<CalendarLinkDto>> GetAllCalendarLinksForUser(
-        CancellationToken cancellationToken)
+        CancellationToken cancellationToken
+    )
     {
         var user = httpContextAccessor.GetJwtUser();
-        var query = new GetAllCalendarLinksForUserQuery(
-            User: user);
+        var query = new GetAllCalendarLinksForUserQuery(User: user);
 
         return await sender.Send(query, cancellationToken);
     }
 
     public async Task<CalendarLinkDto?> GetCalendarLink(
         Guid calendarLinkId,
-        CancellationToken cancellationToken)
+        CancellationToken cancellationToken
+    )
     {
         var user = httpContextAccessor.GetJwtUser();
-        var query = new GetCalendarLinkQuery(
-            User: user,
-            CalendarLinkId: calendarLinkId);
-        
+        var query = new GetCalendarLinkQuery(User: user, CalendarLinkId: calendarLinkId);
+
         return await sender.Send(query, cancellationToken);
     }
 
     public async Task CreateCalendarLink(
         Guid initialParentCalendarId,
         CreateCalendarLinkDto createCalendar,
-        CancellationToken cancellationToken)
+        CancellationToken cancellationToken
+    )
     {
         var user = httpContextAccessor.GetJwtUser();
         var command = new CreateCalendarLinkCommand(
@@ -59,15 +57,17 @@ public class CalendarLinkService(
             Title: createCalendar.Title,
             Color: createCalendar.Color,
             CalendarLink: createCalendar.CalendarLink,
-            InitialParentCalendarId: initialParentCalendarId);
-        
+            InitialParentCalendarId: initialParentCalendarId
+        );
+
         await sender.Send(command, cancellationToken);
     }
 
     public async Task EditCalendarLink(
         Guid calendarLinkId,
         EditCalendarLinkDto editCalendar,
-        CancellationToken cancellationToken)
+        CancellationToken cancellationToken
+    )
     {
         var user = httpContextAccessor.GetJwtUser();
         var command = new EditCalendarLinkCommand(
@@ -78,21 +78,21 @@ public class CalendarLinkService(
             CalendarLink: editCalendar.CalendarLink,
             Color: editCalendar.Color,
             DeleteParentCalendarAssociation: editCalendar.DeleteParentCalendarAssociation.ToCollection(),
-            AddParentCalendarAssociation: editCalendar.AddParentCalendarAssociation.ToCollection());
-        
+            AddParentCalendarAssociation: editCalendar.AddParentCalendarAssociation.ToCollection()
+        );
+
         await sender.Send(command, cancellationToken);
     }
 
-    public async Task DeleteCalendarLink(
-        Guid calendarLinkId,
-        CancellationToken cancellationToken)
+    public async Task DeleteCalendarLink(Guid calendarLinkId, CancellationToken cancellationToken)
     {
         var user = httpContextAccessor.GetJwtUser();
         var command = new DeleteCalendarLinkCommand(
             CommandId: Guid.CreateVersion7(),
             User: user,
-            CalendarLinkId: calendarLinkId);
-        
+            CalendarLinkId: calendarLinkId
+        );
+
         await sender.Send(command, cancellationToken);
     }
 }

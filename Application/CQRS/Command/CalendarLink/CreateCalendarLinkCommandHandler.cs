@@ -18,34 +18,38 @@ public class CreateCalendarLinkCommandHandler(
     ILogger<CreateCalendarLinkCommandHandler> logger,
     DatabaseContext databaseContext,
     ICalendarClient calendarClient,
-    TimeProvider timeProvider)
-    : ICommandHandler<CreateCalendarLinkCommand>
+    TimeProvider timeProvider
+) : ICommandHandler<CreateCalendarLinkCommand>
 {
-    public async Task Handle(
-        CreateCalendarLinkCommand command,
-        CancellationToken cancellationToken)
+    public async Task Handle(CreateCalendarLinkCommand command, CancellationToken cancellationToken)
     {
         var now = timeProvider.GetUtcNow().UtcDateTime;
-        var initialParentCalendarEntity = await databaseContext
-            .Calendar
-            .FirstAsync(c => c.OwnerId! == command.User.UserId && c.Id == command.InitialParentCalendarId, cancellationToken);
-        
+        var initialParentCalendarEntity = await databaseContext.Calendar.FirstAsync(
+            c => c.OwnerId! == command.User.UserId && c.Id == command.InitialParentCalendarId,
+            cancellationToken
+        );
+
         var existingCalendarLink = await databaseContext
-            .CalendarLink
-            .Include(cl => cl.User)
-            .FirstOrDefaultAsync(cl => cl.UserId == command.User.UserId && cl.CalendarLink == command.CalendarLink, cancellationToken);
+            .CalendarLink.Include(cl => cl.User)
+            .FirstOrDefaultAsync(
+                cl => cl.UserId == command.User.UserId && cl.CalendarLink == command.CalendarLink,
+                cancellationToken
+            );
         if (existingCalendarLink is not null)
         {
             initialParentCalendarEntity.CalendarLinks.Add(existingCalendarLink);
-            
+
             await databaseContext.SaveChangesAsync(cancellationToken);
             logger.LogUsernameUserIdMethodNameEventId(
                 command.User.Username,
                 command.User.UserId,
                 $"{command.Type} - Added existing calendar link to calendar <{initialParentCalendarEntity.Id}>",
-                existingCalendarLink.Id.ToString());
+                existingCalendarLink.Id.ToString()
+            );
 
-            var editCalendarLinkEvent = new EditCalendarLinkEvent(new ServerEventDestination([command.User.UserId]))
+            var editCalendarLinkEvent = new EditCalendarLinkEvent(
+                new ServerEventDestination([command.User.UserId])
+            )
             {
                 CalendarLink = existingCalendarLink.ToDto(),
                 DeleteParentCalendarAssociation = [],
@@ -58,7 +62,10 @@ public class CreateCalendarLinkCommandHandler(
         }
 
         var calendarLinkEntityId = new CalendarLinkEntityId(Guid.CreateVersion7());
-        var productId = await calendarClient.GetCalendarProductId(calendarLinkEntityId, command.CalendarLink);
+        var productId = await calendarClient.GetCalendarProductId(
+            calendarLinkEntityId,
+            command.CalendarLink
+        );
         var calendarLinkEntity = new CalendarLinkEntity
         {
             Id = calendarLinkEntityId,
@@ -70,21 +77,25 @@ public class CreateCalendarLinkCommandHandler(
             UserId = new UserEntityId(command.User.UserId, true),
             CreatedAt = now,
         };
-        
+
         databaseContext.CalendarLink.Add(calendarLinkEntity);
         await databaseContext.SaveChangesAsync(cancellationToken);
-        
-        await databaseContext.Entry(calendarLinkEntity)
+
+        await databaseContext
+            .Entry(calendarLinkEntity)
             .Reference(u => u.User)
             .LoadAsync(cancellationToken);
-        
+
         logger.LogUsernameUserIdMethodNameEventId(
             command.User.Username,
             command.User.UserId,
             command.Type,
-            calendarLinkEntity.Id.ToString());
+            calendarLinkEntity.Id.ToString()
+        );
 
-        var serverEvent = new CreateCalendarLinkEvent(new ServerEventDestination([command.User.UserId]))
+        var serverEvent = new CreateCalendarLinkEvent(
+            new ServerEventDestination([command.User.UserId])
+        )
         {
             CalendarLink = calendarLinkEntity.ToDto(),
             DispatchedAt = now,

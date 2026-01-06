@@ -9,13 +9,14 @@ namespace Presentation.Abstractions.CQRS;
 public partial class CommandConsumer(
     ILogger<CommandConsumer> logger,
     Channel<ICommand> channel,
-    IServiceScopeFactory serviceScopeFactory)
-    : BackgroundService
+    IServiceScopeFactory serviceScopeFactory
+) : BackgroundService
 {
     [System.Diagnostics.CodeAnalysis.SuppressMessage(
-        "Design", 
-        "CA1031:Do not catch general exception types", 
-        Justification = "Background service must continue processing commands even if one fails")]
+        "Design",
+        "CA1031:Do not catch general exception types",
+        Justification = "Background service must continue processing commands even if one fails"
+    )]
     protected override async Task ExecuteAsync(CancellationToken stoppingToken)
     {
         while (await channel.Reader.WaitToReadAsync(stoppingToken))
@@ -35,7 +36,7 @@ public partial class CommandConsumer(
     }
 
     /// <summary>
-    /// Instantiate scoped CommandHandler that matches the command and execute it. 
+    /// Instantiate scoped CommandHandler that matches the command and execute it.
     /// </summary>
     /// <param name="command">The command to execute.</param>
     /// <param name="cancellationToken">Cancellation.</param>
@@ -43,18 +44,18 @@ public partial class CommandConsumer(
     {
         // Commands should be scoped
         await using var scope = serviceScopeFactory.CreateAsyncScope();
-        
+
         // Get appropriate command handler identifier type
         var commandType = command.GetType();
         var handlerType = typeof(ICommandHandler<>).MakeGenericType(commandType);
-        
+
         // Instantiate the handler from identifier type
         var handler = scope.ServiceProvider.GetRequiredService(handlerType);
         var handleMethod = handlerType.GetMethod(nameof(ICommandHandler<>.Handle))!;
-        
+
         // Execute command
         var commandTask = (Task)handleMethod.Invoke(handler, [command, cancellationToken])!;
-        
+
         // Await completion of command execution
         await commandTask;
     }

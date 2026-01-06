@@ -11,13 +11,15 @@ public class GetCalendarsQueryHandler(DatabaseContext databaseContext)
     : IQueryHandler<GetCalendarsQuery, List<CalendarDto>>
 {
     private const int MaxResults = 200;
-    
-    public async Task<List<CalendarDto>> Handle(GetCalendarsQuery query, CancellationToken cancellationToken)
+
+    public async Task<List<CalendarDto>> Handle(
+        GetCalendarsQuery query,
+        CancellationToken cancellationToken
+    )
     {
         // Tracking is required to combat cyclic dependencies
         var calendars = await databaseContext
-            .Calendar
-            .Include(c => c.Owner)
+            .Calendar.Include(c => c.Owner)
             .Include(c => c.CalendarLinks)
                 .ThenInclude(c => c.Calendars)
             .Where(c => c.OwnerId! == query.User.UserId)
@@ -25,6 +27,6 @@ public class GetCalendarsQueryHandler(DatabaseContext databaseContext)
             .Take(MaxResults)
             .ToListAsync(cancellationToken);
 
-        return [ ..calendars.Select(CalendarMapper.ToDto) ];
+        return [.. calendars.Select(CalendarMapper.ToDto)];
     }
 }

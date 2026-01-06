@@ -12,12 +12,14 @@ public static class EnsureUserDatabaseExtensions
         this DatabaseContext databaseContext,
         JwtUser user,
         DateTime now,
-        CancellationToken cancellationToken = default)
+        CancellationToken cancellationToken = default
+    )
     {
-        var userEntity = await databaseContext
-            .User
-            .FirstOrDefaultAsync(u => u.Id == user.UserId, cancellationToken);
-        
+        var userEntity = await databaseContext.User.FirstOrDefaultAsync(
+            u => u.Id == user.UserId,
+            cancellationToken
+        );
+
         if (userEntity is not null)
         {
             return userEntity;
@@ -35,7 +37,7 @@ public static class EnsureUserDatabaseExtensions
             CreatedAt = now,
         };
         databaseContext.User.Add(userEntity);
-        
+
         var defaultCalendar = new CalendarEntity
         {
             Id = new CalendarEntityId(Guid.CreateVersion7()),
@@ -46,16 +48,16 @@ public static class EnsureUserDatabaseExtensions
             CreatedAt = now,
         };
         databaseContext.Calendar.Add(defaultCalendar);
-        
+
         await databaseContext.SaveChangesAsync(cancellationToken);
-        
+
         userEntity.SelectedCalendarId = defaultCalendar.Id;
         defaultCalendar.OwnerId = userEntity.Id;
         defaultCalendar.Owner = userEntity;
         defaultCalendar.LastSelectedAt = now;
 
         await databaseContext.SaveChangesAsync(cancellationToken);
-        
+
         return userEntity;
     }
 }

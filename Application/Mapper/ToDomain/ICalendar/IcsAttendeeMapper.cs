@@ -6,27 +6,21 @@ namespace Application.Mapper.ToDomain.ICalendar;
 public static class IcsAttendeeMapper
 {
     public static EventAttendeeInfo ToDomainAttendeeInfo(
-        this Ical.Net.CalendarComponents.CalendarEvent calendarEvent)
+        this Ical.Net.CalendarComponents.CalendarEvent calendarEvent
+    )
     {
         var organizerEmail = ExtractEmailFromUri(calendarEvent.Organizer?.Value);
         var organizer = string.IsNullOrWhiteSpace(organizerEmail)
             ? null
-            : new Organizer
-            {
-                Email = organizerEmail,
-                Name = calendarEvent.Organizer?.CommonName,
-            };
+            : new Organizer { Email = organizerEmail, Name = calendarEvent.Organizer?.CommonName };
 
         var attendees = calendarEvent
-            .Attendees
-            .Select(a => a.ToDomain())
+            .Attendees.Select(a => a.ToDomain())
             .Where(a => a is not null)
             .OfType<Attendee>()
             .ToCollection();
 
-        return new EventAttendeeInfo(
-            Attendees: attendees,
-            Organizer: organizer);
+        return new EventAttendeeInfo(Attendees: attendees, Organizer: organizer);
     }
 
     public static Attendee? ToDomain(this Ical.Net.DataTypes.Attendee attendee)
@@ -37,7 +31,7 @@ public static class IcsAttendeeMapper
             // I will not accept attendees without emails.
             return null;
         }
-        
+
         return new Attendee
         {
             Email = email,
@@ -46,37 +40,37 @@ public static class IcsAttendeeMapper
             Status = ParseAttendeeStatus(attendee.ParticipationStatus),
         };
     }
-    
+
     private static string? ExtractEmailFromUri(Uri? uri)
     {
         if (uri is null)
         {
             return null;
         }
-        
+
         // Handle mailto: URIs
         if (uri.Scheme.Equals("mailto", StringComparison.OrdinalIgnoreCase))
         {
             // Uri.LocalPath gives us the email after "mailto:"
             return uri.LocalPath;
         }
-    
+
         // Fallback for other URI types (though attendees should always be mailto:)
         return uri.ToString();
     }
-    
+
     private static AttendeeRole ParseAttendeeRole(string? role)
     {
         if (string.IsNullOrWhiteSpace(role))
             return AttendeeRole.Required;
-    
+
         return role.ToUpperInvariant() switch
         {
             "CHAIR" => AttendeeRole.Chair,
             "REQ-PARTICIPANT" => AttendeeRole.Required,
             "OPT-PARTICIPANT" => AttendeeRole.Optional,
             "NON-PARTICIPANT" => AttendeeRole.NonParticipant,
-            _ => AttendeeRole.Required
+            _ => AttendeeRole.Required,
         };
     }
 
@@ -84,7 +78,7 @@ public static class IcsAttendeeMapper
     {
         if (string.IsNullOrWhiteSpace(status))
             return AttendeeStatus.NeedsAction;
-    
+
         return status.ToUpperInvariant() switch
         {
             "NEEDS-ACTION" => AttendeeStatus.NeedsAction,
@@ -92,7 +86,7 @@ public static class IcsAttendeeMapper
             "DECLINED" => AttendeeStatus.Declined,
             "TENTATIVE" => AttendeeStatus.Tentative,
             "DELEGATED" => AttendeeStatus.Delegated,
-            _ => AttendeeStatus.NeedsAction
+            _ => AttendeeStatus.NeedsAction,
         };
     }
 }

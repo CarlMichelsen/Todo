@@ -10,7 +10,6 @@ namespace Presentation.SSE;
 [JsonDerivedType(typeof(SelectCalendarEvent), "SelectCalendar")]
 [JsonDerivedType(typeof(CreateCalendarEvent), "CreateCalendar")]
 [JsonDerivedType(typeof(DeleteCalendarEvent), "DeleteCalendar")]
-
 // CalendarLink
 [JsonDerivedType(typeof(CreateCalendarLinkEvent), "CreateCalendarLink")]
 [JsonDerivedType(typeof(DeleteCalendarLinkEvent), "DeleteCalendarLink")]
@@ -19,9 +18,7 @@ public abstract class BaseServerEvent
 {
     public const string EventSuffix = "Event";
 
-    protected BaseServerEvent()
-    {
-    }
+    protected BaseServerEvent() { }
 
     protected BaseServerEvent(ServerEventDestination destination)
     {
@@ -30,11 +27,11 @@ public abstract class BaseServerEvent
 
     [JsonIgnore]
     public ServerEventDestination? Destination { get; init; }
-    
+
     public required DateTime DispatchedAt { get; init; }
-    
+
     public required Guid EventId { get; init; }
-    
+
     [JsonIgnore]
     public string EventName => GetEventName();
 
@@ -45,10 +42,9 @@ public abstract class BaseServerEvent
         {
             typeName = typeName[..^EventSuffix.Length];
         }
-    
+
         return typeName;
     }
 }
 
-public record ServerEventDestination(
-    HashSet<Guid> Recipients);
+public record ServerEventDestination(HashSet<Guid> Recipients);

@@ -13,7 +13,8 @@ public static partial class ExceptionHandlerExtensions
             errorApp.Run(async context =>
             {
                 var feature = context.Features.Get<IExceptionHandlerFeature>();
-                if (feature is null) return;
+                if (feature is null)
+                    return;
 
                 var exception = feature.Error;
 
@@ -23,7 +24,7 @@ public static partial class ExceptionHandlerExtensions
                     Title = "An unexpected error occurred.",
                     Detail = exception.Message,
                     Status = (int)HttpStatusCode.InternalServerError,
-                    Instance = context.Request.Path
+                    Instance = context.Request.Path,
                 };
 
                 // You can customize further based on exception type:
@@ -59,5 +60,9 @@ public static partial class ExceptionHandlerExtensions
     }
 
     [LoggerMessage(LogLevel.Error, "Unhandled exception occurred: {message}")]
-    static partial void LogUnhandledExceptionOccurredMessage(this ILogger logger, Exception exception, string message);
+    static partial void LogUnhandledExceptionOccurredMessage(
+        this ILogger logger,
+        Exception exception,
+        string message
+    );
 }

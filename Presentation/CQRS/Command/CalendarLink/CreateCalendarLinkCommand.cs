@@ -10,8 +10,8 @@ public record CreateCalendarLinkCommand(
     Guid InitialParentCalendarId,
     [Required, MinLength(2), MaxLength(100)] string Title,
     [Required] Uri CalendarLink,
-    [Required, HexColor] string Color)
-    : ICommand
+    [Required, HexColor] string Color
+) : ICommand
 {
     public string Type => GetType().Name;
 }

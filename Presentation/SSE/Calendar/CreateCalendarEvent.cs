@@ -2,8 +2,7 @@
 
 namespace Presentation.SSE.Calendar;
 
-public class CreateCalendarEvent(ServerEventDestination destination)
-    : BaseServerEvent(destination)
+public class CreateCalendarEvent(ServerEventDestination destination) : BaseServerEvent(destination)
 {
     public required CalendarDto Calendar { get; init; }
 }

@@ -19,132 +19,133 @@ namespace App;
 
 public static class Dependencies
 {
-    public static void RegisterTodoDependencies(
-        this WebApplicationBuilder builder)
+    public static void RegisterTodoDependencies(this WebApplicationBuilder builder)
     {
         // Configuration
-        builder.Configuration
-            .AddJsonFile(
-                "secrets.json",
-                optional: true,
-                reloadOnChange: true)
+        builder
+            .Configuration.AddJsonFile("secrets.json", optional: true, reloadOnChange: true)
             .AddEnvironmentVariables();
-        builder.Services
-            .AddControllers()
+        builder
+            .Services.AddControllers()
             .AddApplicationPart(typeof(Program).Assembly)
-            .AddJsonOptions(o => o.JsonSerializerOptions.Converters.Add(new JsonStringEnumConverter()));
+            .AddJsonOptions(o =>
+                o.JsonSerializerOptions.Converters.Add(new JsonStringEnumConverter())
+            );
         builder.Environment.ApplicationName = ApplicationConstants.Name;
 
         // Utility
         builder
             .ApplicationUseSerilog()
-            .Services
-            .AddSingleton(TimeProvider.System)
+            .Services.AddSingleton(TimeProvider.System)
             .AddHttpContextAccessor()
             .AddMemoryCache()
             .AddCQRS();
-        
+
         // Commands and queries
         builder.RegisterCommandQueryDependencies();
-        
+
         // Healthcheck
-        builder.Services
-            .AddHealthChecks()
-            .AddCheck("self", () => HealthCheckResult.Healthy());
-        
+        builder.Services.AddHealthChecks().AddCheck("self", () => HealthCheckResult.Healthy());
+
         // Auth
         builder.RegisterAuthDependencies();
-        
+
         // Options
-        builder.Services
-            .AddConfigurationOptions<JwtOptions>(builder.Configuration)
+        builder
+            .Services.AddConfigurationOptions<JwtOptions>(builder.Configuration)
             .AddConfigurationOptions<CorsOptions>(builder.Configuration);
-        
+
         // CORS
         var corsConfig = builder
-            .Configuration
-            .GetSection(CorsOptions.SectionName)
+            .Configuration.GetSection(CorsOptions.SectionName)
             .Get<CorsOptions>();
         ArgumentNullException.ThrowIfNull(corsConfig);
-        
+
         builder.Services.AddCors(options =>
         {
             options.AddDefaultPolicy(policy =>
             {
                 var origins = corsConfig
-                    .AllowedDomains
-                    .Select(uri => uri.GetLeftPart(UriPartial.Authority).TrimEnd('/'))
+                    .AllowedDomains.Select(uri =>
+                        uri.GetLeftPart(UriPartial.Authority).TrimEnd('/')
+                    )
                     .ToArray();
-                policy
-                    .WithOrigins(origins)
-                    .AllowAnyHeader()
-                    .AllowAnyMethod()
-                    .AllowCredentials();
+                policy.WithOrigins(origins).AllowAnyHeader().AllowAnyMethod().AllowCredentials();
             });
         });
-        
+
         // Database
         builder.AddDatabase<DatabaseContext>();
-        
+
         // Services
-        builder.Services
-            .AddScoped<ICalendarService, CalendarService>()
+        builder
+            .Services.AddScoped<ICalendarService, CalendarService>()
             .AddScoped<ICalendarLinkService, CalendarLinkService>()
             .AddScoped<IEventService, EventService>();
-        
+
         // SSE Channel
-        builder.Services
-            .AddScoped<IConnectionManager, ConnectionManager>()
-            .AddSingleton(_ => Channel.CreateUnbounded<SseItem<BaseServerEvent>>(new UnboundedChannelOptions
-            {
-                SingleReader = true,
-                AllowSynchronousContinuations = false,
-            }))
+        builder
+            .Services.AddScoped<IConnectionManager, ConnectionManager>()
+            .AddSingleton(_ =>
+                Channel.CreateUnbounded<SseItem<BaseServerEvent>>(
+                    new UnboundedChannelOptions
+                    {
+                        SingleReader = true,
+                        AllowSynchronousContinuations = false,
+                    }
+                )
+            )
             .AddSingleton<IConnectionRegistry, ConnectionRegistry>();
-        
+
         // Client
-        builder.Services
-            .AddHttpClient<ICalendarClient, CalendarClient>()
+        builder
+            .Services.AddHttpClient<ICalendarClient, CalendarClient>()
             .AddStandardResilienceHandler();
-        
+
         // Add services to the container.
         // Learn more about configuring OpenAPI at https://aka.ms/aspnet/openapi
         builder.Services.AddOpenApi();
     }
-    
+
     private static void RegisterAuthDependencies(this WebApplicationBuilder builder)
     {
-        var jwtOptions = builder.Configuration
-            .GetSection(JwtOptions.SectionName)
-            .Get<JwtOptions>();
-        
-        ArgumentNullException.ThrowIfNull(jwtOptions);
-        
-        builder.Services
-            .AddAuthentication()
-            .AddJwtBearer("CookieScheme", options =>
-            {
-                var timeProvider = builder.Services.BuildServiceProvider()
-                    .GetService<TimeProvider>();
-                
-                // Configure JWT settings
-                options.TokenValidationParameters = TokenValidationParametersFactory
-                    .AccessValidationParameters(jwtOptions, timeProvider);
-                
-                options.MapInboundClaims = false; // Important!
+        var jwtOptions = builder.Configuration.GetSection(JwtOptions.SectionName).Get<JwtOptions>();
 
-                // Get token from cookie
-                options.Events = new JwtBearerEvents
+        ArgumentNullException.ThrowIfNull(jwtOptions);
+
+        builder
+            .Services.AddAuthentication()
+            .AddJwtBearer(
+                "CookieScheme",
+                options =>
                 {
-                    OnMessageReceived = context =>
+                    var timeProvider = builder
+                        .Services.BuildServiceProvider()
+                        .GetService<TimeProvider>();
+
+                    // Configure JWT settings
+                    options.TokenValidationParameters =
+                        TokenValidationParametersFactory.AccessValidationParameters(
+                            jwtOptions,
+                            timeProvider
+                        );
+
+                    options.MapInboundClaims = false; // Important!
+
+                    // Get token from cookie
+                    options.Events = new JwtBearerEvents
                     {
-                        context.Token = context.Request.Cookies[ApplicationConstants.AccessCookieName];
-                        return Task.CompletedTask;
-                    },
-                };
-            });
-        
-        builder.Services
-            .AddAuthorization();
+                        OnMessageReceived = context =>
+                        {
+                            context.Token = context.Request.Cookies[
+                                ApplicationConstants.AccessCookieName
+                            ];
+                            return Task.CompletedTask;
+                        },
+                    };
+                }
+            );
+
+        builder.Services.AddAuthorization();
     }
 }

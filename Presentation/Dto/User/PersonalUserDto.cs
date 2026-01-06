@@ -12,4 +12,5 @@ public record PersonalUserDto(
     string AuthenticationProviderId,
     Uri Profile,
     Uri? ProfileMedium = null,
-    Uri? ProfileLarge = null) : UserDto(UserId, UserName, Profile);
+    Uri? ProfileLarge = null
+) : UserDto(UserId, UserName, Profile);

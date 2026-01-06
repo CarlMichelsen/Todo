@@ -11,7 +11,10 @@ public static class StaticFileOptionsFactory
             OnPrepareResponse = context =>
             {
                 const int oneWeek = 604800;
-                context.Context.Response.Headers.Append("Cache-Control", $"public, max-age={oneWeek * 53}");
+                context.Context.Response.Headers.Append(
+                    "Cache-Control",
+                    $"public, max-age={oneWeek * 53}"
+                );
             },
         };
     }

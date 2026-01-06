@@ -14,17 +14,18 @@ public class EditCalendarCommandHandler(
     ISender sender,
     ILogger<EditCalendarCommandHandler> logger,
     TimeProvider timeProvider,
-    DatabaseContext databaseContext) : ICommandHandler<EditCalendarCommand>
+    DatabaseContext databaseContext
+) : ICommandHandler<EditCalendarCommand>
 {
     public async Task Handle(EditCalendarCommand command, CancellationToken cancellationToken)
     {
-        var userEntity = await databaseContext
-            .User
-            .FirstAsync(u => u.Id == command.User.UserId, cancellationToken);
-        
+        var userEntity = await databaseContext.User.FirstAsync(
+            u => u.Id == command.User.UserId,
+            cancellationToken
+        );
+
         var calendarEntity = await databaseContext
-            .Calendar
-            .Include(c => c.Owner)
+            .Calendar.Include(c => c.Owner)
             .Where(c => c.OwnerId == userEntity.Id && c.Id == command.CalendarId)
             .FirstOrDefaultAsync(cancellationToken);
 
@@ -37,21 +38,24 @@ public class EditCalendarCommandHandler(
         {
             calendarEntity.Title = command.Title;
         }
-        
+
         if (command.Color is not null)
         {
             calendarEntity.Color = command.Color;
         }
-        
+
         await databaseContext.SaveChangesAsync(cancellationToken);
-        
+
         logger.LogUsernameUserIdMethodNameEventId(
             command.User.Username,
             command.User.UserId,
             command.Type,
-            calendarEntity.Id.ToString());
-        
-        var editCalendarEvent = new EditCalendarEvent(new ServerEventDestination([command.User.UserId]))
+            calendarEntity.Id.ToString()
+        );
+
+        var editCalendarEvent = new EditCalendarEvent(
+            new ServerEventDestination([command.User.UserId])
+        )
         {
             Calendar = calendarEntity.ToDto(),
             DispatchedAt = timeProvider.GetUtcNow().UtcDateTime,

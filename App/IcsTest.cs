@@ -17,13 +17,10 @@ public static class IcsTest
         }
 
         var config = scope.ServiceProvider.GetRequiredService<IConfiguration>();
-        var fullViewLink = config
-            .GetSection("Test")
-            .GetSection("FullViewIcsLink")
-            .Get<string>();
+        var fullViewLink = config.GetSection("Test").GetSection("FullViewIcsLink").Get<string>();
         ArgumentException.ThrowIfNullOrWhiteSpace(fullViewLink);
         var uri = new Uri(fullViewLink, UriKind.Absolute);
-        
+
         var calendarClient = scope.ServiceProvider.GetRequiredService<ICalendarClient>();
         var user = new UserEntity
         {

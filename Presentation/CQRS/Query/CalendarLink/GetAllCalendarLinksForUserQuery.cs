@@ -3,6 +3,4 @@ using Presentation.Dto.CalendarLink;
 
 namespace Presentation.CQRS.Query.CalendarLink;
 
-public record GetAllCalendarLinksForUserQuery(
-    JwtUser User)
-    : IQuery<IEnumerable<CalendarLinkDto>>;
+public record GetAllCalendarLinksForUserQuery(JwtUser User) : IQuery<IEnumerable<CalendarLinkDto>>;

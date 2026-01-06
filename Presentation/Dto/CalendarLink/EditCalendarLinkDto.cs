@@ -8,13 +8,21 @@ public record EditCalendarLinkDto(
     Uri? CalendarLink,
     [HexColor] string? Color,
     IEnumerable<Guid> DeleteParentCalendarAssociation,
-    IEnumerable<Guid> AddParentCalendarAssociation) : IValidatableObject
+    IEnumerable<Guid> AddParentCalendarAssociation
+) : IValidatableObject
 {
     public IEnumerable<ValidationResult> Validate(ValidationContext validationContext)
     {
-        if (GuidOverlapChecker.HasOverlap(DeleteParentCalendarAssociation, AddParentCalendarAssociation))
+        if (
+            GuidOverlapChecker.HasOverlap(
+                DeleteParentCalendarAssociation,
+                AddParentCalendarAssociation
+            )
+        )
         {
-            yield return new ValidationResult($"{nameof(DeleteParentCalendarAssociation)} and {nameof(AddParentCalendarAssociation)} cannot have overlapping values");
+            yield return new ValidationResult(
+                $"{nameof(DeleteParentCalendarAssociation)} and {nameof(AddParentCalendarAssociation)} cannot have overlapping values"
+            );
         }
     }
 }

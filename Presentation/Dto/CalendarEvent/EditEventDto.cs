@@ -8,7 +8,8 @@ public record EditEventDto(
     [MaxLength(1028 * 32)] string? Description,
     DateTime? Start,
     DateTime? End,
-    [HexColor] string? Color) : IValidatableObject
+    [HexColor] string? Color
+) : IValidatableObject
 {
     public IEnumerable<ValidationResult> Validate(ValidationContext validationContext)
     {

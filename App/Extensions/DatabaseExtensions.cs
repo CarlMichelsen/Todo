@@ -18,21 +18,23 @@ public static class DatabaseExtensions
     {
         builder.Services.AddDbContext<TContext>(options =>
         {
-            options.UseNpgsql(
+            options
+                .UseNpgsql(
                     builder.Configuration.GetConnectionString("DefaultConnection"),
                     b =>
                     {
-                        var assemblyName = Assembly
-                            .GetExecutingAssembly()
-                            .GetName()
-                            .Name;
+                        var assemblyName = Assembly.GetExecutingAssembly().GetName().Name;
                         ArgumentException.ThrowIfNullOrWhiteSpace(assemblyName);
 
                         b.MigrationsAssembly(assemblyName);
-                        b.MigrationsHistoryTable("__EFMigrationsHistory", DatabaseContext.SchemaName);
-                    })
+                        b.MigrationsHistoryTable(
+                            "__EFMigrationsHistory",
+                            DatabaseContext.SchemaName
+                        );
+                    }
+                )
                 .UseSnakeCaseNamingConvention();
-            
+
             if (builder.Environment.IsDevelopment())
             {
                 options.EnableSensitiveDataLogging();

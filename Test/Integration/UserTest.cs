@@ -19,13 +19,19 @@ public class UserTest(IntegrationTestFactory factory)
         var client = factory.GetAuthorizedClient(ConfiguredTestUsers.Steve);
 
         // Act
-        var response = await client.GetAsync(new Uri("api/v1/user", UriKind.Relative), CancellationToken.None);
+        var response = await client.GetAsync(
+            new Uri("api/v1/user", UriKind.Relative),
+            CancellationToken.None
+        );
         var responseBody = await response.Content.ReadAsStringAsync();
 
         // Assert
         response.StatusCode.ShouldBe(HttpStatusCode.OK);
 
-        var deserialized = JsonSerializer.Deserialize<JwtUser>(responseBody, TestJsonOptions.Default);
+        var deserialized = JsonSerializer.Deserialize<JwtUser>(
+            responseBody,
+            TestJsonOptions.Default
+        );
         deserialized.ShouldNotBeNull();
         deserialized.UserId.ShouldBe(ConfiguredTestUsers.Steve.UserId);
         deserialized.Username.ShouldBe(ConfiguredTestUsers.Steve.Username);

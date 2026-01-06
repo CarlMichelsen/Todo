@@ -12,17 +12,17 @@ public class GetSingleCalendarQueryHandler(DatabaseContext databaseContext)
 {
     public async Task<CalendarDto?> Handle(
         GetSingleCalendarQuery query,
-        CancellationToken cancellationToken)
+        CancellationToken cancellationToken
+    )
     {
         // Tracking is required to combat cyclic dependencies
         var calendar = await databaseContext
-            .Calendar
-            .Include(c => c.Owner)
+            .Calendar.Include(c => c.Owner)
             .Include(c => c.CalendarLinks)
                 .ThenInclude(c => c.Calendars)
             .Where(c => c.OwnerId! == query.User.UserId && c.Id == query.CalendarId)
             .FirstOrDefaultAsync(cancellationToken);
-        
+
         return calendar?.ToDto();
     }
 }

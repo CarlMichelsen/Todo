@@ -7,13 +7,14 @@ public class TypedGuid<TEntity>
     where TEntity : IEntity
 {
     private const int AllowedVersion = 7;
-    
+
     protected TypedGuid(Guid value, bool allowWrongVersion = false)
     {
         if (!allowWrongVersion && value.Version != AllowedVersion)
         {
             throw new TypedGuidException(
-                $"Attempted to instantiate {nameof(TypedGuid<TEntity>)} with a guid not of the allowed version {AllowedVersion}.");
+                $"Attempted to instantiate {nameof(TypedGuid<TEntity>)} with a guid not of the allowed version {AllowedVersion}."
+            );
         }
 
         this.Value = value;
@@ -38,10 +39,15 @@ public class TypedGuid<TEntity>
 #pragma warning restore CA2225
 
     // Equality operators
-    [SuppressMessage("Blocker Code Smell", "S3875:\"operator==\" should not be overloaded on reference types")]
-    public static bool operator ==(TypedGuid<TEntity>? a, TypedGuid<TEntity>? b) => a?.Value == b?.Value;
+    [SuppressMessage(
+        "Blocker Code Smell",
+        "S3875:\"operator==\" should not be overloaded on reference types"
+    )]
+    public static bool operator ==(TypedGuid<TEntity>? a, TypedGuid<TEntity>? b) =>
+        a?.Value == b?.Value;
 
-    public static bool operator !=(TypedGuid<TEntity>? a, TypedGuid<TEntity>? b) => a?.Value != b?.Value;
+    public static bool operator !=(TypedGuid<TEntity>? a, TypedGuid<TEntity>? b) =>
+        a?.Value != b?.Value;
 
     public override string ToString() => this.Value.ToString();
 

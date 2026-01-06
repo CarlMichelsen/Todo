@@ -3,6 +3,4 @@ using Domain.People;
 
 namespace Domain.Value;
 
-public record EventAttendeeInfo(
-    Collection<Attendee> Attendees,
-    Organizer? Organizer);
+public record EventAttendeeInfo(Collection<Attendee> Attendees, Organizer? Organizer);

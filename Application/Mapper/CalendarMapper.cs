@@ -5,10 +5,12 @@ namespace Application.Mapper;
 
 public static class CalendarMapper
 {
-    public static CalendarDto ToDto(this CalendarEntity entity) => new(
-        Id: entity.Id.Value,
-        Title: entity.Title,
-        Color: entity.Color,
-        CalendarLinks: entity.CalendarLinks.Select(CalendarLinkMapper.ToDto).ToCollection(),
-        Owner: entity.Owner!.ToDto());
+    public static CalendarDto ToDto(this CalendarEntity entity) =>
+        new(
+            Id: entity.Id.Value,
+            Title: entity.Title,
+            Color: entity.Color,
+            CalendarLinks: entity.CalendarLinks.Select(CalendarLinkMapper.ToDto).ToCollection(),
+            Owner: entity.Owner!.ToDto()
+        );
 }

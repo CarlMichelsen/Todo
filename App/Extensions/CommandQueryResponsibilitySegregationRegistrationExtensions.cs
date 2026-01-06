@@ -11,16 +11,21 @@ public static class CommandQueryResponsibilitySegregationRegistrationExtensions
     {
         return services
             .AddHostedService<CommandConsumer>()
-            .AddSingleton(
-                _ => Channel.CreateUnbounded<ICommand>(new UnboundedChannelOptions
-                {
-                    SingleReader = true,
-                    AllowSynchronousContinuations = false,
-                }))
+            .AddSingleton(_ =>
+                Channel.CreateUnbounded<ICommand>(
+                    new UnboundedChannelOptions
+                    {
+                        SingleReader = true,
+                        AllowSynchronousContinuations = false,
+                    }
+                )
+            )
             .AddSingleton<ISender, BasicSender>();
     }
 
-    public static IServiceCollection AddCommandHandler<TCommandHandler, TCommand>(this IServiceCollection services)
+    public static IServiceCollection AddCommandHandler<TCommandHandler, TCommand>(
+        this IServiceCollection services
+    )
         where TCommandHandler : class, ICommandHandler<TCommand>
         where TCommand : ICommand
     {
@@ -28,8 +33,10 @@ public static class CommandQueryResponsibilitySegregationRegistrationExtensions
         BasicSender.RegisteredCommands.TryAdd(typeof(TCommand), typeof(TCommandHandler));
         return services.AddScoped<ICommandHandler<TCommand>, TCommandHandler>();
     }
-    
-    public static IServiceCollection AddQueryHandler<TQueryHandler, TQuery, TResponse>(this IServiceCollection services)
+
+    public static IServiceCollection AddQueryHandler<TQueryHandler, TQuery, TResponse>(
+        this IServiceCollection services
+    )
         where TQueryHandler : class, IQueryHandler<TQuery, TResponse>
         where TQuery : IQuery<TResponse>
         where TResponse : class?

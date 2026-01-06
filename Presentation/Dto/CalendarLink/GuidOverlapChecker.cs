@@ -10,14 +10,17 @@ public static class GuidOverlapChecker
         {
             return false;
         }
-        
+
         // Convert to HashSet to avoid multiple enumeration and get O(1) lookups
-        HashSet<Guid> set1 = [..list1];
-        
+        HashSet<Guid> set1 = [.. list1];
+
         return set1.Count != 0 && list2.Any(set1.Contains);
     }
-    
-    public static IEnumerable<Guid> GetOverlappingGuids(Collection<Guid> list1, Collection<Guid> list2)
+
+    public static IEnumerable<Guid> GetOverlappingGuids(
+        Collection<Guid> list1,
+        Collection<Guid> list2
+    )
     {
         return list1.Intersect(list2);
     }

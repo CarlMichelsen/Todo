@@ -9,9 +9,5 @@ public record EventDto(
     DateTime Start,
     DateTime End,
     UserDto CreatedBy,
-    string Color) : CreateEventDto(
-        Title,
-        Description,
-        Start,
-        End,
-        Color);
+    string Color
+) : CreateEventDto(Title, Description, Start, End, Color);

@@ -13,16 +13,23 @@ public record EditCalendarLinkCommand(
     Uri? CalendarLink,
     [HexColor] string? Color,
     IEnumerable<Guid> DeleteParentCalendarAssociation,
-    IEnumerable<Guid> AddParentCalendarAssociation)
-    : ICommand, IValidatableObject
+    IEnumerable<Guid> AddParentCalendarAssociation
+) : ICommand, IValidatableObject
 {
     public string Type => GetType().Name;
-    
+
     public IEnumerable<ValidationResult> Validate(ValidationContext validationContext)
     {
-        if (GuidOverlapChecker.HasOverlap(DeleteParentCalendarAssociation, AddParentCalendarAssociation))
+        if (
+            GuidOverlapChecker.HasOverlap(
+                DeleteParentCalendarAssociation,
+                AddParentCalendarAssociation
+            )
+        )
         {
-            yield return new ValidationResult($"{nameof(DeleteParentCalendarAssociation)} and {nameof(AddParentCalendarAssociation)} cannot have overlapping values");
+            yield return new ValidationResult(
+                $"{nameof(DeleteParentCalendarAssociation)} and {nameof(AddParentCalendarAssociation)} cannot have overlapping values"
+            );
         }
     }
 }

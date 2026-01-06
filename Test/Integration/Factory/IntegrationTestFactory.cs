@@ -14,7 +14,7 @@ namespace Test.Integration.Factory;
 public class IntegrationTestFactory : WebApplicationFactory<Program>, IAsyncLifetime
 {
     private const string DatabaseName = "IntegrationTestDatabase";
-    
+
     private readonly PostgreSqlContainer dbContainer = new PostgreSqlBuilder()
         .WithImage("postgres:16")
         .WithDatabase(DatabaseName)
@@ -23,13 +23,13 @@ public class IntegrationTestFactory : WebApplicationFactory<Program>, IAsyncLife
         .Build();
 
     private readonly JwtFactory jwtFactory = new();
-    
+
     protected override IHost CreateHost(IHostBuilder builder)
     {
         ArgumentNullException.ThrowIfNull(builder);
 
         builder.UseEnvironment("Testing");
-        
+
         // Configure the host BEFORE it's built - setup initial config
         builder.ConfigureHostConfiguration(SetupTestConfiguration);
 
@@ -39,10 +39,10 @@ public class IntegrationTestFactory : WebApplicationFactory<Program>, IAsyncLife
     protected override void ConfigureWebHost(IWebHostBuilder builder)
     {
         ArgumentNullException.ThrowIfNull(builder);
-        
+
         // Set environment here
         builder.UseEnvironment("Testing");
-        
+
         // setup config again because app config builder takes appsettings.Development.json and overrides existing config.
         builder.ConfigureAppConfiguration((_, config) => SetupTestConfiguration(config));
 
@@ -58,9 +58,12 @@ public class IntegrationTestFactory : WebApplicationFactory<Program>, IAsyncLife
         config
             .AddJsonFile("appsettings.Testing.json", optional: false, reloadOnChange: false)
             .AddEnvironmentVariables();
-        
+
         // Set environment variables (they override everything)
-        Environment.SetEnvironmentVariable("ConnectionStrings__DefaultConnection", dbContainer.GetConnectionString());
+        Environment.SetEnvironmentVariable(
+            "ConnectionStrings__DefaultConnection",
+            dbContainer.GetConnectionString()
+        );
         Environment.SetEnvironmentVariable("Jwt__Secrets__0", jwtFactory.JwtSecret);
         Environment.SetEnvironmentVariable("Jwt__Issuer", TestUser.Issuer);
         Environment.SetEnvironmentVariable("Jwt__Audience", TestUser.Audience);
@@ -69,7 +72,7 @@ public class IntegrationTestFactory : WebApplicationFactory<Program>, IAsyncLife
     public async Task InitializeAsync()
     {
         await dbContainer.StartAsync();
-        
+
         // Optional: Run migrations
         using var scope = Services.CreateScope();
         var dbContext = scope.ServiceProvider.GetRequiredService<DatabaseContext>();
@@ -91,7 +94,10 @@ public class IntegrationTestFactory : WebApplicationFactory<Program>, IAsyncLife
         var jwtUser = testUser.ToJwtUser(DateTimeOffset.UtcNow, TimeSpan.FromDays(1));
         var cookieJwtToken = jwtFactory.CreateJwtToken(jwtUser);
         var httpClient = this.CreateDefaultClient();
-        httpClient.DefaultRequestHeaders.Add("Cookie", $"{ApplicationConstants.AccessCookieName}={cookieJwtToken}");
+        httpClient.DefaultRequestHeaders.Add(
+            "Cookie",
+            $"{ApplicationConstants.AccessCookieName}={cookieJwtToken}"
+        );
 
         return httpClient;
     }

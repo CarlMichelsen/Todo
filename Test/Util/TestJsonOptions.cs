@@ -4,8 +4,6 @@ namespace Test.Util;
 
 public static class TestJsonOptions
 {
-    public static JsonSerializerOptions Default => new()
-    {
-        PropertyNamingPolicy = JsonNamingPolicy.CamelCase,
-    };
+    public static JsonSerializerOptions Default =>
+        new() { PropertyNamingPolicy = JsonNamingPolicy.CamelCase };
 }

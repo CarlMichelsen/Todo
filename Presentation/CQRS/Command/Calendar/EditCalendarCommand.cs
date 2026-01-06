@@ -9,7 +9,8 @@ public record EditCalendarCommand(
     JwtUser User,
     Guid CalendarId,
     [MaxLength(100)] string? Title,
-    [MaxLength(7), HexColor] string? Color) : ICommand
+    [MaxLength(7), HexColor] string? Color
+) : ICommand
 {
     public string Type => GetType().Name;
 }

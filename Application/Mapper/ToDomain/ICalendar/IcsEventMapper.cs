@@ -8,26 +8,24 @@ public static class IcsEventMapper
 {
     public static CalendarEvent? ToDomain(
         this Ical.Net.CalendarComponents.CalendarEvent calendarEvent,
-        CalendarLinkEntity calendarLinkEntity)
+        CalendarLinkEntity calendarLinkEntity
+    )
     {
         if (calendarEvent.Start is null)
         {
             return null;
         }
-        
+
         if (calendarEvent.End is null)
         {
             return null;
         }
-        
+
         // Actively only support one recurrence rule.
-        var recurrence = calendarEvent
-            .RecurrenceRules
-            .FirstOrDefault()?
-            .ToRecurrenceInfo();
+        var recurrence = calendarEvent.RecurrenceRules.FirstOrDefault()?.ToRecurrenceInfo();
 
         var status = IcsStatusMapper.MapToDomainStatus(calendarEvent.Status);
-        
+
         return new CalendarEvent
         {
             Id = calendarEvent.Uid ?? calendarEvent.Name,
@@ -45,10 +43,10 @@ public static class IcsEventMapper
             LastModifiedAt = calendarLinkEntity.CreatedAt,
             Status = status,
             AttendeeInfo = calendarEvent.ToDomainAttendeeInfo(),
-            Source = EventSource.IcsSync
+            Source = EventSource.IcsSync,
         };
     }
-    
+
     public static RecurrenceInfo ToRecurrenceInfo(this Ical.Net.DataTypes.RecurrencePattern rrule)
     {
         var frequency = rrule.Frequency switch
@@ -59,13 +57,14 @@ public static class IcsEventMapper
             Ical.Net.FrequencyType.Yearly => RecurrenceFrequency.Yearly,
             _ => RecurrenceFrequency.None,
         };
-        
+
         return new RecurrenceInfo(
             Frequency: frequency,
             Interval: rrule.Interval,
             Until: rrule.Until?.AsUtc,
             Count: rrule.Count,
             ByDay: rrule.ByDay.Select(d => d.DayOfWeek).ToCollection(),
-            ByMonthDay: rrule.ByMonthDay.ToCollection());
+            ByMonthDay: rrule.ByMonthDay.ToCollection()
+        );
     }
 }

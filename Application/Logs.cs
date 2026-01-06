@@ -10,5 +10,6 @@ public static partial class Logs
         string username,
         Guid userId,
         string methodName,
-        string id);
+        string id
+    );
 }

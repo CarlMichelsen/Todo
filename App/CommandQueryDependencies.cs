@@ -20,45 +20,62 @@ namespace App;
 public static class CommandQueryDependencies
 {
     public static WebApplicationBuilder RegisterCommandQueryDependencies(
-        this WebApplicationBuilder builder)
+        this WebApplicationBuilder builder
+    )
     {
         // Commands --------------------------------------------------------------------------------------
-        
+
         // ServerSentEvent
-        builder.Services
-            .AddCommandHandler<ReplayEventsForConnectionCommandHandler, ReplayEventsForConnectionCommand>()
+        builder
+            .Services.AddCommandHandler<
+                ReplayEventsForConnectionCommandHandler,
+                ReplayEventsForConnectionCommand
+            >()
             .AddCommandHandler<DispatchEventCommandHandler, DispatchEventCommand>();
-        
+
         // Calendar
-        builder.Services
-            .AddCommandHandler<CreateCalendarCommandHandler, CreateCalendarCommand>()
+        builder
+            .Services.AddCommandHandler<CreateCalendarCommandHandler, CreateCalendarCommand>()
             .AddCommandHandler<EditCalendarCommandHandler, EditCalendarCommand>()
             .AddCommandHandler<DeleteCalendarCommandHandler, DeleteCalendarCommand>()
             .AddCommandHandler<SelectCalendarCommandHandler, SelectCalendarCommand>();
-        
+
         // CalendarLink
-        builder.Services
-            .AddCommandHandler<CreateCalendarLinkCommandHandler, CreateCalendarLinkCommand>()
+        builder
+            .Services.AddCommandHandler<
+                CreateCalendarLinkCommandHandler,
+                CreateCalendarLinkCommand
+            >()
             .AddCommandHandler<DeleteCalendarLinkCommandHandler, DeleteCalendarLinkCommand>()
             .AddCommandHandler<EditCalendarLinkCommandHandler, EditCalendarLinkCommand>();
-        
 
         // Queries --------------------------------------------------------------------------------------
-        
+
         // User
-        builder.Services
-            .AddQueryHandler<GetUserQueryHandler, GetUserQuery, PersonalUserDto>();
-        
+        builder.Services.AddQueryHandler<GetUserQueryHandler, GetUserQuery, PersonalUserDto>();
+
         // Calendar
-        builder.Services
-            .AddQueryHandler<GetCalendarsQueryHandler, GetCalendarsQuery, List<CalendarDto>>()
+        builder
+            .Services.AddQueryHandler<
+                GetCalendarsQueryHandler,
+                GetCalendarsQuery,
+                List<CalendarDto>
+            >()
             .AddQueryHandler<GetSingleCalendarQueryHandler, GetSingleCalendarQuery, CalendarDto?>();
-        
+
         // CalendarLink
-        builder.Services
-            .AddQueryHandler<GetAllCalendarLinksForUserQueryHandler, GetAllCalendarLinksForUserQuery, IEnumerable<CalendarLinkDto>>()
+        builder
+            .Services.AddQueryHandler<
+                GetAllCalendarLinksForUserQueryHandler,
+                GetAllCalendarLinksForUserQuery,
+                IEnumerable<CalendarLinkDto>
+            >()
             .AddQueryHandler<GetCalendarLinkQueryHandler, GetCalendarLinkQuery, CalendarLinkDto?>()
-            .AddQueryHandler<GetCalendarLinksForCalendarQueryHandler, GetCalendarLinksForCalendarQuery, IEnumerable<CalendarLinkDto>>();
+            .AddQueryHandler<
+                GetCalendarLinksForCalendarQueryHandler,
+                GetCalendarLinksForCalendarQuery,
+                IEnumerable<CalendarLinkDto>
+            >();
 
         return builder;
     }

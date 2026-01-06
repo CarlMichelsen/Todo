@@ -8,9 +8,8 @@ namespace App.Controllers;
 
 [ApiController]
 [Route("api/v1/[controller]")]
-public class UserController(
-    ISender sender,
-    IHttpContextAccessor httpContextAccessor) : ControllerBase
+public class UserController(ISender sender, IHttpContextAccessor httpContextAccessor)
+    : ControllerBase
 {
     [HttpGet]
     public async Task<ActionResult<PersonalUserDto>> GetUserData(CancellationToken ct)

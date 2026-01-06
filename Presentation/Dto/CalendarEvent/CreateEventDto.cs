@@ -4,12 +4,12 @@ using Presentation.Attribute;
 namespace Presentation.Dto.CalendarEvent;
 
 public record CreateEventDto(
-    [Required, MinLength(2), MaxLength(100)]
-    string Title,
+    [Required, MinLength(2), MaxLength(100)] string Title,
     [MaxLength(1028 * 32)] string Description,
     DateTime Start,
     DateTime End,
-    [HexColor] string Color) : IValidatableObject
+    [HexColor] string Color
+) : IValidatableObject
 {
     public IEnumerable<ValidationResult> Validate(ValidationContext validationContext)
     {

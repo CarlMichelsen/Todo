@@ -5,4 +5,5 @@ namespace Presentation.Dto.Calendar;
 
 public record CreateCalendarDto(
     [MaxLength(100), Required] string Title,
-    [MaxLength(7), HexColor, Required] string Color);
+    [MaxLength(7), HexColor, Required] string Color
+);

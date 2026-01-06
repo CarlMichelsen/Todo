@@ -19,4 +19,10 @@
     <ItemGroup>
         <PackageReference Include="SonarAnalyzer.CSharp" />
     </ItemGroup>
+
+    <Target Name="FormatCode" BeforeTargets="Build">
+        <Exec Command="dotnet tool restore" />
+        <Exec Command="dotnet csharpier check ." Condition="'$(Configuration)' == 'Release'" />
+        <Exec Command="dotnet csharpier format ." Condition="'$(Configuration)' == 'Debug'" />
+    </Target>
 </Project>
