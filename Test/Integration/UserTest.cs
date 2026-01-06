@@ -1,6 +1,6 @@
 ﻿using System.Net;
 using System.Text.Json;
-using Presentation;
+using Presentation.Dto.User;
 using Shouldly;
 using Test.Integration.Authorization;
 using Test.Integration.Collection;
@@ -28,12 +28,12 @@ public class UserTest(IntegrationTestFactory factory)
         // Assert
         response.StatusCode.ShouldBe(HttpStatusCode.OK);
 
-        var deserialized = JsonSerializer.Deserialize<JwtUser>(
+        var deserialized = JsonSerializer.Deserialize<PersonalUserDto>(
             responseBody,
             TestJsonOptions.Default
         );
         deserialized.ShouldNotBeNull();
         deserialized.UserId.ShouldBe(ConfiguredTestUsers.Steve.UserId);
-        deserialized.Username.ShouldBe(ConfiguredTestUsers.Steve.Username);
+        deserialized.UserName.ShouldBe(ConfiguredTestUsers.Steve.Username);
     }
 }
