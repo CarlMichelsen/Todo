@@ -30,11 +30,11 @@ public class EventService(
         var user = httpContextAccessor.GetJwtUser();
 
         var results = await databaseContext
-            .Event.Include(e => e.Calendar)
+            .Event.Include(e => e.ParentCalendar)
             .Include(e => e.CreatedBy)
             .Where(e =>
-                e.CalendarId == calendarId
-                && e.Calendar!.OwnerId! == user.UserId
+                e.ParentCalendarId == calendarId
+                && e.ParentCalendar!.OwnerId! == user.UserId
                 && e.StartsAt < eventTo
                 && e.EndsAt > eventFrom
             ) // Events overlapping the range
@@ -56,9 +56,11 @@ public class EventService(
         var user = httpContextAccessor.GetJwtUser();
 
         var query = databaseContext
-            .Event.Include(e => e.Calendar)
+            .Event.Include(e => e.ParentCalendar)
             .Include(e => e.CreatedBy)
-            .Where(e => e.Calendar!.OwnerId! == user.UserId && e.Calendar!.Id == calendarId);
+            .Where(e =>
+                e.ParentCalendar!.OwnerId! == user.UserId && e.ParentCalendar!.Id == calendarId
+            );
 
         if (!string.IsNullOrWhiteSpace(search))
         {
@@ -92,9 +94,11 @@ public class EventService(
         var user = httpContextAccessor.GetJwtUser();
 
         var result = await databaseContext
-            .Event.Include(e => e.Calendar)
+            .Event.Include(e => e.ParentCalendar)
             .Include(e => e.CreatedBy)
-            .Where(e => e.Calendar!.OwnerId! == user.UserId && e.Calendar!.Id == calendarId)
+            .Where(e =>
+                e.ParentCalendar!.OwnerId! == user.UserId && e.ParentCalendar!.Id == calendarId
+            )
             .AsNoTracking()
             .FirstOrDefaultAsync(e => e.Id == eventId, cancellationToken);
 
@@ -145,9 +149,11 @@ public class EventService(
         var user = httpContextAccessor.GetJwtUser();
 
         var eventEntity = await databaseContext
-            .Event.Include(e => e.Calendar)
+            .Event.Include(e => e.ParentCalendar)
             .Include(e => e.CreatedBy)
-            .Where(e => e.Calendar!.OwnerId! == user.UserId && e.Calendar!.Id == calendarId)
+            .Where(e =>
+                e.ParentCalendar!.OwnerId! == user.UserId && e.ParentCalendar!.Id == calendarId
+            )
             .SingleAsync(e => e.Id == eventId, cancellationToken);
 
         if (editEvent.Title is not null)
@@ -196,10 +202,10 @@ public class EventService(
         var user = httpContextAccessor.GetJwtUser();
 
         var result = await databaseContext
-            .Event.Include(e => e.Calendar)
+            .Event.Include(e => e.ParentCalendar)
             .Where(e =>
-                e.Calendar!.OwnerId! == user.UserId
-                && e.Calendar!.Id == calendarId
+                e.ParentCalendar!.OwnerId! == user.UserId
+                && e.ParentCalendar!.Id == calendarId
                 && e.Id == eventId
             )
             .ExecuteDeleteAsync(cancellationToken);

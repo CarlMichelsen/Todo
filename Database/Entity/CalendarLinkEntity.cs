@@ -1,5 +1,4 @@
-﻿using System.Collections.ObjectModel;
-using System.ComponentModel.DataAnnotations;
+﻿using System.ComponentModel.DataAnnotations;
 using Database.Entity.Id;
 using Database.Util;
 using Microsoft.EntityFrameworkCore;
@@ -21,7 +20,7 @@ public class CalendarLinkEntity : IEntity
 
     public required Uri CalendarLink { get; set; }
 
-    public required Collection<CalendarEntity> Calendars { get; init; }
+    public required ICollection<CalendarEntity> Calendars { get; init; }
 
     public required UserEntityId UserId { get; init; }
 

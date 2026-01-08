@@ -33,9 +33,9 @@ public class CalendarCreationTest(IntegrationTestFactory factory)
 
         // Act
         var connectionId = Guid.NewGuid();
-        using var tokenSource = new CancellationTokenSource(TimeSpan.FromSeconds(30));
-        var sseStream = client.StreamServerSentEventsAsync(
-            new Uri("api/v1/ServerSentEvent", UriKind.Relative),
+        using var tokenSource = new CancellationTokenSource();
+        var sseStream = client.TemporarilyListenToServerSentEvents(
+            TimeSpan.FromSeconds(5),
             connectionId,
             null,
             tokenSource.Token

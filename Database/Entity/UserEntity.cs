@@ -1,6 +1,6 @@
-﻿using System.Collections.ObjectModel;
-using System.ComponentModel.DataAnnotations;
+﻿using System.ComponentModel.DataAnnotations;
 using Database.Entity.Id;
+using Database.Entity.Value;
 using Database.Util;
 using Microsoft.EntityFrameworkCore;
 
@@ -16,7 +16,7 @@ public class UserEntity : IEntity
 
     [MinLength(2)]
     [MaxLength(256)]
-    public required string Email { get; init; }
+    public required EmailValue Email { get; init; }
 
     public required Uri ProfileImageSmall { get; init; }
 
@@ -28,11 +28,11 @@ public class UserEntity : IEntity
 
     public required CalendarEntityId? SelectedCalendarId { get; set; }
 
-    public Collection<CalendarEntity> Calendars { get; init; } = [];
+    public ICollection<CalendarEntity> Calendars { get; init; } = [];
 
-    public Collection<EventEntity> CreatedEvents { get; init; } = [];
+    public ICollection<EventEntity> CreatedEvents { get; init; } = [];
 
-    public Collection<CalendarLinkEntity> CalendarLinks { get; init; } = [];
+    public ICollection<CalendarLinkEntity> CalendarLinks { get; init; } = [];
 
     public required DateTime CreatedAt { get; init; }
 
@@ -52,6 +52,12 @@ public class UserEntity : IEntity
                 x,
                 true
             ));
+
+        entityBuilder
+            .Property(u => u.Email)
+            .HasConversion(email => email.Value, value => EmailValue.Create(value)) // Will throw if invalid data in DB
+            .HasMaxLength(255)
+            .IsRequired();
 
         // EventEntity
         entityBuilder

@@ -15,6 +15,34 @@ public static class HttpClientServerSentEventExtensions
         PropertyNamingPolicy = JsonNamingPolicy.CamelCase,
     };
 
+    public static async IAsyncEnumerable<BaseServerEvent> TemporarilyListenToServerSentEvents(
+        this HttpClient httpClient,
+        TimeSpan timeout,
+        Guid? connectionId = null,
+        string? lastEventId = null,
+        [EnumeratorCancellation] CancellationToken cancellationToken = default
+    )
+    {
+        using var timeoutSource = new CancellationTokenSource(timeout);
+        using var linkedSource = CancellationTokenSource.CreateLinkedTokenSource(
+            cancellationToken,
+            timeoutSource.Token
+        );
+
+        var asyncEnumerable = httpClient.StreamServerSentEventsAsync(
+            new Uri("api/v1/ServerSentEvent", UriKind.Relative),
+            connectionId ?? Guid.CreateVersion7(),
+            lastEventId,
+            linkedSource.Token
+        );
+
+        // Must be awaited to respect cancellationTokenSource being disposed after scope closed.
+        await foreach (var serverEvent in asyncEnumerable)
+        {
+            yield return serverEvent;
+        }
+    }
+
     public static async IAsyncEnumerable<BaseServerEvent> StreamServerSentEventsAsync(
         this HttpClient httpClient,
         Uri uri,
@@ -70,7 +98,9 @@ public static class HttpClientServerSentEventExtensions
 
     private static Uri BuildRequestUri(HttpClient httpClient, Uri uri, Guid connectionId)
     {
-        var requestUri = uri.IsAbsoluteUri ? uri : new Uri(httpClient.BaseAddress!, uri);
+        var requestUri = uri.IsAbsoluteUri
+            ? uri
+            : new Uri(httpClient.BaseAddress.ShouldNotBeNull(), uri);
         var uriBuilder = new UriBuilder(requestUri) { Query = $"connectionId={connectionId}" };
         return uriBuilder.Uri;
     }

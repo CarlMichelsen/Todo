@@ -32,7 +32,7 @@ public static class IcsCalendarMapper
 
         var calendarOwner = new CalendarOwner
         {
-            Email = calendarLinkEntity.User.Email,
+            Email = calendarLinkEntity.User.Email.Value,
             Name = calendarLinkEntity.User.Username,
             TodoUser = new TodoUser
             {

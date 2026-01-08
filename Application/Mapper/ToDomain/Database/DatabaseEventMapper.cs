@@ -2,6 +2,7 @@
 using Domain;
 using Domain.People;
 using Domain.Value;
+using EventStatus = Domain.Value.EventStatus;
 
 namespace Application.Mapper.ToDomain.Database;
 
@@ -26,7 +27,7 @@ public static class DatabaseEventMapper
             IsAllDay = false, // TODO: Add isAllDay to database model
             TimeZone = null, // TODO: Consider if it makes sense to include this when all DateTime are UTC.
             Recurrence = null, // TODO: Add support for recurrence (giant task)
-            CalendarId = eventEntity.CalendarId.ToString(),
+            CalendarId = eventEntity.ParentCalendarId.ToString(),
             CreatedAt = eventEntity.CreatedAt,
             LastModifiedAt = null, // TODO: Add this value to the event database model.
             Status = EventStatus.Confirmed, //  TODO: Add this value to the database model.

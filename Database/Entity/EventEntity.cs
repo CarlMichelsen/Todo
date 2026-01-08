@@ -15,6 +15,14 @@ public class EventEntity : IEntity
     [MaxLength(1028 * 32)]
     public required string Description { get; set; }
 
+    [MaxLength(1028 * 4)]
+    public required string? Location { get; set; }
+
+    public bool IsAllDay { get; set; }
+
+    [MaxLength(32)]
+    public string TimeZone { get; } = "UTC";
+
     [MaxLength(7)]
     public required string Color { get; set; }
 
@@ -24,9 +32,17 @@ public class EventEntity : IEntity
 
     public required DateTime CreatedAt { get; init; }
 
-    public required CalendarEntityId CalendarId { get; init; }
+    public required DateTime LastModifiedAt { get; init; }
 
-    public CalendarEntity? Calendar { get; init; }
+    public required EventStatus Status { get; init; }
+
+    public required CalendarEntityId ParentCalendarId { get; init; }
+
+    public CalendarEntity? ParentCalendar { get; init; }
+
+    public required AttendeeEntityId OrganizerId { get; set; }
+
+    public required ICollection<AttendeeEntity> Attendees { get; init; }
 
     public required UserEntityId CreatedById { get; init; }
 
@@ -45,6 +61,18 @@ public class EventEntity : IEntity
                 true
             ));
 
+        entityBuilder.Property(x => x.Status).HasConversion<string>();
+
+        entityBuilder
+            .Property(u => u.OrganizerId)
+            .RegisterTypedKeyConversion<AttendeeEntity, AttendeeEntityId>(x => new AttendeeEntityId(
+                x,
+                true
+            ));
+
+        // Attendees
+        entityBuilder.HasMany(a => a.Attendees).WithMany(e => e.Attending);
+
         // Owner
         entityBuilder
             .HasOne(e => e.CreatedBy)
@@ -54,11 +82,18 @@ public class EventEntity : IEntity
         // Index
         entityBuilder.HasIndex(e => new
         {
-            e.CalendarId,
+            CalendarId = e.ParentCalendarId,
             e.StartsAt,
             e.EndsAt,
         });
 
-        entityBuilder.HasIndex(e => new { e.CalendarId, e.Id });
+        entityBuilder.HasIndex(e => new { CalendarId = e.ParentCalendarId, e.Id });
     }
+}
+
+public enum EventStatus
+{
+    Tentative = 0,
+    Confirmed = 1,
+    Cancelled = 2,
 }

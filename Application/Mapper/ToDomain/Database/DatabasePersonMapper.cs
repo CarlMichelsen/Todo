@@ -9,9 +9,9 @@ public static class DatabasePersonMapper
     {
         var person = new MappedPerson
         {
-            Email = user.Email,
+            Email = user.Email.Value,
             Name = user.Username,
-            TodoUser = new()
+            TodoUser = new TodoUser
             {
                 UserId = user.Id,
                 UserName = user.Username,

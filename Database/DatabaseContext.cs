@@ -20,6 +20,7 @@ public class DatabaseContext(DbContextOptions<DatabaseContext> options) : DbCont
         modelBuilder.HasDefaultSchema(SchemaName);
 
         UserEntity.Configure(modelBuilder);
+        AttendeeEntity.Configure(modelBuilder);
         CalendarEntity.Configure(modelBuilder);
         EventEntity.Configure(modelBuilder);
         CalendarLinkEntity.Configure(modelBuilder);

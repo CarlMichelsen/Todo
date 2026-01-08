@@ -1,5 +1,4 @@
-﻿using System.Collections.ObjectModel;
-using System.ComponentModel.DataAnnotations;
+﻿using System.ComponentModel.DataAnnotations;
 using Database.Entity.Id;
 using Database.Util;
 using Microsoft.EntityFrameworkCore;
@@ -16,9 +15,9 @@ public class CalendarEntity : IEntity
     [MaxLength(7)]
     public required string Color { get; set; }
 
-    public Collection<EventEntity> Events { get; init; } = [];
+    public ICollection<EventEntity> Events { get; init; } = [];
 
-    public Collection<CalendarLinkEntity> CalendarLinks { get; init; } = [];
+    public ICollection<CalendarLinkEntity> CalendarLinks { get; init; } = [];
 
     public required UserEntityId? OwnerId { get; set; }
 
@@ -44,8 +43,8 @@ public class CalendarEntity : IEntity
         // Events
         entityBuilder
             .HasMany(c => c.Events)
-            .WithOne(e => e.Calendar)
-            .HasForeignKey(e => e.CalendarId)
+            .WithOne(e => e.ParentCalendar)
+            .HasForeignKey(e => e.ParentCalendarId)
             .OnDelete(DeleteBehavior.Cascade);
 
         // Index

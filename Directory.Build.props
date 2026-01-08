@@ -1,28 +1,28 @@
 <Project>
-    <PropertyGroup>
-        <TargetFramework>net10.0</TargetFramework>
-        <Nullable>enable</Nullable>
-        <ImplicitUsings>enable</ImplicitUsings>
+  <PropertyGroup>
+    <TargetFramework>net10.0</TargetFramework>
+    <Nullable>enable</Nullable>
+    <ImplicitUsings>enable</ImplicitUsings>
 
-        <AnalysisLevel>latest</AnalysisLevel>
-        <AnalysisMode>All</AnalysisMode>
-        <TreatWarningsAsErrors>true</TreatWarningsAsErrors>
-        <CodeAnalysisTreatWarningsAsErrors>true</CodeAnalysisTreatWarningsAsErrors>
-        <EnforceCodeStyleInBuild>true</EnforceCodeStyleInBuild>
-        
-        <!-- Warnings -->
-        <NoWarn>$(NoWarn);CA1515</NoWarn>
-        <NoWarn>$(NoWarn);CA2007</NoWarn>
-        <NoWarn>$(NoWarn);CA1062</NoWarn>
-    </PropertyGroup>
-    
-    <ItemGroup>
-        <PackageReference Include="SonarAnalyzer.CSharp" />
-    </ItemGroup>
+    <AnalysisLevel>latest</AnalysisLevel>
+    <AnalysisMode>All</AnalysisMode>
+    <TreatWarningsAsErrors>true</TreatWarningsAsErrors>
+    <CodeAnalysisTreatWarningsAsErrors>true</CodeAnalysisTreatWarningsAsErrors>
+    <EnforceCodeStyleInBuild>true</EnforceCodeStyleInBuild>
 
-    <Target Name="FormatCode" BeforeTargets="Build">
-        <Exec Command="dotnet tool restore" />
-        <Exec Command="dotnet csharpier check ." Condition="'$(Configuration)' == 'Release'" />
-        <Exec Command="dotnet csharpier format ." Condition="'$(Configuration)' == 'Debug'" />
-    </Target>
+    <!-- Warnings -->
+    <NoWarn>$(NoWarn);CA1515</NoWarn>
+    <NoWarn>$(NoWarn);CA2007</NoWarn>
+    <NoWarn>$(NoWarn);CA1062</NoWarn>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="SonarAnalyzer.CSharp" />
+  </ItemGroup>
+
+  <Target Name="FormatCode" BeforeTargets="Build">
+    <Exec Command="dotnet tool restore" />
+    <Exec Command="dotnet csharpier check ." Condition="'$(Configuration)' == 'Release'" />
+    <Exec Command="dotnet csharpier format ." Condition="'$(Configuration)' == 'Debug'" />
+  </Target>
 </Project>

@@ -4,11 +4,11 @@ A full-stack calendar and event management application built with .NET and Svelt
 
 ## Tech Stack
 
-| Layer | Technologies |
-|-------|-------------|
-| **Backend** | .NET 10, ASP.NET Core, PostgreSQL, Entity Framework Core |
-| **Frontend** | Svelte 5, TypeScript, Tailwind CSS, Vite |
-| **Patterns** | CQRS, Server-Sent Events (SSE) |
+| Layer        | Technologies                                               |
+|--------------|------------------------------------------------------------|
+| **Backend**  | .NET 10, ASP.NET Core, PostgreSQL, Entity Framework Core   |
+| **Frontend** | Svelte 5, TypeScript, Tailwind CSS, Vite                   |
+| **Patterns** | CQRS, Server-Sent Events (SSE)                             |
 
 ## Project Structure
 
