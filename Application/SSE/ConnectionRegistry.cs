@@ -1,5 +1,4 @@
-﻿using System.Collections.Concurrent;
-using Microsoft.Extensions.Logging;
+﻿using Microsoft.Extensions.Logging;
 using Presentation.SSE.Connection;
 
 namespace Application.SSE;
@@ -9,148 +8,93 @@ public partial class ConnectionRegistry(
     TimeProvider timeProvider
 ) : IConnectionRegistry
 {
-    // Primary index: connectionId -> connection info
-    private readonly ConcurrentDictionary<Guid, SSEConnection> connectionsByConnectionId = new();
+    private readonly ConnectionConcurrentBag activeConnections = new(timeProvider);
 
-    // Secondary index: userId -> set of connectionIds
-    private readonly ConcurrentDictionary<
-        Guid,
-        ConcurrentDictionary<Guid, byte>
-    > connectionIdsByUserId = new();
+    private readonly ConnectionConcurrentBag allConnections = new(timeProvider);
 
-    private readonly ConcurrentDictionary<Guid, SSEConnection> connectionHistory = new();
-
-    public Task<bool> TryAdd(SSEConnection connection, CancellationToken cancellationToken)
+    public async Task<bool> TryAdd(SSEConnection connection, CancellationToken cancellationToken)
     {
-        // Add to primary index
-        if (!connectionsByConnectionId.TryAdd(connection.ConnectionId, connection))
+        var added = await activeConnections.TryAdd(connection, cancellationToken);
+        if (!added)
         {
-            return Task.FromResult(false); // Connection ID already exists
+            return false;
         }
 
-        // Add to secondary index - get or create the user's connection set
-        var userConnections = connectionIdsByUserId.GetOrAdd(
-            connection.User.UserId,
-            _ => new ConcurrentDictionary<Guid, byte>()
-        );
+        if (!await allConnections.TryAdd(connection, cancellationToken))
+        {
+            LogFailedToAddConnectionToAllConnections(logger);
+        }
 
-        // Add connection ID to the set (value is ignored, we just care about the key)
-        userConnections.TryAdd(connection.ConnectionId, 0);
-
-        // Add connection to history - this is not critical
-        connectionHistory.TryAdd(connection.ConnectionId, connection);
-
-        return Task.FromResult(true);
+        return true; // It is non-fatal if the connection is not added to allConnections.
     }
 
-    public Task<bool> TryRemove(Guid connectionId, CancellationToken cancellationToken)
+    public async Task<bool> TryRemove(Guid connectionId, CancellationToken cancellationToken)
     {
-        // Remove from primary index
-        if (!connectionsByConnectionId.TryRemove(connectionId, out var connection))
-        {
-            return Task.FromResult(false); // Connection didn't exist
-        }
+        var connection = await activeConnections.GetByConnectionId(connectionId, cancellationToken);
+        connection?.StopConnection(timeProvider.GetUtcNow().UtcDateTime);
 
-        // Remove from secondary index
-        if (connectionIdsByUserId.TryGetValue(connection.User.UserId, out var userConnections))
-        {
-            // Remove the connection ID from the user's set
-            userConnections.TryRemove(connectionId, out _);
-
-            if (userConnections.IsEmpty)
-            {
-                // Remove the userId entry if no connections remain
-                connectionIdsByUserId.TryRemove(connection.User.UserId, out _);
-            }
-        }
-
-        // Mark last disconnected time in history
-        if (connectionHistory.TryGetValue(connectionId, out var historicalConnection))
-        {
-            historicalConnection.StopConnection(timeProvider.GetUtcNow().UtcDateTime);
-        }
-
-        return Task.FromResult(true);
+        return await activeConnections.TryRemove(connectionId, cancellationToken);
     }
 
-    public Task<SSEConnection?> GetByConnectionId(
+    public async Task<SSEConnection?> GetByConnectionId(
         Guid connectionId,
         CancellationToken cancellationToken
     )
     {
         var connection =
-            connectionsByConnectionId.GetValueOrDefault(connectionId)
-            ?? connectionHistory.GetValueOrDefault(connectionId);
+            await activeConnections.GetByConnectionId(connectionId, cancellationToken)
+            ?? await allConnections.GetByConnectionId(connectionId, cancellationToken);
 
-        return Task.FromResult(connection);
+        return connection;
     }
 
-    public Task<IEnumerable<SSEConnection>> GetByUserId(
+    public async Task<IEnumerable<SSEConnection>> GetByUserId(
         Guid userId,
         CancellationToken cancellationToken
     )
     {
-        if (!connectionIdsByUserId.TryGetValue(userId, out var userConnections))
-        {
-            return Task.FromResult<IEnumerable<SSEConnection>>([]);
-        }
+        var activeConnectionsTask = activeConnections.GetByUserId(userId, cancellationToken);
+        var allConnectionsTask = allConnections.GetByUserId(userId, cancellationToken);
 
-        var connections = userConnections
-            .Keys.Select(id =>
-                connectionsByConnectionId.GetValueOrDefault(id)
-                ?? connectionHistory.GetValueOrDefault(id)
-            )
-            .OfType<SSEConnection>();
-
-        return Task.FromResult(connections);
+        var connections = await Task.WhenAll(activeConnectionsTask, allConnectionsTask);
+        return connections.SelectMany(c => c).DistinctBy(c => c.ConnectionId).ToList();
     }
 
-    public Task CleanStaleConnections(TimeSpan staleThreshold, CancellationToken cancellationToken)
+    public async Task CleanStaleConnections(
+        TimeSpan staleThreshold,
+        CancellationToken cancellationToken
+    )
     {
         var now = timeProvider.GetUtcNow().UtcDateTime;
 
-        var staleConnectionIds = connectionHistory
-            .Where(kvp =>
-                kvp.Value.ConnectionReader == null
+        var inactiveConnections = allConnections.ConnectionsByConnectionId.Values.Where(
+            sseConnection =>
+                sseConnection.ConnectionReader == null
                 && // Connection is inactive
-                kvp.Value.LastDisconnected != null
-                && now - kvp.Value.LastDisconnected.Value > staleThreshold
-            )
-            .Select(kvp => kvp.Key)
-            .ToList(); // Materialize to avoid collection modification during enumeration
+                sseConnection.LastDisconnected != null
+        );
 
-        foreach (var connectionId in staleConnectionIds)
+        var staleConnections = inactiveConnections
+            .Where(sseConnection => now - sseConnection.LastDisconnected!.Value > staleThreshold)
+            .ToList();
+
+        foreach (var staleConnection in staleConnections)
         {
-            if (!connectionHistory.TryRemove(connectionId, out var connection))
-            {
-                continue;
-            }
+            var cleanTask = allConnections.TryRemove(
+                staleConnection.ConnectionId,
+                cancellationToken
+            );
 
-            TryRemove(connectionId, cancellationToken); // Use existing removal logic
+            await TryRemove(staleConnection.ConnectionId, cancellationToken); // Use existing removal logic in case the connection got active in the meantime.
+            await cleanTask;
             LogRemovedStaleConnection(
                 logger,
-                connectionId,
-                connection.User.Username,
-                connection.User.UserId,
+                staleConnection.ConnectionId,
+                staleConnection.User.Username,
+                staleConnection.User.UserId,
                 staleThreshold
             );
         }
-
-        // Also check for improperly disconnected connections
-        foreach (var conn in connectionHistory.Values)
-        {
-            if (conn.ConnectionReader == null && conn.LastDisconnected == null)
-            {
-                LogConnectionImproperlyDisconnected(
-                    logger,
-                    conn.ConnectionId,
-                    conn.User.Username,
-                    conn.User.UserId
-                );
-            }
-        }
-
-        return Task.CompletedTask;
     }
 
     [LoggerMessage(
@@ -166,13 +110,10 @@ public partial class ConnectionRegistry(
     );
 
     [LoggerMessage(
-        LogLevel.Error,
-        "Connection {connectionId} by {username}<{userId}> discovered to be inactive but was improperly disconnected"
+        LogLevel.Warning,
+        "Failed to add connection to allConnections bag but connection still active."
     )]
-    static partial void LogConnectionImproperlyDisconnected(
-        ILogger<ConnectionRegistry> logger,
-        Guid connectionId,
-        string username,
-        Guid userId
+    static partial void LogFailedToAddConnectionToAllConnections(
+        ILogger<ConnectionRegistry> logger
     );
 }

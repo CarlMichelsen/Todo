@@ -34,6 +34,7 @@ public class AttendeeEntity : IEntity
             .Property(u => u.Email)
             .HasConversion(email => email.Value, value => EmailValue.Create(value)) // Will throw if invalid data in DB
             .IsRequired();
+        entityBuilder.HasIndex(u => u.Email).IsUnique();
 
         // Attending
         entityBuilder.HasMany(a => a.Attending).WithMany(e => e.Attendees);

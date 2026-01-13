@@ -26,13 +26,18 @@ public sealed class EmailValue : IEquatable<EmailValue>
             : throw new EmailValueException("Email format is invalid");
     }
 
-    private static bool IsValidEmail(string email)
+    public static bool IsValidEmail(string email)
     {
         var emailRegex = new System.Text.RegularExpressions.Regex(
             @"^[^@\s]+@[^@\s]+\.[^@\s]+$",
             System.Text.RegularExpressions.RegexOptions.IgnoreCase
         );
         return emailRegex.IsMatch(email);
+    }
+
+    public static implicit operator string(EmailValue email)
+    {
+        return email.Value;
     }
 
     public bool Equals(EmailValue? other)

@@ -1,10 +1,11 @@
 ﻿using Application.Extensions;
 using Application.Mapper;
 using Database;
-using Database.Entity.Id;
 using Microsoft.AspNetCore.Http;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
+using Presentation.Abstractions.CQRS.Messaging;
+using Presentation.CQRS.Command.CalendarEvent;
 using Presentation.Dto;
 using Presentation.Dto.CalendarEvent;
 using Presentation.Service;
@@ -13,7 +14,7 @@ namespace Application.Service;
 
 public class EventService(
     ILogger<EventService> logger,
-    TimeProvider timeProvider,
+    ISender sender,
     IHttpContextAccessor httpContextAccessor,
     DatabaseContext databaseContext
 ) : IEventService
@@ -62,14 +63,9 @@ public class EventService(
                 e.ParentCalendar!.OwnerId! == user.UserId && e.ParentCalendar!.Id == calendarId
             );
 
-        if (!string.IsNullOrWhiteSpace(search))
-        {
-            query = query.OrderByMatch(search, e => e.Title, e => e.Description);
-        }
-        else
-        {
-            query = query.OrderBy(e => e.StartsAt);
-        }
+        query = !string.IsNullOrWhiteSpace(search)
+            ? query.OrderByMatch(search, e => e.Title, e => e.Description)
+            : query.OrderBy(e => e.StartsAt);
 
         var results = await query
             .Skip(paginationRequest.Skip)
@@ -105,41 +101,23 @@ public class EventService(
         return result?.ToDto();
     }
 
-    public async Task<EventDto> AddEvent(
+    public async Task AddEvent(
         Guid calendarId,
         CreateEventDto createEvent,
         CancellationToken cancellationToken
     )
     {
         var user = httpContextAccessor.GetJwtUser();
-
-        var now = timeProvider.GetUtcNow().UtcDateTime;
-        var userEntity = await databaseContext.User.FirstAsync(
-            u => u.Id == user.UserId,
-            cancellationToken
+        var command = new AddEventCommand(
+            CommandId: Guid.CreateVersion7(),
+            User: user,
+            ParentCalendarId: calendarId,
+            CreateEvent: createEvent
         );
-
-        // ReSharper disable once EntityFramework.NPlusOne.IncompleteDataUsage
-        var eventEntity = createEvent.FromDto(
-            now,
-            new CalendarEntityId(calendarId, true),
-            userEntity
-        );
-
-        databaseContext.Event.Add(eventEntity);
-        await databaseContext.SaveChangesAsync(cancellationToken);
-
-        logger.LogUsernameUserIdMethodNameEventId(
-            user.Username,
-            user.UserId,
-            nameof(IEventService.AddEvent),
-            eventEntity.Id.ToString()
-        );
-
-        return eventEntity.ToDto();
+        await sender.Send(command, cancellationToken);
     }
 
-    public async Task<EventDto> EditEvent(
+    public async Task EditEvent(
         Guid calendarId,
         Guid eventId,
         EditEventDto editEvent,
@@ -189,11 +167,9 @@ public class EventService(
             nameof(IEventService.EditEvent),
             eventEntity.Id.ToString()
         );
-
-        return eventEntity.ToDto();
     }
 
-    public async Task<bool> DeleteEvent(
+    public async Task DeleteEvent(
         Guid calendarId,
         Guid eventId,
         CancellationToken cancellationToken
@@ -217,7 +193,5 @@ public class EventService(
             nameof(IEventService.DeleteEvent),
             success ? eventId.ToString() : "event not found"
         );
-
-        return success;
     }
 }

@@ -56,26 +56,26 @@ public class EventController(IEventService eventService) : ControllerBase
     }
 
     [HttpPost("{calendarId:guid}")]
-    public async Task<ActionResult<EventDto>> CreateEvent(
+    public async Task<ActionResult> CreateEvent(
         [FromRoute] Guid calendarId,
         [FromBody] CreateEventDto createEvent,
         CancellationToken cancellationToken
     )
     {
-        return this.Ok(await eventService.AddEvent(calendarId, createEvent, cancellationToken));
+        await eventService.AddEvent(calendarId, createEvent, cancellationToken);
+        return this.Accepted();
     }
 
     [HttpPut("{calendarId:guid}/{eventId:guid}")]
-    public async Task<ActionResult<EventDto>> EditEvent(
+    public async Task<ActionResult> EditEvent(
         [FromRoute] Guid calendarId,
         [FromRoute] Guid eventId,
         [FromBody] EditEventDto editEvent,
         CancellationToken cancellationToken
     )
     {
-        return this.Ok(
-            await eventService.EditEvent(calendarId, eventId, editEvent, cancellationToken)
-        );
+        await eventService.EditEvent(calendarId, eventId, editEvent, cancellationToken);
+        return this.Accepted();
     }
 
     [HttpDelete("{calendarId:guid}/{eventId:guid}")]
@@ -85,8 +85,7 @@ public class EventController(IEventService eventService) : ControllerBase
         CancellationToken cancellationToken
     )
     {
-        return await eventService.DeleteEvent(calendarId, eventId, cancellationToken)
-            ? this.Ok()
-            : this.NotFound();
+        await eventService.DeleteEvent(calendarId, eventId, cancellationToken);
+        return this.Accepted();
     }
 }

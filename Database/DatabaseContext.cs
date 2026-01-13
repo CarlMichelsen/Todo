@@ -9,6 +9,8 @@ public class DatabaseContext(DbContextOptions<DatabaseContext> options) : DbCont
 
     public DbSet<UserEntity> User => Set<UserEntity>();
 
+    public DbSet<AttendeeEntity> Attendee => Set<AttendeeEntity>();
+
     public DbSet<CalendarEntity> Calendar => Set<CalendarEntity>();
 
     public DbSet<EventEntity> Event => Set<EventEntity>();

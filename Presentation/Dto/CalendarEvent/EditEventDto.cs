@@ -17,5 +17,10 @@ public record EditEventDto(
         {
             yield return new ValidationResult("Start must be before than End");
         }
+
+        if (End - Start > TimeSpan.FromDays(365))
+        {
+            yield return new ValidationResult("Event duration exceeds 365 days");
+        }
     }
 }
