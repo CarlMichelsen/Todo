@@ -1,5 +1,6 @@
 using Application.Extensions;
 using Application.Mapper;
+using Application.Mapper.ToDomain.Database;
 using Database;
 using Microsoft.AspNetCore.Http;
 using Microsoft.EntityFrameworkCore;
@@ -28,21 +29,42 @@ public class EventService(
     {
         var user = httpContextAccessor.GetJwtUser();
 
-        var results = await databaseContext
+        // Get base events - include recurring events even if they start before the range
+        var baseEvents = await databaseContext
             .Event.Include(e => e.ParentCalendar)
             .Include(e => e.CreatedBy)
             .Where(e =>
                 e.ParentCalendarId == calendarId
                 && e.ParentCalendar!.OwnerId! == user.UserId
-                && e.StartsAt < eventTo
-                && e.EndsAt > eventFrom
-            ) // Events overlapping the range
+                && (
+                    // Non-recurring events within range
+                    (!e.IsRecurring && e.StartsAt < eventTo && e.EndsAt > eventFrom)
+                    ||
+                    // Recurring events that might have occurrences in the range
+                    (e.IsRecurring && e.StartsAt <= eventTo)
+                )
+            )
             .OrderBy(e => e.StartsAt)
             .Take(MaxCurrentResults)
             .AsNoTracking()
             .ToListAsync(cancellationToken);
 
-        return results.Select(EventMapper.ToDto);
+        // Convert to domain events and expand recurrences
+        var domainEvents = baseEvents.Select(e => e.ToDomain());
+        var expandedEvents = RecurrenceExpansionService.ExpandRecurringEvents(
+            domainEvents,
+            eventFrom,
+            eventTo
+        );
+
+        // Convert back to DTOs
+        var limitedResults = expandedEvents.Take(MaxCurrentResults);
+        return limitedResults.Select(e =>
+        {
+            // Convert back to EventEntity for DTO mapping (this is a bit inefficient but preserves existing mapping)
+            var entity = baseEvents.First(be => be.Id.Value == Guid.Parse(e.Id));
+            return entity.ToDto();
+        });
     }
 
     public async Task<PaginationDto<EventDto>> GetEvents(

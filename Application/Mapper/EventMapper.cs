@@ -21,7 +21,8 @@ public static class EventMapper
             Start: entity.StartsAt,
             End: entity.EndsAt,
             CreatedBy: entity.CreatedBy!.ToDto(),
-            Color: entity.Color
+            Color: entity.Color,
+            Recurrence: entity.ToRecurrenceDto()
         );
 
     private static EventStatusDto ToDto(EventStatus status) =>
@@ -32,4 +33,29 @@ public static class EventMapper
             EventStatus.Cancelled => EventStatusDto.Cancelled,
             _ => EventStatusDto.Confirmed,
         };
+
+    public static RecurrenceDto? ToRecurrenceDto(this EventEntity entity)
+    {
+        if (!entity.IsRecurring || entity.RecurrencePattern == null)
+            return null;
+
+        RecurrencePatternDto? patternDto = entity.RecurrencePattern.Value switch
+        {
+            Database.Entity.RecurrencePattern.Daily => RecurrencePatternDto.Daily,
+            Database.Entity.RecurrencePattern.Weekly => RecurrencePatternDto.Weekly,
+            Database.Entity.RecurrencePattern.Monthly => RecurrencePatternDto.Monthly,
+            Database.Entity.RecurrencePattern.Yearly => RecurrencePatternDto.Yearly,
+            _ => RecurrencePatternDto.Daily, // Default fallback
+        };
+
+        return new RecurrenceDto(
+            IsRecurring: entity.IsRecurring,
+            Pattern: patternDto,
+            IntervalValue: entity.RecurrenceIntervalValue,
+            DaysOfWeek: entity.RecurrenceDaysOfWeek?.ToList(),
+            DayOfMonth: entity.RecurrenceDayOfMonth,
+            EndDate: entity.RecurrenceEndDate,
+            Occurrences: entity.RecurrenceOccurrences
+        );
+    }
 }

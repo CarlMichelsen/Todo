@@ -1,4 +1,4 @@
-﻿using System.ComponentModel.DataAnnotations;
+using System.ComponentModel.DataAnnotations;
 using Database.Entity.Value;
 using Presentation.Attribute;
 
@@ -13,7 +13,8 @@ public record CreateEventDto(
     [Required] bool IsAllDay,
     DateTime Start,
     DateTime End,
-    [HexColor] string Color
+    [HexColor] string Color,
+    RecurrenceDto? Recurrence
 ) : IValidatableObject
 {
     public IEnumerable<ValidationResult> Validate(ValidationContext validationContext)

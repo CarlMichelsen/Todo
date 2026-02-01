@@ -1,4 +1,4 @@
-﻿using System.ComponentModel.DataAnnotations;
+using System.ComponentModel.DataAnnotations;
 using Database.Entity.Id;
 using Database.Util;
 using Microsoft.EntityFrameworkCore;
@@ -48,6 +48,21 @@ public class EventEntity : IEntity
 
     public UserEntity? CreatedBy { get; init; }
 
+    // Recurrence properties
+    public bool IsRecurring { get; set; }
+
+    public RecurrencePattern? RecurrencePattern { get; set; }
+
+    public int? RecurrenceIntervalValue { get; set; }
+
+    public ICollection<DayOfWeek>? RecurrenceDaysOfWeek { get; init; }
+
+    public int? RecurrenceDayOfMonth { get; set; }
+
+    public DateTime? RecurrenceEndDate { get; set; }
+
+    public int? RecurrenceOccurrences { get; set; }
+
     public static void Configure(ModelBuilder modelBuilder)
     {
         var entityBuilder = modelBuilder.Entity<EventEntity>();
@@ -62,6 +77,12 @@ public class EventEntity : IEntity
             ));
 
         entityBuilder.Property(x => x.Status).HasConversion<string>();
+
+        // Recurrence configuration
+        entityBuilder.Property(x => x.RecurrencePattern).HasConversion<string>();
+
+        // Use PostgreSQL array types for DayOfWeek collection
+        entityBuilder.Property(x => x.RecurrenceDaysOfWeek).HasColumnType("integer[]");
 
         entityBuilder
             .Property(u => u.OrganizerId)

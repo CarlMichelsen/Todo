@@ -1,4 +1,4 @@
-﻿using System.ComponentModel.DataAnnotations;
+using System.ComponentModel.DataAnnotations;
 using Presentation.Attribute;
 
 namespace Presentation.Dto.CalendarEvent;
@@ -8,7 +8,8 @@ public record EditEventDto(
     [MaxLength(1028 * 32)] string? Description,
     DateTime? Start,
     DateTime? End,
-    [HexColor] string? Color
+    [HexColor] string? Color,
+    RecurrenceDto? Recurrence
 ) : IValidatableObject
 {
     public IEnumerable<ValidationResult> Validate(ValidationContext validationContext)

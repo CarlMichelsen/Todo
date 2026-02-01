@@ -1,4 +1,4 @@
-﻿using Presentation.Dto.User;
+using Presentation.Dto.User;
 
 namespace Presentation.Dto.CalendarEvent;
 
@@ -13,5 +13,18 @@ public record EventDto(
     DateTime Start,
     DateTime End,
     UserDto CreatedBy,
-    string Color
-) : CreateEventDto(Title, Description, Attendees, Status, Location, IsAllDay, Start, End, Color);
+    string Color,
+    RecurrenceDto? Recurrence
+)
+    : CreateEventDto(
+        Title,
+        Description,
+        Attendees,
+        Status,
+        Location,
+        IsAllDay,
+        Start,
+        End,
+        Color,
+        Recurrence
+    );

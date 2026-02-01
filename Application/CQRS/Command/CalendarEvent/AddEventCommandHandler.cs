@@ -1,4 +1,4 @@
-﻿using Database;
+using Database;
 using Database.Entity;
 using Database.Entity.Id;
 using Database.Entity.Value;
@@ -27,6 +27,9 @@ public class AddEventCommandHandler(
 
         var organizer = attendees.First(a => a.Email == command.User.Email);
 
+        // Prepare recurrence properties
+        var isRecurring = command.CreateEvent.Recurrence?.IsRecurring == true;
+
         var eventEntity = new EventEntity
         {
             Id = new EventEntityId(Guid.CreateVersion7()),
@@ -44,6 +47,23 @@ public class AddEventCommandHandler(
             LastModifiedAt = now,
             Status = ToDto(command.CreateEvent.Status),
             ParentCalendarId = new CalendarEntityId(command.ParentCalendarId, true),
+
+            // Recurrence properties
+            IsRecurring = isRecurring,
+            RecurrencePattern = isRecurring
+                ? ToEntity(command.CreateEvent.Recurrence!.Pattern)
+                : null,
+            RecurrenceIntervalValue = isRecurring
+                ? command.CreateEvent.Recurrence!.IntervalValue ?? 1
+                : null,
+            RecurrenceDaysOfWeek = isRecurring
+                ? command.CreateEvent.Recurrence!.DaysOfWeek?.ToList()
+                : null,
+            RecurrenceDayOfMonth = isRecurring ? command.CreateEvent.Recurrence!.DayOfMonth : null,
+            RecurrenceEndDate = isRecurring ? command.CreateEvent.Recurrence!.EndDate : null,
+            RecurrenceOccurrences = isRecurring
+                ? command.CreateEvent.Recurrence!.Occurrences
+                : null,
         };
 
         databaseContext.Event.Add(eventEntity);
@@ -64,6 +84,16 @@ public class AddEventCommandHandler(
             EventStatusDto.Confirmed => EventStatus.Confirmed,
             EventStatusDto.Cancelled => EventStatus.Cancelled,
             _ => EventStatus.Confirmed,
+        };
+
+    private static RecurrencePattern? ToEntity(RecurrencePatternDto? dto) =>
+        dto switch
+        {
+            RecurrencePatternDto.Daily => RecurrencePattern.Daily,
+            RecurrencePatternDto.Weekly => RecurrencePattern.Weekly,
+            RecurrencePatternDto.Monthly => RecurrencePattern.Monthly,
+            RecurrencePatternDto.Yearly => RecurrencePattern.Yearly,
+            _ => null,
         };
 
     private async Task<List<AttendeeEntity>> GetOrCreateAttendees(

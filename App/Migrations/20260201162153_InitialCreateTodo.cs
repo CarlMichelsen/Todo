@@ -14,6 +14,50 @@ namespace App.Migrations
             migrationBuilder.EnsureSchema(name: "todo");
 
             migrationBuilder.CreateTable(
+                name: "attendee",
+                schema: "todo",
+                columns: table => new
+                {
+                    id = table.Column<Guid>(type: "uuid", nullable: false),
+                    common_name = table.Column<string>(type: "text", nullable: true),
+                    email = table.Column<string>(type: "text", nullable: false),
+                    created_at = table.Column<DateTime>(
+                        type: "timestamp with time zone",
+                        nullable: false
+                    ),
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("pk_attendee", x => x.id);
+                }
+            );
+
+            migrationBuilder.CreateTable(
+                name: "attendee_entity_event_entity",
+                schema: "todo",
+                columns: table => new
+                {
+                    attendees_id = table.Column<Guid>(type: "uuid", nullable: false),
+                    attending_id = table.Column<Guid>(type: "uuid", nullable: false),
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey(
+                        "pk_attendee_entity_event_entity",
+                        x => new { x.attendees_id, x.attending_id }
+                    );
+                    table.ForeignKey(
+                        name: "fk_attendee_entity_event_entity_attendee_attendees_id",
+                        column: x => x.attendees_id,
+                        principalSchema: "todo",
+                        principalTable: "attendee",
+                        principalColumn: "id",
+                        onDelete: ReferentialAction.Cascade
+                    );
+                }
+            );
+
+            migrationBuilder.CreateTable(
                 name: "calendar",
                 schema: "todo",
                 columns: table => new
@@ -57,8 +101,8 @@ namespace App.Migrations
                         nullable: false
                     ),
                     email = table.Column<string>(
-                        type: "character varying(256)",
-                        maxLength: 256,
+                        type: "character varying(255)",
+                        maxLength: 255,
                         nullable: false
                     ),
                     profile_image_small = table.Column<string>(type: "text", nullable: false),
@@ -142,6 +186,12 @@ namespace App.Migrations
                         maxLength: 32896,
                         nullable: false
                     ),
+                    location = table.Column<string>(
+                        type: "character varying(4112)",
+                        maxLength: 4112,
+                        nullable: true
+                    ),
+                    is_all_day = table.Column<bool>(type: "boolean", nullable: false),
                     color = table.Column<string>(
                         type: "character varying(7)",
                         maxLength: 7,
@@ -159,15 +209,34 @@ namespace App.Migrations
                         type: "timestamp with time zone",
                         nullable: false
                     ),
-                    calendar_id = table.Column<Guid>(type: "uuid", nullable: false),
+                    last_modified_at = table.Column<DateTime>(
+                        type: "timestamp with time zone",
+                        nullable: false
+                    ),
+                    status = table.Column<string>(type: "text", nullable: false),
+                    parent_calendar_id = table.Column<Guid>(type: "uuid", nullable: false),
+                    organizer_id = table.Column<Guid>(type: "uuid", nullable: false),
                     created_by_id = table.Column<Guid>(type: "uuid", nullable: false),
+                    is_recurring = table.Column<bool>(type: "boolean", nullable: false),
+                    recurrence_pattern = table.Column<string>(type: "text", nullable: true),
+                    recurrence_interval_value = table.Column<int>(type: "integer", nullable: true),
+                    recurrence_days_of_week = table.Column<int[]>(
+                        type: "integer[]",
+                        nullable: true
+                    ),
+                    recurrence_day_of_month = table.Column<int>(type: "integer", nullable: true),
+                    recurrence_end_date = table.Column<DateTime>(
+                        type: "timestamp with time zone",
+                        nullable: true
+                    ),
+                    recurrence_occurrences = table.Column<int>(type: "integer", nullable: true),
                 },
                 constraints: table =>
                 {
                     table.PrimaryKey("pk_event", x => x.id);
                     table.ForeignKey(
-                        name: "fk_event_calendar_calendar_id",
-                        column: x => x.calendar_id,
+                        name: "fk_event_calendar_parent_calendar_id",
+                        column: x => x.parent_calendar_id,
                         principalSchema: "todo",
                         principalTable: "calendar",
                         principalColumn: "id",
@@ -218,6 +287,21 @@ namespace App.Migrations
             );
 
             migrationBuilder.CreateIndex(
+                name: "ix_attendee_email",
+                schema: "todo",
+                table: "attendee",
+                column: "email",
+                unique: true
+            );
+
+            migrationBuilder.CreateIndex(
+                name: "ix_attendee_entity_event_entity_attending_id",
+                schema: "todo",
+                table: "attendee_entity_event_entity",
+                column: "attending_id"
+            );
+
+            migrationBuilder.CreateIndex(
                 name: "ix_calendar_owner_id",
                 schema: "todo",
                 table: "calendar",
@@ -246,20 +330,6 @@ namespace App.Migrations
             );
 
             migrationBuilder.CreateIndex(
-                name: "ix_event_calendar_id_id",
-                schema: "todo",
-                table: "event",
-                columns: ["calendar_id", "id"]
-            );
-
-            migrationBuilder.CreateIndex(
-                name: "ix_event_calendar_id_starts_at_ends_at",
-                schema: "todo",
-                table: "event",
-                columns: ["calendar_id", "starts_at", "ends_at"]
-            );
-
-            migrationBuilder.CreateIndex(
                 name: "ix_event_created_by_id",
                 schema: "todo",
                 table: "event",
@@ -267,10 +337,35 @@ namespace App.Migrations
             );
 
             migrationBuilder.CreateIndex(
+                name: "ix_event_parent_calendar_id_id",
+                schema: "todo",
+                table: "event",
+                columns: ["parent_calendar_id", "id"]
+            );
+
+            migrationBuilder.CreateIndex(
+                name: "ix_event_parent_calendar_id_starts_at_ends_at",
+                schema: "todo",
+                table: "event",
+                columns: ["parent_calendar_id", "starts_at", "ends_at"]
+            );
+
+            migrationBuilder.CreateIndex(
                 name: "ix_user_selected_calendar_id",
                 schema: "todo",
                 table: "user",
                 column: "selected_calendar_id"
+            );
+
+            migrationBuilder.AddForeignKey(
+                name: "fk_attendee_entity_event_entity_event_attending_id",
+                schema: "todo",
+                table: "attendee_entity_event_entity",
+                column: "attending_id",
+                principalSchema: "todo",
+                principalTable: "event",
+                principalColumn: "id",
+                onDelete: ReferentialAction.Cascade
             );
 
             migrationBuilder.AddForeignKey(
@@ -294,10 +389,14 @@ namespace App.Migrations
                 table: "calendar"
             );
 
+            migrationBuilder.DropTable(name: "attendee_entity_event_entity", schema: "todo");
+
             migrationBuilder.DropTable(
                 name: "calendar_entity_calendar_link_entity",
                 schema: "todo"
             );
+
+            migrationBuilder.DropTable(name: "attendee", schema: "todo");
 
             migrationBuilder.DropTable(name: "event", schema: "todo");
 
