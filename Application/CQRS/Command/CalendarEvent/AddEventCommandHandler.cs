@@ -71,22 +71,15 @@ public class AddEventCommandHandler(
     )
     {
         var now = timeProvider.GetUtcNow().UtcDateTime;
-        var distinctByEmail = attendees
-            .DistinctBy(a => a.Email)
-            .ToList();
+        var distinctByEmail = attendees.DistinctBy(a => a.Email).ToList();
 
-        var emails = distinctByEmail
-            .Select(a => a.Email)
-            .ToList();
+        var emails = distinctByEmail.Select(a => a.Email).ToList();
 
         var existingAttendees = await databaseContext
-            .Attendee.
-            Where(a => emails.Contains(a.Email))
+            .Attendee.Where(a => emails.Contains(a.Email))
             .ToListAsync();
 
-        var existingAttendeeEmails = existingAttendees
-            .Select(a => a.Email.Value)
-            .ToList();
+        var existingAttendeeEmails = existingAttendees.Select(a => a.Email.Value).ToList();
 
         List<AttendeeEntity> newAttendees = [];
         foreach (

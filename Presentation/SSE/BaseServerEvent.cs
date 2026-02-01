@@ -1,5 +1,6 @@
-﻿using System.Text.Json.Serialization;
+using System.Text.Json.Serialization;
 using Presentation.SSE.Calendar;
+using Presentation.SSE.CalendarEvent;
 using Presentation.SSE.CalendarLink;
 
 namespace Presentation.SSE;
@@ -14,6 +15,10 @@ namespace Presentation.SSE;
 [JsonDerivedType(typeof(CreateCalendarLinkEvent), "CreateCalendarLink")]
 [JsonDerivedType(typeof(DeleteCalendarLinkEvent), "DeleteCalendarLink")]
 [JsonDerivedType(typeof(EditCalendarLinkEvent), "EditCalendarLink")]
+// Event
+[JsonDerivedType(typeof(CreateEventEvent), "CreateEvent")]
+[JsonDerivedType(typeof(EditEventEvent), "EditEvent")]
+[JsonDerivedType(typeof(DeleteEventEvent), "DeleteEvent")]
 public abstract class BaseServerEvent
 {
     public const string EventSuffix = "Event";

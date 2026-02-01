@@ -1,9 +1,8 @@
-﻿using Application.Extensions;
+using Application.Extensions;
 using Application.Mapper;
 using Database;
 using Microsoft.AspNetCore.Http;
 using Microsoft.EntityFrameworkCore;
-using Microsoft.Extensions.Logging;
 using Presentation.Abstractions.CQRS.Messaging;
 using Presentation.CQRS.Command.CalendarEvent;
 using Presentation.Dto;
@@ -13,7 +12,6 @@ using Presentation.Service;
 namespace Application.Service;
 
 public class EventService(
-    ILogger<EventService> logger,
     ISender sender,
     IHttpContextAccessor httpContextAccessor,
     DatabaseContext databaseContext
@@ -125,48 +123,14 @@ public class EventService(
     )
     {
         var user = httpContextAccessor.GetJwtUser();
-
-        var eventEntity = await databaseContext
-            .Event.Include(e => e.ParentCalendar)
-            .Include(e => e.CreatedBy)
-            .Where(e =>
-                e.ParentCalendar!.OwnerId! == user.UserId && e.ParentCalendar!.Id == calendarId
-            )
-            .SingleAsync(e => e.Id == eventId, cancellationToken);
-
-        if (editEvent.Title is not null)
-        {
-            eventEntity.Title = editEvent.Title;
-        }
-
-        if (editEvent.Description is not null)
-        {
-            eventEntity.Description = editEvent.Description;
-        }
-
-        if (editEvent.Start is not null)
-        {
-            eventEntity.StartsAt = editEvent.Start.Value;
-        }
-
-        if (editEvent.End is not null)
-        {
-            eventEntity.EndsAt = editEvent.End.Value;
-        }
-
-        if (editEvent.Color is not null)
-        {
-            eventEntity.Color = editEvent.Color;
-        }
-
-        await databaseContext.SaveChangesAsync(cancellationToken);
-
-        logger.LogUsernameUserIdMethodNameEventId(
-            user.Username,
-            user.UserId,
-            nameof(IEventService.EditEvent),
-            eventEntity.Id.ToString()
+        var command = new EditEventCommand(
+            CommandId: Guid.CreateVersion7(),
+            User: user,
+            ParentCalendarId: calendarId,
+            EventId: eventId,
+            EditEvent: editEvent
         );
+        await sender.Send(command, cancellationToken);
     }
 
     public async Task DeleteEvent(
@@ -176,22 +140,12 @@ public class EventService(
     )
     {
         var user = httpContextAccessor.GetJwtUser();
-
-        var result = await databaseContext
-            .Event.Include(e => e.ParentCalendar)
-            .Where(e =>
-                e.ParentCalendar!.OwnerId! == user.UserId
-                && e.ParentCalendar!.Id == calendarId
-                && e.Id == eventId
-            )
-            .ExecuteDeleteAsync(cancellationToken);
-
-        var success = result == 1;
-        logger.LogUsernameUserIdMethodNameEventId(
-            user.Username,
-            user.UserId,
-            nameof(IEventService.DeleteEvent),
-            success ? eventId.ToString() : "event not found"
+        var command = new DeleteEventCommand(
+            CommandId: Guid.CreateVersion7(),
+            User: user,
+            ParentCalendarId: calendarId,
+            EventId: eventId
         );
+        await sender.Send(command, cancellationToken);
     }
 }

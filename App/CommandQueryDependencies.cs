@@ -1,4 +1,4 @@
-﻿using App.Extensions;
+using App.Extensions;
 using Application.CQRS.Command.Calendar;
 using Application.CQRS.Command.CalendarEvent;
 using Application.CQRS.Command.CalendarLink;
@@ -43,7 +43,10 @@ public static class CommandQueryDependencies
             .AddCommandHandler<SelectCalendarCommandHandler, SelectCalendarCommand>();
 
         // CalendarEvent
-        builder.Services.AddCommandHandler<AddEventCommandHandler, AddEventCommand>();
+        builder
+            .Services.AddCommandHandler<AddEventCommandHandler, AddEventCommand>()
+            .AddCommandHandler<EditEventCommandHandler, EditEventCommand>()
+            .AddCommandHandler<DeleteEventCommandHandler, DeleteEventCommand>();
 
         // CalendarLink
         builder
