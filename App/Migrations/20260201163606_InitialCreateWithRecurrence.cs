@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using Microsoft.EntityFrameworkCore.Migrations;
 
 #nullable disable
@@ -6,8 +6,21 @@ using Microsoft.EntityFrameworkCore.Migrations;
 namespace App.Migrations
 {
     /// <inheritdoc />
-    public partial class InitialCreateTodo : Migration
+    public partial class InitialCreateWithRecurrence : Migration
     {
+        private static readonly string[] ix_event_parent_calendar_id_starts_at_ends_at_columns =
+            new[] { "parent_calendar_id", "starts_at", "ends_at" };
+        private static readonly string[] ix_event_parent_calendar_id_id_columns = new[]
+        {
+            "parent_calendar_id",
+            "id",
+        };
+        private static readonly string[] ix_calendar_owner_id_id_columns = new[]
+        {
+            "owner_id",
+            "id",
+        };
+
         /// <inheritdoc />
         protected override void Up(MigrationBuilder migrationBuilder)
         {
@@ -312,7 +325,7 @@ namespace App.Migrations
                 name: "ix_calendar_owner_id_id",
                 schema: "todo",
                 table: "calendar",
-                columns: ["owner_id", "id"]
+                columns: ix_calendar_owner_id_id_columns
             );
 
             migrationBuilder.CreateIndex(
@@ -340,14 +353,14 @@ namespace App.Migrations
                 name: "ix_event_parent_calendar_id_id",
                 schema: "todo",
                 table: "event",
-                columns: ["parent_calendar_id", "id"]
+                columns: ix_event_parent_calendar_id_id_columns
             );
 
             migrationBuilder.CreateIndex(
                 name: "ix_event_parent_calendar_id_starts_at_ends_at",
                 schema: "todo",
                 table: "event",
-                columns: ["parent_calendar_id", "starts_at", "ends_at"]
+                columns: ix_event_parent_calendar_id_starts_at_ends_at_columns
             );
 
             migrationBuilder.CreateIndex(
