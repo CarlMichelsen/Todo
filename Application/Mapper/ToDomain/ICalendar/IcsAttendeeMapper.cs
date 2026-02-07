@@ -12,7 +12,7 @@ public static class IcsAttendeeMapper
         var organizerEmail = ExtractEmailFromUri(calendarEvent.Organizer?.Value);
         var organizer = string.IsNullOrWhiteSpace(organizerEmail)
             ? null
-            : new Organizer { Email = organizerEmail, Name = calendarEvent.Organizer?.CommonName };
+            : new Person { Email = organizerEmail, Name = calendarEvent.Organizer?.CommonName };
 
         var attendees = calendarEvent
             .Attendees.Select(a => a.ToDomain())

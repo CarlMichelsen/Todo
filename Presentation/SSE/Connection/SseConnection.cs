@@ -4,9 +4,7 @@ using System.Threading.Channels;
 namespace Presentation.SSE.Connection;
 
 // ReSharper disable once InconsistentNaming
-#pragma warning disable S101
-public class SSEConnection
-#pragma warning restore S101
+public class SseConnection
 {
     private const int MaxEventHistory = 500;
 
@@ -46,14 +44,22 @@ public class SSEConnection
     public void StopConnection(DateTime now, Exception? exception = null)
     {
         if (channel is null)
+        {
             return;
+        }
+
         try
         {
             channel.Writer.Complete(exception);
-            LastDisconnected = now;
         }
         catch (ChannelClosedException)
-        { /* Accepting that the channel may already be closed. */
+        {
+            /* Accepting that the channel may already be closed. */
+        }
+        finally
+        {
+            channel = null;
+            LastDisconnected = now;
         }
     }
 

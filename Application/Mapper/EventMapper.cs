@@ -12,7 +12,7 @@ public static class EventMapper
             Title: entity.Title,
             Description: entity.Description,
             Attendees: entity
-                .Attendees?.Select(a => new AttendeeDto(a.Email.Value, a.CommonName))
+                .Attendees?.Select(a => new AttendeeDto(a.Email, a.CommonName))
                 .ToList()
                 ?? new List<AttendeeDto>(),
             Status: ToDto(entity.Status),

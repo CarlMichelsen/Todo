@@ -12,8 +12,8 @@ using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 namespace App.Migrations
 {
     [DbContext(typeof(DatabaseContext))]
-    [Migration("20260201163606_InitialCreateWithRecurrence")]
-    partial class InitialCreateWithRecurrence
+    [Migration("20260207122441_InitialCreateTodo")]
+    partial class InitialCreateTodo
     {
         /// <inheritdoc />
         protected override void BuildTargetModel(ModelBuilder modelBuilder)

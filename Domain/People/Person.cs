@@ -1,6 +1,6 @@
 ﻿namespace Domain.People;
 
-public abstract class Person
+public class Person
 {
     public required string Email { get; set; }
 

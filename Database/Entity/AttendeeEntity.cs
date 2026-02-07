@@ -1,5 +1,4 @@
 ﻿using Database.Entity.Id;
-using Database.Entity.Value;
 using Database.Util;
 using Microsoft.EntityFrameworkCore;
 
@@ -11,7 +10,7 @@ public class AttendeeEntity : IEntity
 
     public required string? CommonName { get; init; }
 
-    public required EmailValue Email { get; init; }
+    public required string Email { get; init; }
 
     public ICollection<EventEntity> Attending { get; init; } = [];
 
@@ -30,10 +29,6 @@ public class AttendeeEntity : IEntity
                 true
             ));
 
-        entityBuilder
-            .Property(u => u.Email)
-            .HasConversion(email => email.Value, value => EmailValue.Create(value)) // Will throw if invalid data in DB
-            .IsRequired();
         entityBuilder.HasIndex(u => u.Email).IsUnique();
 
         // Attending

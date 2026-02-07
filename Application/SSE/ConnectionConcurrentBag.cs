@@ -6,7 +6,7 @@ namespace Application.SSE;
 public class ConnectionConcurrentBag(TimeProvider timeProvider) : IConnectionConcurrentBag
 {
     // Primary index: connectionId -> connection info
-    private readonly ConcurrentDictionary<Guid, SSEConnection> connectionsByConnectionId = new();
+    private readonly ConcurrentDictionary<Guid, SseConnection> connectionsByConnectionId = new();
 
     // Secondary index: userId -> set of connectionIds
     private readonly ConcurrentDictionary<
@@ -14,10 +14,10 @@ public class ConnectionConcurrentBag(TimeProvider timeProvider) : IConnectionCon
         ConcurrentDictionary<Guid, byte>
     > connectionIdsByUserId = new();
 
-    public IReadOnlyDictionary<Guid, SSEConnection> ConnectionsByConnectionId =>
+    public IReadOnlyDictionary<Guid, SseConnection> ConnectionsByConnectionId =>
         connectionsByConnectionId;
 
-    public Task<bool> TryAdd(SSEConnection connection, CancellationToken cancellationToken)
+    public Task<bool> TryAdd(SseConnection connection, CancellationToken cancellationToken)
     {
         // Add to primary index
         if (!connectionsByConnectionId.TryAdd(connection.ConnectionId, connection))
@@ -65,7 +65,7 @@ public class ConnectionConcurrentBag(TimeProvider timeProvider) : IConnectionCon
         return Task.FromResult(true);
     }
 
-    public Task<SSEConnection?> GetByConnectionId(
+    public Task<SseConnection?> GetByConnectionId(
         Guid connectionId,
         CancellationToken cancellationToken
     )
@@ -74,19 +74,19 @@ public class ConnectionConcurrentBag(TimeProvider timeProvider) : IConnectionCon
         return Task.FromResult(connection);
     }
 
-    public Task<IEnumerable<SSEConnection>> GetByUserId(
+    public Task<IEnumerable<SseConnection>> GetByUserId(
         Guid userId,
         CancellationToken cancellationToken
     )
     {
         if (!connectionIdsByUserId.TryGetValue(userId, out var userConnections))
         {
-            return Task.FromResult<IEnumerable<SSEConnection>>([]);
+            return Task.FromResult<IEnumerable<SseConnection>>([]);
         }
 
         var connections = userConnections
             .Keys.Select(id => connectionsByConnectionId.GetValueOrDefault(id))
-            .OfType<SSEConnection>();
+            .OfType<SseConnection>();
 
         return Task.FromResult(connections);
     }

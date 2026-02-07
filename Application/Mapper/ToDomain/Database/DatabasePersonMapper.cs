@@ -7,9 +7,9 @@ public static class DatabasePersonMapper
 {
     public static Person ToPerson(this UserEntity user)
     {
-        var person = new MappedPerson
+        var person = new Person
         {
-            Email = user.Email.Value,
+            Email = user.Email,
             Name = user.Username,
             TodoUser = new TodoUser
             {
@@ -21,5 +21,3 @@ public static class DatabasePersonMapper
         return person;
     }
 }
-
-public class MappedPerson : Person;

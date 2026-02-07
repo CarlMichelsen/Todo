@@ -17,7 +17,7 @@ public static class DatabaseEventMapper
         var attendees = eventEntity
             .Attendees.Select(a => new Attendee
             {
-                Email = a.Email.Value,
+                Email = a.Email,
                 Name = a.CommonName,
                 Role = AttendeeRole.Required,
                 Status = AttendeeStatus.Accepted,
@@ -26,7 +26,7 @@ public static class DatabaseEventMapper
 
         var attendeeInfo = new EventAttendeeInfo(
             new Collection<Attendee>(attendees),
-            (Organizer)eventEntity.CreatedBy.ToPerson()
+            eventEntity.CreatedBy.ToPerson()
         );
 
         var calendarEvent = new CalendarEvent

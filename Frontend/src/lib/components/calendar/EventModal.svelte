@@ -7,11 +7,6 @@
 	import { calendarsStore } from '$lib/stores/calendars';
 	import { toastStore } from '$lib/stores/toast';
 	import { combineDateAndTime, extractDateString, extractTimeString } from '$lib/utils/calendarUtils';
-	import StatusSelector from '$lib/components/event/StatusSelector.svelte';
-	import LocationInput from '$lib/components/event/LocationInput.svelte';
-	import AllDayToggle from '$lib/components/event/AllDayToggle.svelte';
-	import AttendeeManager from '$lib/components/event/AttendeeManager.svelte';
-	import RecurrenceEditor from '$lib/components/event/RecurrenceEditor.svelte';
 
 	interface Props {
 		isOpen?: boolean;
@@ -54,6 +49,21 @@
 	let endTime = $state('10:00');
 	let color = $state('#ea580c');
 	
+	// Derived state for combined date-time values
+	let startDateTime = $derived.by(() => {
+		if (startDate && startTime) {
+			return combineDateAndTime(startDate, startTime);
+		}
+		return new Date();
+	});
+
+	let endDateTime = $derived.by(() => {
+		if (endDate && endTime) {
+			return combineDateAndTime(endDate, endTime);
+		}
+		return new Date();
+	});
+	
 	// New fields for enhanced event support
 	let status = $state<'confirmed' | 'tentative' | 'cancelled' | 'pending'>('confirmed');
 	let location = $state('');
@@ -74,10 +84,6 @@
 	let showDeleteConfirm = $state(false);
 
 	// Initialize form when event changes
-	// Helper function to combine date and time
-	function combineDateOnly(dateStr: string): Date {
-		return new Date(dateStr + 'T00:00:00');
-	}
 	
 	$effect(() => {
 		if (event) {
@@ -178,10 +184,10 @@
 
 			if (isEditMode && event) {
 				// Edit mode: Use CQRS store method
-				await eventsStore.updateEvent(eventToSubmit as any);
+				await eventsStore.updateEvent(eventToSubmit);
 			} else {
 				// Create mode: Use CQRS store method
-				await eventsStore.createEvent(eventToSubmit as any);
+				await eventsStore.createEvent(eventToSubmit);
 			}
 
 			// Success: reset form, show toast, and return true
@@ -268,7 +274,7 @@
 		errors = {};
 	}
 
-	function buildCalendarEvent(): any {
+	function buildCalendarEvent(): CalendarEvent {
 		return {
 			id: event?.id || crypto.randomUUID(),
 			title: title.trim(),
@@ -280,7 +286,7 @@
 			location: location.trim() || undefined,
 			isAllDay,
 			attendees,
-			recurrence
+			recurrence: recurrence || undefined
 		};
 	}
 

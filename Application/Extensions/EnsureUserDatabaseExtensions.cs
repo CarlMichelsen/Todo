@@ -1,7 +1,6 @@
 ﻿using Database;
 using Database.Entity;
 using Database.Entity.Id;
-using Database.Entity.Value;
 using Microsoft.EntityFrameworkCore;
 using Presentation;
 
@@ -30,7 +29,7 @@ public static class EnsureUserDatabaseExtensions
         {
             Id = new UserEntityId(user.UserId, true),
             Username = user.Username,
-            Email = EmailValue.Create(user.Email),
+            Email = user.Email,
             ProfileImageSmall = user.Profile,
             ProfileImageMedium = user.ProfileMedium,
             ProfileImageLarge = user.ProfileLarge,

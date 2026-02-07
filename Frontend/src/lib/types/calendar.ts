@@ -64,17 +64,6 @@ export interface CalendarEvent {
 	/** Event attendees */
 	attendees?: Attendee[];
 	/** Recurrence pattern */
-	recurrence?: RecurrenceRule;
-}
-
-/**
- * Temporary patch for TypeScript caching - ensure new fields are recognized
- */
-export interface EnhancedCalendarEvent extends CalendarEvent {
-	location?: string;
-	isAllDay?: boolean;
-	status?: EventStatus;
-	attendees?: Attendee[];
 	recurrence?: RecurrenceRule | null;
 }
 

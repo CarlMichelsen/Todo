@@ -1,6 +1,5 @@
 ﻿using System.ComponentModel.DataAnnotations;
 using Database.Entity.Id;
-using Database.Entity.Value;
 using Database.Util;
 using Microsoft.EntityFrameworkCore;
 
@@ -16,7 +15,7 @@ public class UserEntity : IEntity
 
     [MinLength(2)]
     [MaxLength(256)]
-    public required EmailValue Email { get; init; }
+    public required string Email { get; init; }
 
     public required Uri ProfileImageSmall { get; init; }
 
@@ -53,11 +52,7 @@ public class UserEntity : IEntity
                 true
             ));
 
-        entityBuilder
-            .Property(u => u.Email)
-            .HasConversion(email => email.Value, value => EmailValue.Create(value)) // Will throw if invalid data in DB
-            .HasMaxLength(255)
-            .IsRequired();
+        entityBuilder.Property(u => u.Email).HasMaxLength(255).IsRequired();
 
         // EventEntity
         entityBuilder

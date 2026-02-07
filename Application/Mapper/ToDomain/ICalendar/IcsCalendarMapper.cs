@@ -30,9 +30,9 @@ public static class IcsCalendarMapper
             .OfType<CalendarEvent>()
             .ToList();
 
-        var calendarOwner = new CalendarOwner
+        var calendarOwner = new Person
         {
-            Email = calendarLinkEntity.User.Email.Value,
+            Email = calendarLinkEntity.User.Email,
             Name = calendarLinkEntity.User.Username,
             TodoUser = new TodoUser
             {

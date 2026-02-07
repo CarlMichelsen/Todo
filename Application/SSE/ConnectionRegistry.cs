@@ -12,7 +12,7 @@ public partial class ConnectionRegistry(
 
     private readonly ConnectionConcurrentBag allConnections = new(timeProvider);
 
-    public async Task<bool> TryAdd(SSEConnection connection, CancellationToken cancellationToken)
+    public async Task<bool> TryAdd(SseConnection connection, CancellationToken cancellationToken)
     {
         var added = await activeConnections.TryAdd(connection, cancellationToken);
         if (!added)
@@ -36,7 +36,7 @@ public partial class ConnectionRegistry(
         return await activeConnections.TryRemove(connectionId, cancellationToken);
     }
 
-    public async Task<SSEConnection?> GetByConnectionId(
+    public async Task<SseConnection?> GetByConnectionId(
         Guid connectionId,
         CancellationToken cancellationToken
     )
@@ -48,7 +48,7 @@ public partial class ConnectionRegistry(
         return connection;
     }
 
-    public async Task<IEnumerable<SSEConnection>> GetByUserId(
+    public async Task<IEnumerable<SseConnection>> GetByUserId(
         Guid userId,
         CancellationToken cancellationToken
     )

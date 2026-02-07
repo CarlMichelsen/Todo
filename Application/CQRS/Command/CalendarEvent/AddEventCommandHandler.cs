@@ -1,7 +1,6 @@
 using Database;
 using Database.Entity;
 using Database.Entity.Id;
-using Database.Entity.Value;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
 using Presentation.Abstractions.CQRS.Messaging;
@@ -25,7 +24,8 @@ public class AddEventCommandHandler(
             new AttendeeDto(command.User.Email, command.User.Username),
         ]);
 
-        var organizer = attendees.First(a => a.Email == command.User.Email);
+        var organizerEmail = command.User.Email.ToUpperInvariant();
+        var organizer = attendees.First(a => a.Email == organizerEmail);
 
         // Prepare recurrence properties
         var isRecurring = command.CreateEvent.Recurrence?.IsRecurring == true;
@@ -101,7 +101,7 @@ public class AddEventCommandHandler(
     )
     {
         var now = timeProvider.GetUtcNow().UtcDateTime;
-        var distinctByEmail = attendees.DistinctBy(a => a.Email).ToList();
+        var distinctByEmail = attendees.DistinctBy(a => a.Email.ToUpperInvariant()).ToList();
 
         var emails = distinctByEmail.Select(a => a.Email).ToList();
 
@@ -109,20 +109,19 @@ public class AddEventCommandHandler(
             .Attendee.Where(a => emails.Contains(a.Email))
             .ToListAsync();
 
-        var existingAttendeeEmails = existingAttendees.Select(a => a.Email.Value).ToList();
+        var existingAttendeeEmails = existingAttendees.Select(a => a.Email).ToList();
 
         List<AttendeeEntity> newAttendees = [];
-        foreach (
-            var attendee in distinctByEmail.Where(a =>
-                existingAttendeeEmails.All(b => b != a.Email)
-            )
-        )
+        var newAttendeesDtos = distinctByEmail.Where(a =>
+            existingAttendeeEmails.All(b => b != a.Email)
+        );
+        foreach (var attendee in newAttendeesDtos)
         {
             var attendeeEntity = new AttendeeEntity
             {
                 Id = new AttendeeEntityId(Guid.CreateVersion7()),
                 CommonName = attendee.CommonName,
-                Email = EmailValue.Create(attendee.Email),
+                Email = attendee.Email.ToUpperInvariant(),
                 CreatedAt = now,
             };
 

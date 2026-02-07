@@ -15,7 +15,7 @@ public partial class ConnectionManager(
     IConnectionRegistry connectionRegistry
 ) : IConnectionManager
 {
-    public async Task<SSEConnection> GetOrCreateConnection(
+    public async Task<SseConnection> GetOrCreateConnection(
         Guid connectionId,
         CancellationToken cancellationToken
     )
@@ -31,13 +31,13 @@ public partial class ConnectionManager(
             return connection;
         }
 
-        connection = new SSEConnection { ConnectionId = connectionId, User = user };
+        connection = new SseConnection { ConnectionId = connectionId, User = user };
 
         return connection;
     }
 
     public async Task<bool> TryConnect(
-        SSEConnection connection,
+        SseConnection connection,
         Guid? lastEventId,
         CancellationToken cancellationToken
     )
@@ -77,7 +77,7 @@ public partial class ConnectionManager(
     }
 
     public async Task<bool> TryDisconnect(
-        SSEConnection connection,
+        SseConnection connection,
         Exception? exception,
         CancellationToken cancellationToken
     )

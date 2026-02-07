@@ -2,19 +2,19 @@
 
 public interface IConnectionManager
 {
-    Task<SSEConnection> GetOrCreateConnection(
+    Task<SseConnection> GetOrCreateConnection(
         Guid connectionId,
         CancellationToken cancellationToken
     );
 
     Task<bool> TryConnect(
-        SSEConnection connection,
+        SseConnection connection,
         Guid? lastEventId,
         CancellationToken cancellationToken
     );
 
     Task<bool> TryDisconnect(
-        SSEConnection connection,
+        SseConnection connection,
         Exception? exception,
         CancellationToken cancellationToken
     );

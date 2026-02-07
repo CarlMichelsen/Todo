@@ -1,6 +1,5 @@
 ﻿using Database.Entity;
 using Database.Entity.Id;
-using Database.Entity.Value;
 using Domain;
 using Presentation.Client;
 
@@ -28,7 +27,7 @@ public static class IcsTest
             Id = new UserEntityId(Guid.CreateVersion7()),
             SelectedCalendarId = new CalendarEntityId(Guid.CreateVersion7()),
             Username = "Steve",
-            Email = EmailValue.Create("steve@protonmail.com"),
+            Email = "steve@protonmail.com",
             ProfileImageSmall = uri,
             CreatedAt = DateTime.UtcNow,
         };

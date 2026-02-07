@@ -33,6 +33,7 @@ public class EventService(
         var baseEvents = await databaseContext
             .Event.Include(e => e.ParentCalendar)
             .Include(e => e.CreatedBy)
+            .Include(e => e.Attendees)
             .Where(e =>
                 e.ParentCalendarId == calendarId
                 && e.ParentCalendar!.OwnerId! == user.UserId
@@ -47,6 +48,7 @@ public class EventService(
             .OrderBy(e => e.StartsAt)
             .Take(MaxCurrentResults)
             .AsNoTracking()
+            .AsSplitQuery()
             .ToListAsync(cancellationToken);
 
         // Convert to domain events and expand recurrences

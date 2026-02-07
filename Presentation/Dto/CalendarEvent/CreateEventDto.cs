@@ -1,5 +1,4 @@
 using System.ComponentModel.DataAnnotations;
-using Database.Entity.Value;
 using Presentation.Attribute;
 
 namespace Presentation.Dto.CalendarEvent;
@@ -27,11 +26,6 @@ public record CreateEventDto(
         if (End - Start > TimeSpan.FromDays(365))
         {
             yield return new ValidationResult("Event duration exceeds 365 days");
-        }
-
-        foreach (var attendee in Attendees.Where(a => !EmailValue.IsValidEmail(a.Email)))
-        {
-            yield return new ValidationResult($"'{attendee.Email}' Email is not valid");
         }
     }
 };

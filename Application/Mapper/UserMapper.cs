@@ -24,7 +24,7 @@ public static class UserMapper
             TokenIssuedAt: jwtUser.TokenIssuedAt,
             TokenExpiresAt: jwtUser.TokenExpiresAt,
             UserName: userEntity.Username,
-            Email: userEntity.Email.Value,
+            Email: userEntity.Email,
             AuthenticationProvider: jwtUser.AuthenticationProvider,
             AuthenticationProviderId: jwtUser.AuthenticationProviderId,
             Profile: userEntity.ProfileImageSmall,

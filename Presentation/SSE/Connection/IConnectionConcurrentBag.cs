@@ -2,11 +2,11 @@
 
 public interface IConnectionConcurrentBag
 {
-    Task<bool> TryAdd(SSEConnection connection, CancellationToken cancellationToken);
+    Task<bool> TryAdd(SseConnection connection, CancellationToken cancellationToken);
 
     Task<bool> TryRemove(Guid connectionId, CancellationToken cancellationToken);
 
-    Task<SSEConnection?> GetByConnectionId(Guid connectionId, CancellationToken cancellationToken);
+    Task<SseConnection?> GetByConnectionId(Guid connectionId, CancellationToken cancellationToken);
 
-    Task<IEnumerable<SSEConnection>> GetByUserId(Guid userId, CancellationToken cancellationToken);
+    Task<IEnumerable<SseConnection>> GetByUserId(Guid userId, CancellationToken cancellationToken);
 }
