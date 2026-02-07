@@ -7,9 +7,11 @@
 	import { calendarsStore } from '$lib/stores/calendars';
 	import { toastStore } from '$lib/stores/toast';
 	import { combineDateAndTime, extractDateString, extractTimeString } from '$lib/utils/calendarUtils';
-	import { EventClient } from '$lib/utils/eventClient';
-	import { eventDtoToCalendarEvent } from '$lib/utils/eventConverter';
-	import type { CreateEventDto, EditEventDto } from '$lib/types/api/event';
+	import StatusSelector from '$lib/components/event/StatusSelector.svelte';
+	import LocationInput from '$lib/components/event/LocationInput.svelte';
+	import AllDayToggle from '$lib/components/event/AllDayToggle.svelte';
+	import AttendeeManager from '$lib/components/event/AttendeeManager.svelte';
+	import RecurrenceEditor from '$lib/components/event/RecurrenceEditor.svelte';
 
 	interface Props {
 		isOpen?: boolean;
@@ -51,6 +53,20 @@
 	let startTime = $state('09:00');
 	let endTime = $state('10:00');
 	let color = $state('#ea580c');
+	
+	// New fields for enhanced event support
+	let status = $state<'confirmed' | 'tentative' | 'cancelled' | 'pending'>('confirmed');
+	let location = $state('');
+	let isAllDay = $state(false);
+	let attendees = $state<{ email: string; commonName?: string; isOrganizer?: boolean }[]>([]);
+	let recurrence = $state<{ frequency: 'daily' | 'weekly' | 'monthly' | 'yearly'; interval: number; daysOfWeek?: number[]; dayOfMonth?: number; endDate?: Date; count?: number } | null>(null);
+	
+	// New fields for enhanced event support (TODO: Add to UI when ready)
+	// let location = $state('');
+	// let isAllDay = $state(false);
+	// let attendees = $state<{ email: string; commonName?: string }[]>([]);
+	// let newAttendeeEmail = $state('');
+	// let newAttendeeName = $state('');
 
 	// New states for API integration
 	let isSubmitting = $state(false);
@@ -58,6 +74,11 @@
 	let showDeleteConfirm = $state(false);
 
 	// Initialize form when event changes
+	// Helper function to combine date and time
+	function combineDateOnly(dateStr: string): Date {
+		return new Date(dateStr + 'T00:00:00');
+	}
+	
 	$effect(() => {
 		if (event) {
 			// Edit mode: pre-fill with event data
@@ -68,6 +89,13 @@
 			startTime = extractTimeString(event.start);
 			endTime = extractTimeString(event.end);
 			color = event.color || '#ea580c';
+			
+			// Initialize new fields from existing event
+			status = event.status || 'confirmed';
+			location = event.location || '';
+			isAllDay = event.isAllDay || false;
+			attendees = event.attendees || [];
+			recurrence = event.recurrence || null;
 		} else {
 			// Create mode: reset to defaults
 			title = '';
@@ -77,6 +105,13 @@
 			startTime = initialStartTime || '09:00';
 			endTime = initialEndTime || '10:00';
 			color = '#ea580c';
+			
+			// Initialize new fields with defaults
+			status = 'confirmed';
+			location = '';
+			isAllDay = false;
+			attendees = [];
+			recurrence = null;
 		}
 	});
 
@@ -108,9 +143,6 @@
 
 		// Validate that end is after start
 		if (startDate && endDate && startTime && endTime) {
-			const startDateTime = combineDateAndTime(startDate, startTime);
-			const endDateTime = combineDateAndTime(endDate, endTime);
-
 			if (startDateTime >= endDateTime) {
 				newErrors.endTime = 'End must be after start';
 			}
@@ -133,9 +165,6 @@
 		isSubmitting = true;
 
 		try {
-			const startDateTime = combineDateAndTime(startDate, startTime);
-			const endDateTime = combineDateAndTime(endDate, endTime);
-
 			// Get active calendar ID
 			const calendarId = get(calendarsStore).activeCalendarId;
 
@@ -145,48 +174,14 @@
 				return false;
 			}
 
+			const eventToSubmit = buildCalendarEvent();
+
 			if (isEditMode && event) {
-				// Edit mode: Call EventClient API
-				const client = new EventClient();
-
-				// Convert to EditEventDto
-				const editDto: EditEventDto = {
-					title: title.trim(),
-					description: description.trim() || '', // API requires string, not undefined
-					start: startDateTime.toISOString(),
-					end: endDateTime.toISOString(),
-					color: color
-				};
-
-				// Call API
-				const eventDto = await client.updateEvent(calendarId, event.id, editDto);
-
-				// Convert to CalendarEvent
-				const calendarEvent = eventDtoToCalendarEvent(eventDto);
-
-				// Update store
-				eventsStore.updateEvent(event.id, calendarEvent);
+				// Edit mode: Use CQRS store method
+				await eventsStore.updateEvent(eventToSubmit as any);
 			} else {
-				// Create mode: Use EventClient API
-				const client = new EventClient();
-
-				// Convert to CreateEventDto
-				const createDto: CreateEventDto = {
-					title: title.trim(),
-					description: description.trim() || '', // API requires string, not undefined
-					start: startDateTime.toISOString(),
-					end: endDateTime.toISOString(),
-					color: color
-				};
-
-				// Call API
-				const eventDto = await client.createEvent(calendarId, createDto);
-
-				// Convert to CalendarEvent
-				const calendarEvent = eventDtoToCalendarEvent(eventDto);
-
-				// Update store
-				eventsStore.addEvent(calendarEvent);
+				// Create mode: Use CQRS store method
+				await eventsStore.createEvent(eventToSubmit as any);
 			}
 
 			// Success: reset form, show toast, and return true
@@ -251,11 +246,8 @@
 					return;
 				}
 
-				const client = new EventClient();
-				await client.deleteEvent(calendarId, event.id);
-
-				// Success: update store and close modal
-				eventsStore.deleteEvent(event.id);
+				// Use CQRS store method
+				await eventsStore.deleteEvent(event.id);
 				isOpen = false;
 			} catch (error) {
 				submitError = error instanceof Error ? error.message : 'Failed to delete event';
@@ -274,6 +266,22 @@
 		// Don't reset here - let $effect handle it based on event prop
 		// This ensures form stays in sync with event prop
 		errors = {};
+	}
+
+	function buildCalendarEvent(): any {
+		return {
+			id: event?.id || crypto.randomUUID(),
+			title: title.trim(),
+			description: description.trim() || undefined,
+			start: startDateTime,
+			end: endDateTime,
+			color: color,
+			status,
+			location: location.trim() || undefined,
+			isAllDay,
+			attendees,
+			recurrence
+		};
 	}
 
 	// Predefined color options

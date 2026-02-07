@@ -130,18 +130,28 @@ export class EventClient extends AuthorizedHttpClient {
 	}
 
 	/**
-	 * Create a new event
+	 * Create a new event (CQRS command)
 	 * Uses POST /api/v1/Event/{calendarId} endpoint
 	 *
-	 * @param calendarId - UUID of the calendar
+	 * @param calendarId - UUID of calendar
 	 * @param event - CreateEventDto with all required fields (ISO strings for dates)
-	 * @returns Created EventDto with generated ID
+	 * @param commandId - Optional command ID for idempotency and SSE correlation
+	 * @returns Command ID for SSE correlation
 	 */
-	async createEvent(calendarId: string, event: CreateEventDto): Promise<EventDto> {
-		const response = await this.request<EventDto>(
+	async createEvent(
+		calendarId: string,
+		event: CreateEventDto,
+		commandId?: string
+	): Promise<string> {
+		const id = commandId || crypto.randomUUID();
+
+		const response = await this.request<void>(
 			HttpMethod.POST,
 			`/api/v1/Event/${calendarId}`,
-			event
+			event,
+			{
+				headers: { 'X-Command-ID': id }
+			}
 		);
 
 		if (!response.ok) {
@@ -167,27 +177,34 @@ export class EventClient extends AuthorizedHttpClient {
 			throw new Error(`Failed to create event: ${response.data.title || 'Unknown error'}`);
 		}
 
-		if (!response.data) {
-			throw new Error('Failed to create event: No data returned');
-		}
-
-		return response.data;
+		return id;
 	}
 
 	/**
-	 * Update an existing event
+	 * Update an existing event (CQRS command)
 	 * Uses PUT /api/v1/Event/{calendarId}/{eventId} endpoint
 	 *
 	 * @param calendarId - UUID of the calendar
 	 * @param eventId - UUID of the event to update
 	 * @param updates - EditEventDto with partial/nullable fields (ISO strings for dates)
-	 * @returns Updated EventDto
+	 * @param commandId - Optional command ID for idempotency and SSE correlation
+	 * @returns Command ID for SSE correlation
 	 */
-	async updateEvent(calendarId: string, eventId: string, updates: EditEventDto): Promise<EventDto> {
-		const response = await this.request<EventDto>(
+	async updateEvent(
+		calendarId: string,
+		eventId: string,
+		updates: EditEventDto,
+		commandId?: string
+	): Promise<string> {
+		const id = commandId || crypto.randomUUID();
+
+		const response = await this.request<void>(
 			HttpMethod.PUT,
 			`/api/v1/Event/${calendarId}/${eventId}`,
-			updates
+			updates,
+			{
+				headers: { 'X-Command-ID': id }
+			}
 		);
 
 		if (!response.ok) {
@@ -219,25 +236,28 @@ export class EventClient extends AuthorizedHttpClient {
 			throw new Error(`Failed to update event: ${response.data.title || 'Unknown error'}`);
 		}
 
-		if (!response.data) {
-			throw new Error('Failed to update event: No data returned');
-		}
-
-		return response.data;
+		return id;
 	}
 
 	/**
-	 * Delete an event
+	 * Delete an event (CQRS command)
 	 * Uses DELETE /api/v1/Event/{calendarId}/{eventId} endpoint
 	 *
 	 * @param calendarId - UUID of the calendar
 	 * @param eventId - UUID of the event to delete
-	 * @returns void (throws on error)
+	 * @param commandId - Optional command ID for idempotency and SSE correlation
+	 * @returns Command ID for SSE correlation
 	 */
-	async deleteEvent(calendarId: string, eventId: string): Promise<void> {
-		const response = await this.request<boolean>(
+	async deleteEvent(calendarId: string, eventId: string, commandId?: string): Promise<string> {
+		const id = commandId || crypto.randomUUID();
+
+		const response = await this.request<void>(
 			HttpMethod.DELETE,
-			`/api/v1/Event/${calendarId}/${eventId}`
+			`/api/v1/Event/${calendarId}/${eventId}`,
+			undefined,
+			{
+				headers: { 'X-Command-ID': id }
+			}
 		);
 
 		if (!response.ok) {
@@ -249,5 +269,7 @@ export class EventClient extends AuthorizedHttpClient {
 			console.error('Failed to delete event:', response.data);
 			throw new Error(`Failed to delete event: ${response.data.title || 'Unknown error'}`);
 		}
+
+		return id;
 	}
 }

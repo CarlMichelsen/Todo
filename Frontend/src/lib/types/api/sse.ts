@@ -1,5 +1,6 @@
 import type { CalendarDto } from './calendar';
 import type { CalendarLinkDto } from './calendarLink';
+import type { EventDto } from './event';
 
 /**
  * Base interface for all server-sent events
@@ -72,6 +73,34 @@ export interface DeleteCalendarLinkEvent extends BaseServerEvent {
 }
 
 /**
+ * Event sent when an event is created
+ */
+export interface CreateEventEvent extends BaseServerEvent {
+	eventName: 'CreateEvent';
+	event: EventDto;
+	calendarId: string;
+}
+
+/**
+ * Event sent when an event is edited
+ */
+export interface EditEventEvent extends BaseServerEvent {
+	eventName: 'EditEvent';
+	event: EventDto;
+	calendarId: string;
+}
+
+/**
+ * Event sent when an event is deleted
+ */
+export interface DeleteEventEvent extends BaseServerEvent {
+	eventName: 'DeleteEvent';
+	calendarEventId: string;
+	eventTitle: string;
+	calendarId: string;
+}
+
+/**
  * Union type of all possible server events
  */
 export type ServerEvent =
@@ -81,7 +110,10 @@ export type ServerEvent =
 	| SelectCalendarEvent
 	| CreateCalendarLinkEvent
 	| EditCalendarLinkEvent
-	| DeleteCalendarLinkEvent;
+	| DeleteCalendarLinkEvent
+	| CreateEventEvent
+	| EditEventEvent
+	| DeleteEventEvent;
 
 export const SERVER_EVENT_NAMES = [
 	'CreateCalendar',
@@ -90,7 +122,10 @@ export const SERVER_EVENT_NAMES = [
 	'SelectCalendar',
 	'CreateCalendarLink',
 	'EditCalendarLink',
-	'DeleteCalendarLink'
+	'DeleteCalendarLink',
+	'CreateEvent',
+	'EditEvent',
+	'DeleteEvent'
 ] as const satisfies readonly ServerEvent['eventName'][];
 
 // The following code makes typescript check that all events in ServerEvent are also present in SERVER_EVENT_NAMES.

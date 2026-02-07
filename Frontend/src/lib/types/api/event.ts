@@ -1,6 +1,51 @@
 import type { UserDto } from './calendar';
 
 /**
+ * Event attendee representation
+ */
+export interface AttendeeDto {
+	/** Email address (required) */
+	email: string;
+	/** Display name (optional) */
+	commonName?: string;
+}
+
+/**
+ * Event status enumeration
+ */
+export type EventStatusDto = number;
+
+/**
+ * Day of week enumeration for recurrence
+ */
+export type DayOfWeek = number;
+
+/**
+ * Recurrence pattern enumeration
+ */
+export type RecurrencePatternDto = number;
+
+/**
+ * Event recurrence configuration
+ */
+export interface RecurrenceDto {
+	/** Whether the event recurs */
+	isRecurring: boolean;
+	/** Recurrence pattern type */
+	pattern?: RecurrencePatternDto;
+	/** Interval value for the pattern */
+	intervalValue?: number;
+	/** Days of week for weekly recurrence */
+	daysOfWeek?: DayOfWeek[];
+	/** Day of month for monthly recurrence */
+	dayOfMonth?: number;
+	/** End date for recurrence */
+	endDate?: string;
+	/** Number of occurrences */
+	occurrences?: number;
+}
+
+/**
  * API event DTO matching backend EventDto from OpenAPI spec
  */
 export interface EventDto {
@@ -12,12 +57,22 @@ export interface EventDto {
 	title: string;
 	/** Event description */
 	description: string;
+	/** Event attendees */
+	attendees: AttendeeDto[];
+	/** Event status */
+	status: EventStatusDto;
+	/** Event location (optional) */
+	location?: string;
+	/** Whether this is an all-day event */
+	isAllDay: boolean;
 	/** Start date-time (ISO 8601 string) */
 	start: string;
 	/** End date-time (ISO 8601 string) */
 	end: string;
 	/** Hex color code (e.g., "#3b82f6") */
 	color: string;
+	/** Event recurrence pattern */
+	recurrence: RecurrenceDto | null;
 }
 
 /**
@@ -29,12 +84,22 @@ export interface CreateEventDto {
 	title: string;
 	/** Event description */
 	description: string;
+	/** Event attendees */
+	attendees: AttendeeDto[];
+	/** Event status */
+	status: EventStatusDto;
+	/** Event location (optional) */
+	location?: string;
+	/** Whether this is an all-day event */
+	isAllDay: boolean;
 	/** Start date-time (ISO 8601 string) */
 	start: string;
 	/** End date-time (ISO 8601 string) */
 	end: string;
 	/** Hex color code (e.g., "#3b82f6") */
 	color: string;
+	/** Event recurrence pattern */
+	recurrence: RecurrenceDto | null;
 }
 
 /**
@@ -52,6 +117,8 @@ export interface EditEventDto {
 	end?: string | null;
 	/** Hex color code (nullable) */
 	color?: string | null;
+	/** Event recurrence pattern */
+	recurrence: RecurrenceDto | null;
 }
 
 /**
@@ -90,3 +157,8 @@ export interface PaginationDto<T> {
 	/** Whether this is the last page */
 	isLastPage: boolean;
 }
+
+/**
+ * Event-specific pagination response from OpenAPI spec
+ */
+export type PaginationDtoOfEventDto = PaginationDto<EventDto>;
