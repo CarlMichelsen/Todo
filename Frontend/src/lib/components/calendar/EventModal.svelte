@@ -2,6 +2,7 @@
 	import { get } from 'svelte/store';
 	import FormModal from '$lib/components/modals/FormModal.svelte';
 	import ConfirmModal from '$lib/components/modals/ConfirmModal.svelte';
+	import RecurrenceEditor from '$lib/components/event/RecurrenceEditor.svelte';
 	import type { CalendarEvent } from '$lib/types/calendar';
 	import { eventsStore } from '$lib/stores/events';
 	import { calendarsStore } from '$lib/stores/calendars';
@@ -151,6 +152,19 @@
 		if (startDate && endDate && startTime && endTime) {
 			if (startDateTime >= endDateTime) {
 				newErrors.endTime = 'End must be after start';
+			}
+		}
+
+		// Validate recurrence rules
+		if (recurrence) {
+			if (recurrence.interval < 1) {
+				newErrors.recurrence = 'Interval must be at least 1';
+			} else if (recurrence.frequency === 'weekly' && (!recurrence.daysOfWeek || recurrence.daysOfWeek.length === 0)) {
+				newErrors.recurrence = 'Weekly recurrence must have at least one day selected';
+			} else if (recurrence.endDate && new Date(recurrence.endDate) <= startDateTime) {
+				newErrors.recurrence = 'End date must be after start date';
+			} else if (recurrence.count && recurrence.count < 1) {
+				newErrors.recurrence = 'Number of occurrences must be at least 1';
 			}
 		}
 
@@ -497,6 +511,18 @@
 						></button>
 					{/each}
 				</div>
+			</div>
+			
+			<!-- Recurrence -->
+			<div>
+				<RecurrenceEditor
+					bind:value={recurrence}
+					startDate={startDateTime}
+					disabled={isSubmitting}
+				/>
+				{#if errors.recurrence}
+					<p class="text-sm text-red-600 dark:text-red-400 mt-1">{errors.recurrence}</p>
+				{/if}
 			</div>
 		</form>
 	{/snippet}

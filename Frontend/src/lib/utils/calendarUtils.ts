@@ -576,3 +576,197 @@ export function roundTimeToInterval(time: string, intervalMinutes: number = 15):
 
 	return `${String(finalHours).padStart(2, '0')}:${String(finalMinutes).padStart(2, '0')}`;
 }
+
+// ============================================================================
+// RECURRENCE CALCULATION UTILITIES
+// ============================================================================
+
+import type { RecurrenceRule } from '$lib/types/calendar';
+
+/**
+ * Add months to a date, handling edge cases like end-of-month
+ * @param date - The starting date
+ * @param months - Number of months to add (can be negative)
+ * @returns A new Date object with months added
+ */
+export function addMonths(date: Date, months: number): Date {
+	const result = new Date(date);
+	const originalDay = result.getDate();
+
+	result.setMonth(result.getMonth() + months);
+
+	// Handle edge case where adding months results in invalid day (e.g., Jan 31 + 1 month = Feb 28/29)
+	if (result.getDate() !== originalDay) {
+		result.setDate(0); // Set to last day of previous month
+	}
+
+	return result;
+}
+
+/**
+ * Add years to a date
+ * @param date - The starting date
+ * @param years - Number of years to add (can be negative)
+ * @returns A new Date object with years added
+ */
+export function addYears(date: Date, years: number): Date {
+	const result = new Date(date);
+	result.setFullYear(result.getFullYear() + years);
+	return result;
+}
+
+/**
+ * Get the next occurrence of a recurring event
+ * @param currentDate - The current occurrence date
+ * @param rule - The recurrence rule to apply
+ * @returns The next occurrence date, or null if no more occurrences
+ */
+export function getNextOccurrence(currentDate: Date, rule: RecurrenceRule): Date | null {
+	const { frequency, interval, daysOfWeek, dayOfMonth } = rule;
+
+	let nextDate: Date;
+
+	switch (frequency) {
+		case 'daily':
+			nextDate = addDays(currentDate, interval);
+			break;
+
+		case 'weekly':
+			nextDate = addDays(currentDate, interval * 7);
+			break;
+
+		case 'monthly':
+			nextDate = addMonths(currentDate, interval);
+			// Handle specific day of month
+			if (dayOfMonth) {
+				nextDate.setDate(Math.min(dayOfMonth, getDaysInMonth(nextDate)));
+			}
+			break;
+
+		case 'yearly':
+			nextDate = addYears(currentDate, interval);
+			break;
+
+		default:
+			return null;
+	}
+
+	return nextDate;
+}
+
+/**
+ * Get the number of days in a month
+ * @param date - Date within the month
+ * @returns Number of days in the month
+ */
+function getDaysInMonth(date: Date): number {
+	return new Date(date.getFullYear(), date.getMonth() + 1, 0).getDate();
+}
+
+/**
+ * Generate first N occurrences of a recurring event
+ * @param startDate - The start date of the first occurrence
+ * @param rule - The recurrence rule to apply
+ * @param maxCount - Maximum number of occurrences to generate
+ * @returns Array of occurrence dates
+ */
+export function generateOccurrences(
+	startDate: Date,
+	rule: RecurrenceRule,
+	maxCount: number
+): Date[] {
+	const occurrences: Date[] = [];
+	let currentDate = new Date(startDate);
+
+	// For weekly recurrence, we need to find the first valid day
+	if (rule.frequency === 'weekly' && rule.daysOfWeek && rule.daysOfWeek.length > 0) {
+		const startDay = startDate.getDay();
+		if (!rule.daysOfWeek.includes(startDay)) {
+			// Find the next valid day of week
+			const sortedDays = [...rule.daysOfWeek].sort((a, b) => a - b);
+			const nextValidDay = sortedDays.find((day) => day > startDay) || sortedDays[0];
+			const daysToAdd =
+				nextValidDay <= startDay ? 7 - startDay + nextValidDay : nextValidDay - startDay;
+			currentDate = addDays(startDate, daysToAdd);
+		}
+	}
+
+	for (let i = 0; i < maxCount; i++) {
+		if (i > 0) {
+			const next = getNextOccurrence(currentDate, rule);
+			if (!next) break;
+			currentDate = next;
+		}
+
+		// Check end conditions
+		if (rule.endDate && currentDate > rule.endDate) {
+			break;
+		}
+
+		if (rule.count && i >= rule.count) {
+			break;
+		}
+
+		occurrences.push(new Date(currentDate));
+	}
+
+	return occurrences;
+}
+
+/**
+ * Calculate when a recurrence series will end
+ * @param startDate - The start date of the first occurrence
+ * @param rule - The recurrence rule
+ * @returns The final occurrence date, or null if never ends
+ */
+export function calculateRecurrenceEndDate(startDate: Date, rule: RecurrenceRule): Date | null {
+	if (rule.endDate) {
+		return rule.endDate;
+	}
+
+	if (rule.count) {
+		const occurrences = generateOccurrences(startDate, rule, rule.count);
+		return occurrences.length > 0 ? occurrences[occurrences.length - 1] : null;
+	}
+
+	// No end condition - never ends
+	return null;
+}
+
+/**
+ * Validate recurrence rule constraints
+ * @param rule - The recurrence rule to validate
+ * @param startDate - The start date of the event
+ * @returns Array of validation error messages (empty if valid)
+ */
+export function validateRecurrenceRule(rule: RecurrenceRule, startDate: Date): string[] {
+	const errors: string[] = [];
+
+	if (rule.interval < 1) {
+		errors.push('Interval must be at least 1');
+	}
+
+	if (rule.frequency === 'weekly') {
+		if (!rule.daysOfWeek || rule.daysOfWeek.length === 0) {
+			errors.push('Weekly recurrence must have at least one day selected');
+		} else if (rule.daysOfWeek.some((day) => day < 0 || day > 6)) {
+			errors.push('Days of week must be between 0 (Sunday) and 6 (Saturday)');
+		}
+	}
+
+	if (rule.frequency === 'monthly' && rule.dayOfMonth) {
+		if (rule.dayOfMonth < 1 || rule.dayOfMonth > 31) {
+			errors.push('Day of month must be between 1 and 31');
+		}
+	}
+
+	if (rule.endDate && rule.endDate <= startDate) {
+		errors.push('End date must be after start date');
+	}
+
+	if (rule.count && rule.count < 1) {
+		errors.push('Number of occurrences must be at least 1');
+	}
+
+	return errors;
+}
