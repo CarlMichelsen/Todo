@@ -10,7 +10,7 @@ using Presentation.Service;
 
 namespace Application.CQRS.Command.CalendarEvent;
 
-public class AddEventCommandHandler(
+public partial class AddEventCommandHandler(
     ILogger<AddEventCommandHandler> logger,
     TimeProvider timeProvider,
     DatabaseContext databaseContext
@@ -25,7 +25,20 @@ public class AddEventCommandHandler(
         ]);
 
         var organizerEmail = command.User.Email.ToUpperInvariant();
-        var organizer = attendees.First(a => a.Email == organizerEmail);
+        var organizer = attendees.FirstOrDefault(a => a.Email == organizerEmail);
+
+        if (organizer == null)
+        {
+            LogFailedToFindOrganizer(
+                logger,
+                command.User.Email,
+                attendees.Count,
+                string.Join(", ", attendees.Select(a => a.Email))
+            );
+            throw new InvalidOperationException(
+                $"Organizer with email '{command.User.Email}' not found in attendees list."
+            );
+        }
 
         // Prepare recurrence properties
         var isRecurring = command.CreateEvent.Recurrence?.IsRecurring == true;
@@ -111,7 +124,9 @@ public class AddEventCommandHandler(
 
         List<AttendeeEntity> newAttendees = [];
         var newAttendeesDtos = distinctByEmail.Where(a =>
-            existingAttendeeEmails.All(b => !b.Equals(a.Email, StringComparison.OrdinalIgnoreCase))
+            existingAttendeeEmails.All(b =>
+                !string.Equals(b, a.Email, StringComparison.OrdinalIgnoreCase)
+            )
         );
         foreach (var attendee in newAttendeesDtos)
         {
@@ -129,4 +144,15 @@ public class AddEventCommandHandler(
         databaseContext.Attendee.AddRange(newAttendees);
         return [.. newAttendees, .. existingAttendees];
     }
+
+    [LoggerMessage(
+        LogLevel.Error,
+        "Failed to find organizer attendee. User email: {UserEmail}, Attendees count: {AttendeesCount}, Attendees: {Attendees}"
+    )]
+    static partial void LogFailedToFindOrganizer(
+        ILogger<AddEventCommandHandler> logger,
+        string userEmail,
+        int attendeesCount,
+        string attendees
+    );
 }

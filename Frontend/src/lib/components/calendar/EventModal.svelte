@@ -519,6 +519,7 @@
 					bind:value={recurrence}
 					startDate={startDateTime}
 					disabled={isSubmitting}
+					onValueChange={value => recurrence = value}
 				/>
 				{#if errors.recurrence}
 					<p class="text-sm text-red-600 dark:text-red-400 mt-1">{errors.recurrence}</p>

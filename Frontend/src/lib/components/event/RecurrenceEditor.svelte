@@ -164,9 +164,11 @@
 	}
 	
 	function toggleRecurrence() {
-		if (hasRecurrence) {
+		if (value) {
+			// Currently has recurrence - turn it off
 			onValueChange?.(null);
 		} else {
+			// Currently no recurrence - turn it on with default weekly pattern
 			onValueChange?.({
 				frequency: 'weekly',
 				interval: 1
@@ -180,7 +182,7 @@
 	<label class="flex items-center space-x-3 {disabled ? 'cursor-not-allowed opacity-50' : 'cursor-pointer'}">
 		<input
 			type="checkbox"
-			bind:checked={hasRecurrence}
+			checked={hasRecurrence}
 			onchange={toggleRecurrence}
 			class="sr-only"
 			disabled={disabled}
